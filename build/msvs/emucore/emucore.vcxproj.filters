@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{763245da-9101-4ef0-b1e8-9f98967c2171}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{cf882c5e-a8fe-4068-b733-9104b0833702}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\apu">
+      <UniqueIdentifier>{3357ab73-daa8-439c-aa8b-d813369b4cc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\snesfile">
+      <UniqueIdentifier>{bbb6f8dc-aab6-48b8-8272-34a3618ca0c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\temp">
+      <UniqueIdentifier>{3e49168f-e309-40c4-b21a-41d0ed36ca7e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
+      <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\apu\smptracer.cpp">
+      <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\apu\spc.cpp">
+      <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp">
+      <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\temp\tempspc.cpp">
+      <Filter>src\temp</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp">
+      <Filter>src\snesfile</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\emucore\apu\smp.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\smp_addrmodes.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\smp_instructions.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\smpregs.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\smptracer.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\spc.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\spcbus.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\schuper.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\snesfile.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\tempspc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\snestypes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
