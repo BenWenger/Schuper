@@ -2,14 +2,6 @@
 #include "simpledsp.h"
 #include "spctimer.h"
 
-//#define DUMP
-
-#ifdef DUMP
-#include <cstdio>
-
-FILE* dumper = fopen("schuper_dump.txt", "wt");
-#endif
-
 namespace sch
 {
     
@@ -262,10 +254,6 @@ namespace sch
     
     void SimpleDsp::write(u8 a, u8 v)
     {
-#ifdef DUMP
-        if((a < 8) || ((a == 0x4C) && (v&1)) || ((a == 0x4D) && (v&1)))
-            fprintf(dumper, "%08X - %02X : %02X\n", dspTick, a, v);
-#endif
         rawRegs[a] = v;
         if((a & 0x0F) < 0x08)           // voice specific regs
         {
