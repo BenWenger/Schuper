@@ -2,6 +2,7 @@
 #include <cstring>              // memcpy
 #include "spc.h"
 #include "snesfile.h"
+#include "simpledsp.h"
 
 namespace sch
 {
@@ -13,16 +14,42 @@ namespace sch
         0xCB, 0xF4, 0xD7, 0x00, 0xFC, 0xD0, 0xF3, 0xAB, 0x01, 0x10, 0xEF, 0x7E, 0xF4, 0x10, 0xEB, 0xBA,
         0xF6, 0xDA, 0x00, 0xBA, 0xF4, 0xC4, 0xF4, 0xDD, 0x5D, 0xD0, 0xDB, 0x1F, 0x00, 0x00, 0xC0, 0xFF
         };
+
+        enum 
+        {
+            r_TEST      = 0xF0,
+            r_CONTROL   = 0xF1,
+            r_DSPADDR   = 0xF2,
+            r_DSPDATA   = 0xF3,
+            r_CPUIO_0   = 0xF4,
+            r_CPUIO_1   = 0xF5,
+            r_CPUIO_2   = 0xF6,
+            r_CPUIO_3   = 0xF7,
+            r_RAM_0     = 0xF8,
+            r_RAM_1     = 0xF9,
+            r_T0TARGET  = 0xFA,
+            r_T1TARGET  = 0xFB,
+            r_T2TARGET  = 0xFC,
+            r_T0OUT     = 0xFD,
+            r_T1OUT     = 0xFE,
+            r_T2OUT     = 0xFF
+        };
     }
 
     Spc::Spc()
     {
+        dsp = std::make_unique<SimpleDsp>();
+        dsp->setSharedObjects(ram, timers);
+
         bus.setPkProc( &Spc::pkFunc, this );
         bus.setRdProc(   0,   0, &Spc::rdFunc_Page0, this );
         bus.setRdProc(   1, 0xE, &Spc::rdFunc      , this );
         bus.setRdProc( 0xF, 0xF, &Spc::rdFunc_PageF, this );
         bus.setWrProc(   0,   0, &Spc::wrFunc_Page0, this );
         bus.setWrProc(   1, 0xF, &Spc::wrFunc      , this );
+
+        setClockBase(1);
+        forciblySetTimestamp(0);
     }
 
     u8 Spc::rdFunc(u16 a, timestamp_t tick)
@@ -34,11 +61,28 @@ namespace sch
     {
         if((a & 0xFFF0) == 0x00F0)
         {
-            if(a == 0xFD)       return 1;
-            return 0;       // TODO reg read
+            switch(a)
+            {
+            case r_DSPADDR:                             return dspAddr;
+            case r_DSPDATA:         dsp->runTo(tick);   return dsp->read(dspAddr & 0x7F);
+
+            case r_CPUIO_0:
+            case r_CPUIO_1:
+            case r_CPUIO_2:
+            case r_CPUIO_3:                             return spcIO_Input[a&3];
+                
+            case r_RAM_0:
+            case r_RAM_1:                               return fauxRam[a&1];
+                
+            case r_T0OUT:           dsp->runTo(tick);   return timers[0].readOutput();
+            case r_T1OUT:           dsp->runTo(tick);   return timers[1].readOutput();
+            case r_T2OUT:           dsp->runTo(tick);   return timers[2].readOutput();
+
+            default:                                    return 0;           // write-only regs read as zero
+            }
         }
-        else
-            return ram[a];
+        
+        return ram[a];
     }
 
     u8 Spc::rdFunc_PageF(u16 a, timestamp_t tick)
@@ -62,11 +106,57 @@ namespace sch
     
     void Spc::wrFunc_Page0(u16 a, u8 v, timestamp_t tick)
     {
-        ram[a] = v;
         if((a & 0xFFF0) == 0x00F0)
         {
-            // TODO reg write
+            switch(a)
+            {
+            case r_TEST:
+                // TODO - emulate this reg.. maybe?  It's kind of pointless
+                break;
+
+            case r_CONTROL:
+                dsp->runTo(tick);
+                timers[0].writeEnableBit( (v & 0x01) != 0 );
+                timers[1].writeEnableBit( (v & 0x02) != 0 );
+                timers[2].writeEnableBit( (v & 0x04) != 0 );
+                
+                if(v & 0x10)    spcIO_Input[0] = spcIO_Input[1] = 0;
+                if(v & 0x20)    spcIO_Input[2] = spcIO_Input[3] = 0;
+
+                useIplBootRom = (v & 0x80) != 0;
+                break;
+
+            case r_DSPADDR:
+                dspAddr = v;
+                break;
+
+            case r_DSPDATA:
+                if(dspAddr < 0x80)
+                {
+                    dsp->runTo(tick);
+                    dsp->write(dspAddr, v);
+                }
+                break;
+                
+            case r_CPUIO_0:
+            case r_CPUIO_1:
+            case r_CPUIO_2:
+            case r_CPUIO_3:
+                spcIO_Output[a&3] = v;
+                break;
+
+            case r_RAM_0:
+            case r_RAM_1:
+                fauxRam[a&1] = v;
+                break;
+                
+            case r_T0TARGET:    dsp->runTo(tick);   timers[0].writeTarget(v);       break;
+            case r_T1TARGET:    dsp->runTo(tick);   timers[1].writeTarget(v);       break;
+            case r_T2TARGET:    dsp->runTo(tick);   timers[2].writeTarget(v);       break;
+            }
         }
+        
+        ram[a] = v;
     }
 
 
@@ -98,8 +188,53 @@ namespace sch
         }
     }
 
-    void Spc::runForCycs(timestamp_t cycs)
+    ////////////////////////////////////////////////////////////
+
+    void Spc::setClockBase(timestamp_t base)
     {
-        cpu.run(cycs);
+        dsp->setClockBase(base);
+        cpu.setClockBase(base * 2);
+    }
+
+    timestamp_t Spc::getClockBase() const
+    {
+        return dsp->getClockBase();
+    }
+
+    void Spc::adjustTimestamp(timestamp_t adj)
+    {
+        dsp->adjustTimestamp(adj);
+        cpu.adjustTimestamp(adj);
+    }
+
+    void Spc::forciblySetTimestamp(timestamp_t ts)
+    {
+        dsp->forciblySetTimestamp(ts);
+        cpu.forciblySetTimestamp(ts);
+    }
+
+    timestamp_t Spc::getTick() const
+    {
+        return cpu.getTick();
+    }
+
+    /////////////////////////////////////////////////////////
+    
+    void Spc::runTo(timestamp_t runto)
+    {
+        cpu.runTo(runto);
+        dsp->runTo(runto);
+    }
+
+    void Spc::runToFillAudio()
+    {
+        timestamp_t orig = cpu.getTick();
+        timestamp_t runto = dsp->findTimestampToFillAudio();
+
+        runTo(runto);
+
+        timestamp_t adj = orig - cpu.getTick();
+        cpu.adjustTimestamp(adj);
+        dsp->adjustTimestamp(adj);
     }
 }

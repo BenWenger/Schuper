@@ -3,6 +3,7 @@
 #define SCHUPER_APU_SMP_H_INCLUDED
 
 #include "smpregs.h"
+#include "util/clockedsubsystem.h"
 
 namespace sch
 {
@@ -10,18 +11,16 @@ namespace sch
     class SmpTracer;
     class SnesFile;
 
-    class Smp
+    class Smp : public ClockedSubsystem
     {
     public:
                         Smp();
-        void            run(timestamp_t runto);
+        virtual void    runTo(timestamp_t runto) override;
         void            setTracer(SmpTracer* trcr)          { tracer = trcr;            }
 
         void            resetWithFile(SpcBus* bs, const SnesFile& file);
 
     private:
-        timestamp_t     clockBase;
-        timestamp_t     tick;
         SmpRegs         regs;
         SpcBus*         bus;
         bool            stopped;

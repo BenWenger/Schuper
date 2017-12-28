@@ -18,63 +18,35 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\src\emucore\apu\dsp.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\apu\simpledsp.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\apu\smptracer.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\apu\spc.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\temp\tempspc.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\include\emucore\schuper.h" />
-    <ClInclude Include="..\..\..\include\emucore\snesfile.h" />
-    <ClInclude Include="..\..\..\include\emucore\tempspc.h" />
-    <ClInclude Include="..\..\..\include\emucore\snestypes.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\dsp.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\simpledsp.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\smp.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\smpregs.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\smptracer.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\smp_addrmodes.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\smp_instructions.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\spc.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\spcbus.h" />
-    <ClInclude Include="..\..\..\src\emucore\apu\spctimer.h" />
-    <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />
-    <ClInclude Include="..\..\..\src\emucore\util\clockedsubsystem.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{D13CC37D-55A4-42DF-878B-165A074FB161}</ProjectGuid>
-    <RootNamespace>emucore</RootNamespace>
+    <ProjectGuid>{387C197A-652C-4490-96C7-A1630E8EF8FB}</ProjectGuid>
+    <RootNamespace>spcplayer</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140_xp</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -97,32 +69,42 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)..\..\src\emucore;$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\..\bin\emucore\$(Configuration)_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)..\..\src\emucore;$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\..\bin\emucore\$(Configuration)_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)..\..\src\emucore;$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\..\bin\emucore\$(Configuration)_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)..\..\src\emucore;$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)..\..\include\emucore;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\..\bin\emucore\$(Configuration)_$(Platform)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>emucore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>emucore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -131,11 +113,12 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>emucore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,13 +128,17 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>emucore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\spcplayer\main.cpp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

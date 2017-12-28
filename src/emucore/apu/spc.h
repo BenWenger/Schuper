@@ -5,6 +5,9 @@
 #include "spcbus.h"
 #include "smp.h"
 #include "smptracer.h"
+#include "spctimer.h"
+#include "dsp.h"
+#include <memory>
 
 namespace sch
 {
@@ -16,14 +19,34 @@ namespace sch
                     Spc();
         void        loadSpcFile(const SnesFile& file);
         void        setTrace(const char* filename);
-        void        runForCycs(timestamp_t cycs);           // TODO this is temporary
+
+        void        runTo(timestamp_t runto);
+        void        runToFillAudio();
+        
+        void        setClockBase(timestamp_t base);
+        timestamp_t getClockBase() const;
+        void        adjustTimestamp(timestamp_t adj);
+        void        forciblySetTimestamp(timestamp_t ts);
+        timestamp_t getTick() const;
+
+        void        setAudioBuffer(AudioBuffer* buf)        { dsp->setAudioBuffer(buf);         }
 
 
     private:
+        typedef     std::unique_ptr<Dsp>    DspPtr;
+
         Smp         cpu;
         SmpTracer   tracer;
+        SpcTimer    timers[3];
         SpcBus      bus;
+        DspPtr      dsp;
         u8          ram[0x10000];
+        u8          fauxRam[2];
+        u8          dspAddr;
+        
+        u8          spcIO_Input[4];
+        u8          spcIO_Output[4];
+
         bool        useIplBootRom;
         bool        traceEnabled;
         

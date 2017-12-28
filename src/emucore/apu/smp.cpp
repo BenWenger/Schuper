@@ -6,21 +6,19 @@
 
 namespace sch
 {
-    inline u8   Smp::read(u16 a)        { return bus->read( a, tick += clockBase ); }
+    inline u8   Smp::read(u16 a)        { return bus->read( a, cyc() );             }
     inline u8   Smp::dpRd(u8 a)         { return read( regs.DP | a );               }
     inline u8   Smp::pull()             { return read( 0x0100 | ++regs.SP );        }
 
-    inline void Smp::write(u16 a, u8 v) { bus->write( a, v, tick += clockBase );    }
+    inline void Smp::write(u16 a, u8 v) { bus->write( a, v, cyc() );                }
     inline void Smp::dpWr(u8 a, u8 v)   { write( regs.DP | a, v );                  }
     inline void Smp::push(u8 v)         { write( 0x0100 | regs.SP--, v );           }
     
-    inline void Smp::ioCyc()            { tick += clockBase;                        }
-    inline void Smp::ioCyc(int cycs)    { tick += clockBase * cycs;                 }
+    inline void Smp::ioCyc()            { cyc();                                    }
+    inline void Smp::ioCyc(int cycs)    { cyc(cycs);                                }
     
     Smp::Smp()
     {
-        clockBase =         1;
-        tick =              0;
         regs.clear();
         bus = nullptr;
         stopped = true;
@@ -29,8 +27,7 @@ namespace sch
 
     void Smp::resetWithFile(SpcBus* bs, const SnesFile& file)
     {
-        tick = 0;
-
+        // TODO reset timestamp?
         regs.PC     = file.smpRegs.PC;
         regs.A      = file.smpRegs.A;
         regs.X      = file.smpRegs.X;
@@ -42,16 +39,16 @@ namespace sch
         stopped =   false;
     }
 
-    void Smp::run(timestamp_t runto)
+    void Smp::runTo(timestamp_t runto)
     {
         if(stopped)
         {
-            tick = runto;
+            forciblySetTimestamp(runto);
             return;
         }
 
         u8 op;
-        while(tick < runto)
+        while(getTick() < runto)
         {
             if(tracer)
                 tracer->cpuTrace(regs, *bus);
@@ -385,7 +382,7 @@ namespace sch
             case 0xEF:
             case 0xFF:
                 stopped = true;
-                tick = runto;
+                forciblySetTimestamp(runto);
                 break;
             }
         }

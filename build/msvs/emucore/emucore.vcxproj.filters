@@ -16,6 +16,9 @@
     <Filter Include="src\temp">
       <UniqueIdentifier>{3e49168f-e309-40c4-b21a-41d0ed36ca7e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\util">
+      <UniqueIdentifier>{bdb480bd-8fa3-4096-8085-98b0eb48f4bc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -35,6 +38,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp">
       <Filter>src\snesfile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\apu\simpledsp.cpp">
+      <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\apu\dsp.cpp">
+      <Filter>src\apu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -70,6 +79,21 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\emucore\snestypes.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\spctimer.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\dsp.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\apu\simpledsp.h">
+      <Filter>src\apu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\util\clockedsubsystem.h">
+      <Filter>src\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h">
+      <Filter>src\util</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
