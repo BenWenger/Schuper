@@ -84,6 +84,8 @@ namespace sch
         ////////////////////
         //  Timestamp and syncing stuff
         u32             dspTick;
+
+        bool            silenceEcho;        // hack for SPC files, to prevent garbage in the echo buffer from playing
     };
 
 }

@@ -45,15 +45,10 @@ namespace sch
             if(flg & 0x40)
                 outputSample( 0, 0 );
             else
-            {/*
+            {
                 outputSample( clamp16(mainSamp[0] + echoSamp[0]),
                               clamp16(mainSamp[1] + echoSamp[1])
-                            );*/
-                
-                outputSample( mainSamp[0],
-                              mainSamp[1]
                             );
-                //outputSample( voices[2].out[0], voices[2].out[1] );
             }
 
             // update the global rate counter
@@ -75,7 +70,8 @@ namespace sch
 
         for(int i = 0; i < 2; ++i)
         {
-            firRing[i][firPos] = static_cast<s16>(echobuf[0] | (echobuf[1] << 8));
+            firRing[i][firPos] = static_cast<s16>(echobuf[0] | (echobuf[1] << 8)) >> 1;
+            if(silenceEcho)     firRing[i][firPos] = 0;
 
             firout =    (firRing[i][(firPos+7)&7] * firCoeff[6]) >> 6;
             firout +=   (firRing[i][(firPos+6)&7] * firCoeff[5]) >> 6;
@@ -93,18 +89,17 @@ namespace sch
             if(!(flg & 0x20))       // is echo writing permitted?
             {
                 int towrite = (firout * echoFeedback) >> 7;
-                towrite = clamp16( firout + samps[i] );
+                towrite = clamp16( towrite + samps[i] ) & ~1;
                 echobuf[0] = static_cast<u8>( towrite );
                 echobuf[1] = static_cast<u8>( towrite >> 8 );
             }
 
             samps[i] = static_cast<s16>( (firout * evol[i]) >> 7 );
-
             echobuf += 2;
         }
 
         // Update echo ring buffer position & FIR filter position
-        if(echoBufferPos >= echoBufferSize)     echoBufferPos  = 0;
+        if(echoBufferPos >= echoBufferSize) {   echoBufferPos  = 0;         silenceEcho = false;        }
         else                                    echoBufferPos += 4;
         firPos = (firPos+1) & 7;
     }
@@ -422,5 +417,6 @@ namespace sch
         }
 
         kon = 0;
+        silenceEcho = true;
     }
 }
