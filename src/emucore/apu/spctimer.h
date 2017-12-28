@@ -36,7 +36,10 @@ namespace sch
             {
                 ++counter;
                 if(counter == target)
+                {
+                    counter = 0;
                     ++output;
+                }
             }
         }
 

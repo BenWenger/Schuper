@@ -14,6 +14,9 @@ namespace sch
     class SimpleDsp : public Dsp
     {
     public:
+        virtual void        reset() override;
+        virtual void        loadFromSpcFile(const u8* regs) override;
+
         virtual u8          read(u8 a) override;
         virtual void        write(u8 a, u8 v) override;
         virtual void        runFor(timestamp_t ticks) override;

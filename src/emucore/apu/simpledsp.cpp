@@ -2,6 +2,14 @@
 #include "simpledsp.h"
 #include "spctimer.h"
 
+//#define DUMP
+
+#ifdef DUMP
+#include <cstdio>
+
+FILE* dumper = fopen("schuper_dump.txt", "wt");
+#endif
+
 namespace sch
 {
     
@@ -10,8 +18,8 @@ namespace sch
         for(int i = 0; (i < count) && canOutputAudio(); ++i)
         {
             // Update and mix all voices
-            s16 mainSamp[2];
-            s16 echoSamp[2];
+            s16 mainSamp[2] = {0,0};
+            s16 echoSamp[2] = {0,0};
             for(int vc = 0; vc < 8; ++vc)
             {
                 updateVoice(vc);
@@ -37,10 +45,15 @@ namespace sch
             if(flg & 0x40)
                 outputSample( 0, 0 );
             else
-            {
+            {/*
                 outputSample( clamp16(mainSamp[0] + echoSamp[0]),
                               clamp16(mainSamp[1] + echoSamp[1])
+                            );*/
+                
+                outputSample( mainSamp[0],
+                              mainSamp[1]
                             );
+                //outputSample( voices[2].out[0], voices[2].out[1] );
             }
 
             // update the global rate counter
@@ -254,6 +267,10 @@ namespace sch
     
     void SimpleDsp::write(u8 a, u8 v)
     {
+#ifdef DUMP
+        if((a < 8) || ((a == 0x4C) && (v&1)) || ((a == 0x4D) && (v&1)))
+            fprintf(dumper, "%08X - %02X : %02X\n", dspTick, a, v);
+#endif
         rawRegs[a] = v;
         if((a & 0x0F) < 0x08)           // voice specific regs
         {
@@ -322,6 +339,8 @@ namespace sch
         }
         if(samps > 0)
             doSamples( static_cast<int>(samps) );
+
+        dspTick = newtick;
     }
 
     
@@ -337,5 +356,71 @@ namespace sch
         }
         else
             return getTick();
+    }
+
+    void SimpleDsp::reset()
+    {
+        internalReset();
+        
+        mvol[0] = mvol[1] = 0;
+        evol[0] = evol[1] = 0;
+        flg = 0;
+        endx = 0;
+        echoFeedback = 0;
+        pmon = 0;
+        non = 0;
+        eon = 0;
+        brrTableAddr = 0;
+        echoBufferAddr = 0;
+        echoBufferSize = 0;
+        echoBufferPos = 0;
+
+        kon = 0;
+        koff = 0;
+        for(int i = 0; i < 8; ++i)
+        {
+            firCoeff[i] = 0;
+            firRing[0][i] = 0;
+            firRing[1][i] = 0;
+        }
+        firPos = 0;
+
+        for(auto& x : rawRegs)
+            x = 0;
+
+        dspTick = 0;
+
+        for(auto& vc : voices)
+        {
+            vc.vol[0] = vc.vol[1] = 0;
+            vc.pitch = 0;
+            vc.srcn = 0;
+            vc.adsr1Reg = vc.adsr2Reg = vc.gainReg = 0;
+
+            vc.konDelay = 0;
+            vc.adsr = Adsr::Off;
+            vc.envelope = 0;
+            vc.outSample = 0;
+            vc.out[0] = vc.out[1] = 0;
+
+            vc.phase = 0;
+            vc.brrWritePos = 0;
+            vc.brrReadPos = 0;
+            for(auto& x : vc.brr) x = 0;
+            vc.brrSrcPointer = 0;
+            vc.brrSrcPos = 1;
+        }
+    }
+    
+    void SimpleDsp::loadFromSpcFile(const u8* regs)
+    {
+        reset();
+
+        for(u8 i = 0; i < 0x80; ++i)
+        {
+            write(i, regs[i]);
+        }
+
+        kon = 0;
     }
 }

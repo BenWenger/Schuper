@@ -17,7 +17,7 @@ int WINAPI WinMain(HINSTANCE prev, HINSTANCE inst, LPSTR cmd, int show)
     if(!GetOpenFileNameA(&ofn))
         return 1;
 
-    if(!sch::doSpcTrace(path, "schuper_trace.txt", 6000))
+    if(!sch::doSpcTrace(path, "schuper_trace.txt", 600000))
         return 1;
 
     return 0;

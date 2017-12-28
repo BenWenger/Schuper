@@ -168,10 +168,17 @@ namespace sch
         if(file.type != SnesFile::Type::Spc)            return;
         if(file.memory.size() != 0x10000)               return;
 
-
-
         memcpy( ram, file.memory.data(), 0x10000 );
         cpu.resetWithFile( &bus, file );
+        dsp->loadFromSpcFile( file.dspRegs );
+
+        
+        wrFunc_Page0(r_CONTROL, ram[r_CONTROL], 0);
+        wrFunc_Page0(r_DSPADDR, ram[r_DSPADDR], 0);
+        
+        wrFunc_Page0(r_T0TARGET, ram[r_T0TARGET], 0);
+        wrFunc_Page0(r_T1TARGET, ram[r_T1TARGET], 0);
+        wrFunc_Page0(r_T2TARGET, ram[r_T2TARGET], 0);
     }
 
     void Spc::setTrace(const char* filename)
@@ -193,7 +200,7 @@ namespace sch
     void Spc::setClockBase(timestamp_t base)
     {
         dsp->setClockBase(base);
-        cpu.setClockBase(base * 2);
+        cpu.setClockBase(base);
     }
 
     timestamp_t Spc::getClockBase() const

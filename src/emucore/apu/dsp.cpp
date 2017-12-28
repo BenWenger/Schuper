@@ -137,7 +137,7 @@ namespace sch
 
     void Dsp::processBrr(u8 hdr, s16 block, s16* prevsamples, s16* nextsamples)
     {
-        int shift = 13 - (hdr >> 4);
+        int shift = 13 - ((hdr >> 4) & 0x0F);
         int filter = (hdr >> 2) & 3;
 
         s16 s[8];
@@ -146,29 +146,33 @@ namespace sch
 
         for(int i = 4; i < 8; ++i)
         {
-            s16 d = (shift <= 0) ? ( (block < 0) ? 0xF800 : 0 ) : (block >> shift);
+            s16 d = (shift <= 0) ? ( (block < 0) ? 0xF800 : 0 ) : (static_cast<s16>(block & 0xF000) >> shift);
             block <<= 4;
+
+            int out;
 
             switch(filter)
             {
             case 0:
-                s[i] = d;
+                out = d;
                 break;
 
             case 1:
-                s[i] = d + s[i-1] + ((-s[i-1])>>4);
+                out = d + s[i-1] + ((-s[i-1])>>4);
                 break;
                 
             case 2:
-                s[i] = d + (s[i-1]<<1) + ((-((s[i-1]<<1)+s[i-1]))>>5)
+                out = d + (s[i-1]<<1) + ((-((s[i-1]<<1)+s[i-1]))>>5)
                                     - s[i-2] + (s[i-2]>>4);
                 break;
                 
             case 3:
-                s[i] = d + (s[i-1]<<1) + ((-(s[i-1]+(s[i-1]<<2)+(s[i-1]<<3)))>>6)
+                out = d + (s[i-1]<<1) + ((-(s[i-1]+(s[i-1]<<2)+(s[i-1]<<3)))>>6)
                                     - s[i-2] + (((s[i-2]<<1) + s[i-2])>>4);
                 break;
             }
+
+            s[i] = wrap15( clamp16(out) );
         }
 
         for(int i = 0; i < 4; ++i)

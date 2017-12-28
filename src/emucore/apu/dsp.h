@@ -14,6 +14,9 @@ namespace sch
     {
     public:
         virtual ~Dsp()      {}
+        
+        virtual void        reset() = 0;
+        virtual void        loadFromSpcFile(const u8* regs) = 0;
 
         virtual u8          read(u8 a) = 0;
         virtual void        write(u8 a, u8 v) = 0;
