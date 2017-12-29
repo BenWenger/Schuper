@@ -107,6 +107,10 @@ namespace sch
         int bitflg = (1<<index);
 
         // Key on / Key Off
+        if((koff & bitflg) && (vc.konDelay < 3))        // konDelay here is a bit of a hack
+        {
+            vc.adsr = Adsr::Release;
+        }
         if(kon & bitflg)
         {
             vc.adsr = Adsr::Attack;
@@ -114,10 +118,6 @@ namespace sch
             vc.konDelay = 5;
             kon &= ~bitflg;
             endx &= ~bitflg;
-        }
-        if(koff & bitflg)
-        {
-            vc.adsr = Adsr::Release;
         }
         if(flg & 0x80)
         {
