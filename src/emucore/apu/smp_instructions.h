@@ -384,8 +384,8 @@ void op_PCALL()         // 6 cycles
     u8 addr = read(regs.PC++);
     push( static_cast<u8>( regs.PC >> 8 ) );
     push( static_cast<u8>( regs.PC      ) );
-    regs.PC = read(0xFF00 | addr++);
-    regs.PC |= read(0xFF00 | addr) << 8;
+    ioCyc(2);
+    regs.PC = 0xFF00 | addr;
 }
 
 void op_RET()           // 5 cycles
