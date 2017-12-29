@@ -91,8 +91,13 @@ namespace sch
         }
 
         // Update echo ring buffer position & FIR filter position
-        if(echoBufferPos >= echoBufferSize) {   echoBufferPos  = 0;         silenceEcho = false;        }
-        else                                    echoBufferPos += 4;
+        echoBufferPos += 4;
+        if(echoBufferPos >= echoBufferSize)
+        {
+            echoBufferPos  = 0;
+            silenceEcho = false;
+        }
+
         firPos = (firPos+1) & 7;
     }
 
@@ -389,7 +394,8 @@ namespace sch
             vc.phase = 0;
             vc.brrWritePos = 0;
             vc.brrReadPos = 0;
-            for(auto& x : vc.brr) x = 0;
+            for(auto& x : vc.brr)
+                x = 0;
             vc.brrSrcPointer = 0;
             vc.brrSrcPos = 1;
         }
@@ -404,7 +410,6 @@ namespace sch
             write(i, regs[i]);
         }
 
-        kon = 0;
         silenceEcho = true;
     }
 }

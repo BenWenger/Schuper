@@ -36,11 +36,11 @@ void ADDW(u16& src)
 {
     u16 ya = (regs.Y << 8) | regs.A;
 
-    regs.fH = ((ya & 0x0FFF) + (src & 0x0FFF) + !!regs.fC) & 0x1000; // Half-carry flag is still stupid
+    regs.fH = ((ya & 0x0FFF) + (src & 0x0FFF)) & 0x1000; // Half-carry flag is still stupid
 
-    int sum = ya + src + !!regs.fC;
+    int sum = ya + src;
     regs.fC = (sum > 0xFFFF);
-    regs.fV = (sum ^ ya) & (sum ^ src) & 0x80;
+    regs.fV = (sum ^ ya) & (sum ^ src) & 0x8000;
     regs.fNZ = regs.Y = static_cast<u8>(sum >> 8);
     regs.A = static_cast<u8>(sum);
 
@@ -121,7 +121,7 @@ void EOR(u8& dst, u8 src)
 
 void EOR1(u8& val, u8 bit)
 {
-    if(!regs.fC != !(val & bit))
+    if(val & bit)
         regs.fC = !regs.fC;
 }
 
@@ -211,19 +211,28 @@ template <u8 bit> void SET1(u8& v)
 
 void SUBW(u16& src)
 {
-    u16 v = (~src) + 1;
-    ADDW(v);
+    u16 ya = (regs.Y << 8) | regs.A;
+
+    regs.fH = ((ya & 0x0FFF) - (src & 0x0FFF)) >= 0; // Half-carry flag is still stupid
+
+    int sum = ya - src;
+    regs.fC = (sum >= 0);
+    regs.fV = (sum ^ ya) & (ya ^ src) & 0x8000;
+    regs.fNZ = regs.Y = static_cast<u8>(sum >> 8);
+    regs.A = static_cast<u8>(sum);
+
+    if(regs.A)      regs.fNZ |= 1;
 }
 
 void TCLR1(u8& val)
 {
-    regs.fNZ = (regs.A - val);
+    regs.fNZ = (regs.A - val) & 0xFF;
     val &= ~regs.A;
 }
 
 void TSET1(u8& val)
 {
-    regs.fNZ = (regs.A - val);
+    regs.fNZ = (regs.A - val) & 0xFF;
     val |= regs.A;
 }
     

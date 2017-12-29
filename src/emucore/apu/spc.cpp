@@ -179,6 +179,15 @@ namespace sch
         wrFunc_Page0(r_T0TARGET, ram[r_T0TARGET], 0);
         wrFunc_Page0(r_T1TARGET, ram[r_T1TARGET], 0);
         wrFunc_Page0(r_T2TARGET, ram[r_T2TARGET], 0);
+
+        for(int i = 0; i < 4; ++i)
+        {
+            spcIO_Output[i] = 0;
+        }
+        spcIO_Input[0] = ram[r_CPUIO_0];
+        spcIO_Input[1] = ram[r_CPUIO_1];
+        spcIO_Input[2] = ram[r_CPUIO_2];
+        spcIO_Input[3] = ram[r_CPUIO_3];
     }
 
     void Spc::setTrace(const char* filename)

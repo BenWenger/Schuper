@@ -345,7 +345,7 @@ namespace sch
             case 0x20:  regs.DP = 0;            ioCyc();    break;  // CLRP
             case 0xE0:  regs.fV = regs.fH = 0;  ioCyc();    break;  // CLRV
             case 0xC0:  regs.fI = 0;            ioCyc();    break;  // DI
-            case 0xA0:  regs.fI = 0;            ioCyc();    break;  // EI
+            case 0xA0:  regs.fI = 1;            ioCyc();    break;  // EI
             case 0xED:  regs.fC = !regs.fC;     ioCyc(2);   break;  // NOTC
             case 0x80:  regs.fC = 1;            ioCyc();    break;  // SETC
             case 0x40:  regs.DP = 0x0100;       ioCyc();    break;  // SETP

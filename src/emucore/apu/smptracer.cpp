@@ -94,6 +94,7 @@ const char* const op_names[0x100] = {
             a_ay,   // !a+Y
             a_mb,   // m.b
             a_nb,   // /m.b
+            a_ja,   // !a               (for JMP/CALL)
             a_jx,   // [!a+X]           (for JMP)
 
             mode_count
@@ -102,7 +103,7 @@ const char* const op_names[0x100] = {
         const int md_bytes[mode_count] = {
             0,0,0,0,0,0,0,0,0,0,0,0,
             1,1,1,1,1,1,1,1,1,1,
-            2,2,2,2,2,2
+            2,2,2,2,2,2,2
         };
 
 //  The left argument
@@ -111,9 +112,9 @@ const AddrArg md_left[0x100] = {
 /* 0x */  a_ip,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_ac,a_dp,a_cc,a_dp,  a_ac,a_sw,a_ab,a_ip,  /* 0x */
 /* 1x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_dw,a_dx,  a_ac,a_xx,a_xx,a_jx,  /* 1x */
 /* 2x */  a_ip,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_ac,a_dp,a_cc,a_dp,  a_ab,a_ac,a_dp,a_rl,  /* 2x */
-/* 3x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_dw,a_dx,  a_ac,a_xx,a_xx,a_ab,  /* 3x */
+/* 3x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_dw,a_dx,  a_ac,a_xx,a_xx,a_ja,  /* 3x */
 /* 4x */  a_ip,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_ac,a_dp,a_cc,a_dp,  a_ab,a_xx,a_ab,a_pc,  /* 4x */
-/* 5x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_ya,a_dx,  a_ac,a_xx,a_yy,a_ab,  /* 5x */
+/* 5x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_ya,a_dx,  a_ac,a_xx,a_yy,a_ja,  /* 5x */
 /* 6x */  a_ip,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_ac,a_dp,a_cc,a_dp,  a_ab,a_yy,a_dp,a_ip,  /* 6x */
 /* 7x */  a_rl,a_tc,a_bt,a_bt,  a_ac,a_ac,a_ac,a_ac,     a_dp,a_xi,a_ya,a_dx,  a_ac,a_ac,a_yy,a_ip,  /* 7x */
 /*         x0   x1   x2   x3     x4   x5   x6   x7        x8   x9   xA   xB     xC   xD   xE   xF          */
@@ -141,7 +142,7 @@ const AddrArg md_right[0x100] = {
 /* 7x */  a_ip,a_ip,a_ip,a_rl,  a_dx,a_ax,a_ay,a_iy,     a_im,a_yi,a_dw,a_ip,  a_ip,a_xx,a_dp,a_ip,  /* 7x */
 /*         x0   x1   x2   x3     x4   x5   x6   x7        x8   x9   xA   xB     xC   xD   xE   xF          */
 /* 8x */  a_ip,a_ip,a_ip,a_rl,  a_dp,a_ab,a_xi,a_ix,     a_im,a_dp,a_mb,a_ip,  a_ip,a_im,a_ip,a_im,  /* 8x */
-/* 9x */  a_ip,a_ip,a_ip,a_rl,  a_dx,a_ax,a_ay,a_iy,     a_im,a_yi,a_dp,a_ip,  a_ip,a_sp,a_xx,a_ip,  /* 9x */
+/* 9x */  a_ip,a_ip,a_ip,a_rl,  a_dx,a_ax,a_ay,a_iy,     a_im,a_yi,a_dw,a_ip,  a_ip,a_sp,a_xx,a_ip,  /* 9x */
 /* Ax */  a_ip,a_ip,a_ip,a_rl,  a_dp,a_ab,a_xi,a_ix,     a_im,a_dp,a_mb,a_ip,  a_ip,a_im,a_ip,a_ac,  /* Ax */
 /* Bx */  a_ip,a_ip,a_ip,a_rl,  a_dx,a_ax,a_ay,a_iy,     a_im,a_yi,a_dw,a_ip,  a_ip,a_xx,a_ip,a_xp,  /* Bx */
 /* Cx */  a_ip,a_ip,a_ip,a_rl,  a_ac,a_ac,a_ac,a_ac,     a_im,a_xx,a_cc,a_yy,  a_yy,a_im,a_ip,a_ip,  /* Cx */
@@ -220,12 +221,12 @@ const AddrArg md_right[0x100] = {
                         targetaddr = regs.DP | static_cast<u8>(val + regs.Y);
                         targetsize = 1;
                         break;
-            case a_ix:  sprintf(buffer, "[$%02X+X]", val );
+            case a_ix:  sprintf(buffer, "($%02X+X)", val );
                         targetaddr = regs.DP | static_cast<u8>(val + regs.X);
                         targetaddr = bus.peek(targetaddr) | (bus.peek(targetaddr+1) << 8);
                         targetsize = 1;
                         break;
-            case a_iy:  sprintf(buffer, "[$%02X]+Y", val );
+            case a_iy:  sprintf(buffer, "($%02X)+Y", val );
                         targetaddr = regs.DP | static_cast<u8>(val);
                         targetaddr = bus.peek(targetaddr) | (bus.peek(targetaddr+1) << 8);
                         targetaddr += regs.Y;
@@ -250,14 +251,18 @@ const AddrArg md_right[0x100] = {
                         targetsize = 1;
                         break;
             case a_mb:  sprintf(buffer, "$%04X.%d", (val & 0x1FFF), (val >> 13));
-                        targetaddr = val + regs.Y;
+                        targetaddr = val;
                         targetsize = 1;
                         break;
             case a_nb:  sprintf(buffer, "/$%04X.%d", (val & 0x1FFF), (val >> 13));
-                        targetaddr = val + regs.Y;
+                        targetaddr = val;
                         targetsize = 1;
                         break;
-            case a_jx:  sprintf(buffer, "[$%04X+X]", val);
+            case a_ja:  sprintf(buffer, "$%04X", val);
+                        targetaddr = val;
+                        targetsize = 0;
+                        break;
+            case a_jx:  sprintf(buffer, "($%04X+X)", val);
                         targetaddr = val + regs.X;
                         targetsize = 2;
                         break;
@@ -293,11 +298,15 @@ const AddrArg md_right[0x100] = {
         u16 lval = getValFromOpBytes( lmode, opbytes + 1 + md_bytes[rmode] );
 
         // unless the r value is relative, in which case it's second
-        if(rmode == a_rl)           std::swap(lval, rval);
+        if(rmode == a_rl && md_bytes[lmode])
+            std::swap(lval, rval);
 
         int bytes_to_print = 1 + md_bytes[lmode] + md_bytes[rmode];
 
         //////////////////////////
+        //  Print the PC
+        fprintf( traceFile, "%04X:  ", regs.PC );
+
         //  Print the op bytes
         switch(bytes_to_print)
         {
@@ -306,13 +315,13 @@ const AddrArg md_right[0x100] = {
         default:    fprintf( traceFile, "%02X      ",     opbytes[0]                         );     break;
         }
 
-        // the PC and instruction mnemonic
-        fprintf( traceFile, "   %04X:  %s  ", regs.PC, op_names[opbytes[0]] );
+        // instruction mnemonic
+        fprintf( traceFile, "     %s  ", op_names[opbytes[0]] );
 
         // the left/right arguments
         char buffer[80] = "";
         u16 targetaddr = 0;
-        int targetbytes = 0;
+        int targetbytes = -1;
         u16 newpc = regs.PC + bytes_to_print;
         
         doParam( buffer,                  newpc, regs, bus, opbytes[0], lval, lmode, targetaddr, targetbytes, false );
@@ -328,8 +337,9 @@ const AddrArg md_right[0x100] = {
         // print the target address
         switch(targetbytes)
         {
-        case 2:     fprintf( traceFile, "{%04X=%02X%02X}", targetaddr, bus.peek(targetaddr+1), bus.peek(targetaddr) );  break;
-        case 1:     fprintf( traceFile, "  {%04X=%02X}", targetaddr, bus.peek(targetaddr) );                            break;
+        case 2:     fprintf( traceFile, "[%04X=%02X%02X]", targetaddr, bus.peek(targetaddr+1), bus.peek(targetaddr) );  break;
+        case 1:     fprintf( traceFile, "  [%04X=%02X]", targetaddr, bus.peek(targetaddr) );                            break;
+        case 0:     fprintf( traceFile, "     [%04X]", targetaddr );                                                    break;
         default:    fprintf( traceFile, "           " );                                                                break;
         }
 
