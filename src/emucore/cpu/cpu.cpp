@@ -49,6 +49,20 @@ namespace sch
             case 0x2B:  regs.DP  = ad_pull(false);                  break;  /* PLD  */
             case 0xAB:  regs.DBR = ad_pull(true) << 16;             break;  /* PLB  */
 
+                /* Reg Xfer     */
+            case 0xAA:  TAX();              ioCyc();                break;  /* TAX  */
+            case 0xA8:  TAY();              ioCyc();                break;  /* TAY  */
+            case 0x5B:  TCD();              ioCyc();                break;  /* TCD  */
+            case 0x1B:  TCS();              ioCyc();                break;  /* TCS  */
+            case 0x7B:  TDC();              ioCyc();                break;  /* TDC  */
+            case 0x3B:  TSC();              ioCyc();                break;  /* TSC  */
+            case 0xBA:  TSX();              ioCyc();                break;  /* TSX  */
+            case 0x8A:  TXA();              ioCyc();                break;  /* TXA  */
+            case 0x9A:  TXS();              ioCyc();                break;  /* TXS  */
+            case 0x9B:  TXY();              ioCyc();                break;  /* TXY  */
+            case 0x98:  TYA();              ioCyc();                break;  /* TYA  */
+            case 0xBB:  TYX();              ioCyc();                break;  /* TYX  */
+
                 /* One-off garbage  */
             case 0x00:  u_BRK();                                    break;  /* BRK  */
             case 0x82:  u_BRL();                                    break;  /* BRL  */
@@ -68,11 +82,15 @@ namespace sch
             case 0xD4:  u_PEI();                                    break;  /* PEI  */
             case 0x62:  u_PER();                                    break;  /* PER  */
             case 0xC2:  u_REP();                                    break;  /* REP  */
-            case 0x40:  u_RTI();                                    break;  /* RTI  */
+            case 0x40:  u_RTI();                                    break;  /* RTI  */      // TODO repredict IRQ
             case 0x6B:  u_RTL();                                    break;  /* RTL  */
             case 0x60:  u_RTS();                                    break;  /* RTS  */
             case 0xE2:  u_SEP();                                    break;  /* SEP  */
             case 0xDB:  u_STP();                                    break;  /* STP  */
+            case 0xCB:  u_WAI();                                    break;  /* WAI  */
+            case 0x42:  ioCyc();                                    break;  /* WDP  */
+            case 0xEB:  u_XBA();                                    break;  /* XBA  */
+            case 0xFB:  u_XCE();                                    break;  /* XCE  */
 
                 /* ADC  */
             case 0x61:  ADC( ad_rd_ix (regs.fM) );                  break;
@@ -302,29 +320,13 @@ namespace sch
             case 0x9C:  ad_wr_ab ( 0, regs.fM );                    break;
             case 0x9E:  ad_wr_ax ( 0, regs.fM );                    break;
 
-                // TODO TAX is next
-
-
-                ////////////////////////////////////////////////////////////////////////////
-
-                                                    case 0x04:                                                                      case 0x0C:
-                                                    case 0x14:                                                            case 0x1B:case 0x1C:
-                                                                                                                                                                    
-                                                                                                                          case 0x3B:                                
-                                case 0x42:                                                                                          
-                                                                                                                          case 0x5B:
-                                                                                                                                                    
-                                                                                                                          case 0x7B:                                
-                                                                                                                case 0x8A:        
-                                                                                            case 0x98:          case 0x9A:case 0x9B:
-                                                                                            case 0xA8:          case 0xAA:          
-                                                                                                                case 0xBA:case 0xBB:
-                                                                                                                          case 0xCB:
-                                                                                                                                                
-                                                                                                                          case 0xEB:                                        
-                                                                                                                          case 0xFB:
-                // TODO all of these
-                break;
+                /* TRB  */
+            case 0x14:  ad_rw_dp ( &Cpu::TRB, regs.fM );            break;
+            case 0x1C:  ad_rw_ab ( &Cpu::TRB, regs.fM );            break;
+                
+                /* TSB  */
+            case 0x04:  ad_rw_dp ( &Cpu::TSB, regs.fM );            break;
+            case 0x0C:  ad_rw_ab ( &Cpu::TSB, regs.fM );            break;
             }
         }
     }

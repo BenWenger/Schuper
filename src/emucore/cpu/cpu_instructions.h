@@ -134,7 +134,7 @@ void BIT(u16 v, bool update_nv)
         if(update_nv)
         {
             regs.fN = v & 0x8000;
-            regs.fV = v & 0x4000;   // TODO - is this right?
+            regs.fV = v & 0x4000;
         }
         regs.fZ = regs.A16 & v;
     }
@@ -362,6 +362,128 @@ u16 STA()
     return regs.fM ? regs.A8 : regs.A16;
 }
 
+u16 TA_XY()
+{
+    u16 out;
+    if(regs.fX)
+    {
+        if(regs.fM)     out = regs.B8 | regs.A8;
+        else            out = regs.A16;
+        regs.fN = out & 0x8000;
+    }
+    else
+    {
+        if(regs.fM)     out = regs.A8;
+        else            out = regs.A16 & 0x00FF;
+        regs.fN = out & 0x80;
+    }
+    regs.fZ = out;
+    return out;
+}
+void    TAX()   { regs.X = TA_XY();     }
+void    TAY()   { regs.Y = TA_XY();     }
+
+u16 T_XY(u16 src)
+{
+    if(regs.fX)     regs.fN = src & 0x80;
+    else            regs.fN = src & 0x8000;
+    regs.fZ = src;
+    return src;
+}
+void    TXY()   { regs.Y = T_XY(regs.X);        }
+void    TYX()   { regs.X = T_XY(regs.Y);        }
+
+void T_XY_A(u16 src)
+{
+    if(regs.fM)
+    {
+        regs.fZ = regs.A8 = (src & 0xFF);
+        regs.fN = (src & 0x80);
+    }
+    else
+    {
+        regs.fZ = regs.A16 = src;
+        regs.fN = src & 0x8000;
+    }
+}
+void    TXA()   { T_XY_A( regs.X );     }
+void    TYA()   { T_XY_A( regs.Y );     }
+
+void    TXS()   { regs.SP = regs.X;     }
+void    TSX()
+{
+    if(regs.fX)
+    {
+        regs.X = regs.SP & 0x00FF;
+        regs.fN = regs.X & 0x80;
+    }
+    else
+    {
+        regs.X = regs.SP;
+        regs.fN = regs.X & 0x8000;
+    }
+    regs.fZ = regs.X;
+}
+
+void TCD()
+{
+    if(regs.fM)     regs.DP = regs.B8 | regs.A8;
+    else            regs.DP = regs.A16;
+    regs.fN = regs.DP & 0x8000;
+    regs.fZ = regs.DP;
+}
+
+void TDC()
+{
+    if(regs.fM)   { regs.A8 = regs.DP & 0xFF;       regs.B8 = regs.DP & 0xFF00; }
+    else            regs.A16 = regs.DP;
+    regs.fN = regs.DP & 0x8000;
+    regs.fZ = regs.DP;
+}
+
+void TCS()
+{
+    if(regs.fM)     regs.SP = regs.B8 | regs.A8;
+    else            regs.SP = regs.A16;
+}
+
+void TSC()
+{
+    if(regs.fM)   { regs.A8 = regs.SP & 0xFF;       regs.B8 = regs.SP & 0xFF00; }
+    else            regs.A16 = regs.SP;
+    regs.fN = regs.SP & 0x8000;
+    regs.fZ = regs.SP;
+}
+
+u16 TRB(u16 v, bool flg)
+{
+    if(flg)
+    {
+        regs.fZ = regs.A16 & v;
+        v &= ~regs.A16;
+    }
+    else
+    {
+        regs.fZ = regs.A8 & v;
+        v &= ~regs.A8;
+    }
+    return v;
+}
+
+u16 TSB(u16 v, bool flg)
+{
+    if(flg)
+    {
+        regs.fZ = regs.A16 & v;
+        v |= regs.A16;
+    }
+    else
+    {
+        regs.fZ = regs.A8 & v;
+        v |= regs.A8;
+    }
+    return v;
+}
 
 /////////////////////////////////////////////////////////
 //  "Full"
@@ -466,15 +588,18 @@ void u_JSR_IndirectX()      /* JSR ($aaaa,X)*/
     regs.PC |=      read_l(a) << 8;
 }
 
-void u_MVP()
+void u_MV_PN(int adj)
 {
-    //TODO
+    // MVP and MVN change DBR to match the destination bank
+    //  dest byte is first in binary        OP DS SR
+    //  dest byte is 2nd in disassembly     MVN src, dst
+    //  MVP subtracts from X,Y, MVN adds
+    //  both MVP/MVN subtract from A
+    //  A is 16 bits REGARDLESS of M flag!!!!
 }
 
-void u_MVN()
-{
-    //TODO
-}
+void u_MVP()    { u_MV_PN(-1);      }
+void u_MVN()    { u_MV_PN( 1);      }
 
 void u_PEA()
 {
@@ -517,7 +642,10 @@ void u_PLA()
 
 void u_REP()
 {
-    // TODO
+    u8 v =          read_p();
+    ioCyc();
+    
+    regs.setStatusByte( regs.getStatusByte(true) & ~v );
 }
 
 void u_RTI()
@@ -547,12 +675,57 @@ void u_RTL()
 
 void u_SEP()
 {
-    // TODO
+    u8 v =          read_p();
+    ioCyc();
+    
+    regs.setStatusByte( regs.getStatusByte(true) | v );
 }
 
 void u_STP()
 {
     // TODO
+}
+
+void u_WAI()
+{
+    // TODO
+}
+
+void u_XBA()
+{
+    ioCyc(2);
+    if(regs.fM)
+    {
+        u8 tmp = (regs.B8 >> 8);
+        regs.B8 = regs.A8 << 8;
+        regs.fZ = regs.A8 = tmp;
+        regs.fN = regs.A8 & 0x80;
+    }
+    else
+    {
+        regs.A16 = (regs.A16 << 8) | (regs.A16 >> 8);
+        regs.fZ = regs.A16 & 0xFF;
+        regs.fN = regs.A16 & 0x80;
+    }
+}
+
+void u_XCE()
+{
+    ioCyc();
+    if(!regs.fC != !regs.fE)        // they are changing!
+    {
+        if(!regs.fM)                // going to an 8-bit accumulator
+        {
+            regs.A8 = regs.A16 & 0x00FF;
+            regs.B8 = regs.A16 & 0xFF00;
+        }
+        regs.X &= 0x00FF;
+        regs.Y &= 0x00FF;
+        regs.fE = !regs.fE;
+        regs.fC = !regs.fC;
+        regs.fX = true;
+        regs.fM = true;
+    }
 }
 
         
