@@ -32,33 +32,33 @@ void ADC_decimal(u16 v)
     // This is so freaking gross
     if(regs.fM)
     {
-        int lo = (regs.A8 & 0x0F) + (v & 0x0F) + !!regs.fC;         if(lo > 0x09)   lo += 0x06;
-        int hi = (regs.A8 & 0xF0) + (v & 0xF0) + (lo & 0xF0);
+        int lo = (regs.A.l & 0x0F) + (v & 0x0F) + !!regs.fC;        if(lo > 0x09)   lo += 0x06;
+        int hi = (regs.A.l & 0xF0) + (v & 0xF0) + (lo & 0xF0);
 
-        regs.fZ = (regs.A8 + v + !!regs.fC) & 0xFF;
+        regs.fZ = (regs.A.l + v + !!regs.fC) & 0xFF;
         regs.fN = (hi & 0x80);
-        regs.fV = (hi ^ regs.A8) & (hi ^ v) & 0x80;
+        regs.fV = (hi ^ regs.A.l) & (hi ^ v) & 0x80;
 
         if(hi > 0x90)       hi += 0x60;     // yes, apparently this happens after setting above flags
 
         regs.fC = (hi > 0xFF);
-        regs.A8 = (hi & 0xF0) | (lo & 0x0F);
+        regs.A.l = (hi & 0xF0) | (lo & 0x0F);
     }
     else
     {
-        int a = (regs.A16 & 0x000F) + (v & 0x000F) + !!regs.fC;     if(a > 0x0009)  a += 0x0006;
-        int b = (regs.A16 & 0x00F0) + (v & 0x00F0) + (a & 0x00F0);  if(b > 0x0090)  b += 0x0060;
-        int c = (regs.A16 & 0x0F00) + (v & 0x0F00) + (b & 0x0F00);  if(c > 0x0900)  c += 0x0600;
-        int d = (regs.A16 & 0xF000) + (v & 0xF000) + (c & 0xF000);
+        int a = (regs.A.w & 0x000F) + (v & 0x000F) + !!regs.fC;     if(a > 0x0009)  a += 0x0006;
+        int b = (regs.A.w & 0x00F0) + (v & 0x00F0) + (a & 0x00F0);  if(b > 0x0090)  b += 0x0060;
+        int c = (regs.A.w & 0x0F00) + (v & 0x0F00) + (b & 0x0F00);  if(c > 0x0900)  c += 0x0600;
+        int d = (regs.A.w & 0xF000) + (v & 0xF000) + (c & 0xF000);
 
-        regs.fZ = (regs.A16 + v + !!regs.fC) & 0xFFFF;
+        regs.fZ = (regs.A.w + v + !!regs.fC) & 0xFFFF;
         regs.fN = (d & 0x8000);
-        regs.fV = (d ^ regs.A16) & (d ^ v) & 0x8000;
+        regs.fV = (d ^ regs.A.w) & (d ^ v) & 0x8000;
 
         if(d > 0x9000)      d += 0x6000;
 
         regs.fC = (d > 0xFFFF);
-        regs.A16 = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
+        regs.A.w = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
     }
 }
 
@@ -70,19 +70,19 @@ void ADC(u16 v)
     {
         if(regs.fM)
         {
-            int sum = regs.A8 + v + !!regs.fC;
-            regs.fV = (sum ^ regs.A8) & (sum ^ v) & 0x80;
+            int sum = regs.A.l + v + !!regs.fC;
+            regs.fV = (sum ^ regs.A.l) & (sum ^ v) & 0x80;
             regs.fC = (sum > 0xFF);
             regs.fN = (sum & 0x80);
-            regs.fZ = regs.A8 = (sum & 0xFF);
+            regs.fZ = regs.A.l = (sum & 0xFF);
         }
         else
         {
-            int sum = regs.A16 + v + !!regs.fC;
-            regs.fV = (sum ^ regs.A16) & (sum ^ v) & 0x8000;
+            int sum = regs.A.w + v + !!regs.fC;
+            regs.fV = (sum ^ regs.A.w) & (sum ^ v) & 0x8000;
             regs.fC = (sum > 0xFFFF);
             regs.fN = (sum & 0x8000);
-            regs.fZ = regs.A16 = (sum & 0xFFFF);
+            regs.fZ = regs.A.w = (sum & 0xFFFF);
         }
     }
 }
@@ -91,13 +91,13 @@ void AND(u16 v)
 {
     if(regs.fM)
     {
-        regs.fZ = regs.A8 &= v;
-        regs.fN = (regs.A8 & 0x80);
+        regs.fZ = regs.A.l &= v;
+        regs.fN = (regs.A.l & 0x80);
     }
     else
     {
-        regs.fZ = regs.A16 &= v;
-        regs.fN = (regs.A16 & 0x8000);
+        regs.fZ = regs.A.w &= v;
+        regs.fN = (regs.A.w & 0x8000);
     }
 }
 
@@ -127,7 +127,7 @@ void BIT(u16 v, bool update_nv)
             regs.fN = v & 0x80;
             regs.fV = v & 0x40;
         }
-        regs.fZ = regs.A8 & v;
+        regs.fZ = regs.A.l & v;
     }
     else
     {
@@ -136,7 +136,7 @@ void BIT(u16 v, bool update_nv)
             regs.fN = v & 0x8000;
             regs.fV = v & 0x4000;
         }
-        regs.fZ = regs.A16 & v;
+        regs.fZ = regs.A.w & v;
     }
 }
 
@@ -144,15 +144,15 @@ void CMP(u16 v)
 {
     if(regs.fM)
     {
-        regs.fC = (regs.A8 >= v);
-        int dif = regs.A8 - v;
+        regs.fC = (regs.A.l >= v);
+        int dif = regs.A.l - v;
         regs.fZ = dif;
         regs.fN = dif & 0x80;
     }
     else
     {
-        regs.fC = (regs.A16 >= v);
-        int dif = regs.A16 - v;
+        regs.fC = (regs.A.w >= v);
+        int dif = regs.A.w - v;
         regs.fZ = dif;
         regs.fN = dif & 0x8000;
     }
@@ -167,8 +167,8 @@ void CMP_XY(u16 reg, u16 v)
     if(regs.fX)     regs.fN = (dif & 0x80);
     else            regs.fN = (dif & 0x8000);
 }
-void CPX(u16 v) { CMP_XY(regs.X, v);        }
-void CPY(u16 v) { CMP_XY(regs.Y, v);        }
+void CPX(u16 v) { CMP_XY(regs.X.w, v);        }
+void CPY(u16 v) { CMP_XY(regs.Y.w, v);        }
 
 u16 DEC(u16 v, bool flg)
 {
@@ -189,13 +189,13 @@ void EOR(u16 v)
 {
     if(regs.fM)
     {
-        regs.fZ = regs.A8 ^= v;
-        regs.fN = (regs.A8 & 0x80);
+        regs.fZ = regs.A.l ^= v;
+        regs.fN = (regs.A.l & 0x80);
     }
     else
     {
-        regs.fZ = regs.A16 ^= v;
-        regs.fN = (regs.A16 & 0x8000);
+        regs.fZ = regs.A.w ^= v;
+        regs.fN = (regs.A.w & 0x8000);
     }
 }
 
@@ -218,13 +218,13 @@ void LDA(u16 v)
 {
     if(regs.fM)
     {
-        regs.fZ = regs.A8 = v & 0xFF;
-        regs.fN = (regs.A8 & 0x80);
+        regs.fZ = regs.A.l = v & 0xFF;
+        regs.fN = (regs.A.l & 0x80);
     }
     else
     {
-        regs.fZ = regs.A16 = v;
-        regs.fN = (regs.A16 & 0x8000);
+        regs.fZ = regs.A.w = v;
+        regs.fN = (regs.A.w & 0x8000);
     }
 }
 
@@ -234,8 +234,8 @@ void LD_XY(u16& reg, u16 v)
     if(regs.fX)     regs.fN = v & 0x80;
     else            regs.fN = v & 0x8000;
 }
-void LDX(u16 v) { LD_XY(regs.X, v); }
-void LDY(u16 v) { LD_XY(regs.Y, v); }
+void LDX(u16 v) { LD_XY(regs.X.w, v);   }
+void LDY(u16 v) { LD_XY(regs.Y.w, v);   }
 
 u16 LSR(u16 v, bool flg)
 {
@@ -251,13 +251,13 @@ void ORA(u16 v)
 {
     if(regs.fM)
     {
-        regs.fZ = regs.A8 |= v;
-        regs.fN = (regs.A8 & 0x80);
+        regs.fZ = regs.A.l |= v;
+        regs.fN = (regs.A.l & 0x80);
     }
     else
     {
-        regs.fZ = regs.A16 |= v;
-        regs.fN = (regs.A16 & 0x8000);
+        regs.fZ = regs.A.w |= v;
+        regs.fN = (regs.A.w & 0x8000);
     }
 }
 
@@ -294,27 +294,27 @@ void SBC_decimal(u16 v)
 {
     if(regs.fM)
     {
-        int lo = (regs.A8 & 0x0F) - (v & 0x0F) - !regs.fC;
-        int hi = (regs.A8 & 0xF0) - (v & 0xF0);
+        int lo = (regs.A.l & 0x0F) - (v & 0x0F) - !regs.fC;
+        int hi = (regs.A.l & 0xF0) - (v & 0xF0);
 
         if(lo < 0)      {   lo -= 0x06;     hi -= 0x10;     }
         if(hi < 0)      {   hi -= 0x06;                     }
 
         // Flags don't care about decimal mode?
-        int dif = regs.A8 - v - !regs.fC;
+        int dif = regs.A.l - v - !regs.fC;
         regs.fC = (dif >= 0);
         regs.fZ = (dif & 0xFF);
         regs.fN = (dif & 0x80);
-        regs.fV = (regs.A8 ^ dif) & (regs.A8 ^ v) & 0x80;
+        regs.fV = (regs.A.l ^ dif) & (regs.A.l ^ v) & 0x80;
 
-        regs.A8 = (hi & 0xF0) | (lo & 0x0F);
+        regs.A.l = (hi & 0xF0) | (lo & 0x0F);
     }
     else
     {
-        int a = (regs.A16 & 0x000F) - (v & 0x000F) - !regs.fC;
-        int b = (regs.A16 & 0x00F0) - (v & 0x00F0);
-        int c = (regs.A16 & 0x0F00) - (v & 0x0F00);
-        int d = (regs.A16 & 0xF000) - (v & 0xF000);
+        int a = (regs.A.w & 0x000F) - (v & 0x000F) - !regs.fC;
+        int b = (regs.A.w & 0x00F0) - (v & 0x00F0);
+        int c = (regs.A.w & 0x0F00) - (v & 0x0F00);
+        int d = (regs.A.w & 0xF000) - (v & 0xF000);
         
         if(a < 0)       {   a -= 0x0006;    b -= 0x0010;    }
         if(b < 0)       {   b -= 0x0060;    c -= 0x0100;    }
@@ -322,13 +322,13 @@ void SBC_decimal(u16 v)
         if(d < 0)       {   d -= 0x6000;                    }
 
         // Flags don't care about decimal mode?
-        int dif = regs.A16 - v - !regs.fC;
+        int dif = regs.A.w - v - !regs.fC;
         regs.fC = (dif >= 0);
         regs.fZ = (dif & 0xFFFF);
         regs.fN = (dif & 0x8000);
-        regs.fV = (regs.A16 ^ dif) & (regs.A16 ^ v) & 0x8000;
+        regs.fV = (regs.A.w ^ dif) & (regs.A.w ^ v) & 0x8000;
 
-        regs.A16 = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
+        regs.A.w = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
     }
 }
 
@@ -340,26 +340,26 @@ void SBC(u16 v)
     {
         if(regs.fM)
         {
-            int dif = regs.A8 - v - !regs.fC;
-            regs.fV = (regs.A8 ^ dif) & (regs.A8 ^ v) & 0x80;
+            int dif = regs.A.l - v - !regs.fC;
+            regs.fV = (regs.A.l ^ dif) & (regs.A.l ^ v) & 0x80;
             regs.fC = (dif >= 0);
             regs.fN = (dif & 0x80);
-            regs.fZ = regs.A8 = (dif & 0xFF);
+            regs.fZ = regs.A.l = (dif & 0xFF);
         }
         else
         {
-            int dif = regs.A16 - v - !regs.fC;
-            regs.fV = (regs.A16 ^ dif) & (regs.A16 ^ v) & 0x8000;
+            int dif = regs.A.w - v - !regs.fC;
+            regs.fV = (regs.A.w ^ dif) & (regs.A.w ^ v) & 0x8000;
             regs.fC = (dif >= 0);
             regs.fN = (dif & 0x8000);
-            regs.fZ = regs.A16 = (dif & 0xFFFF);
+            regs.fZ = regs.A.w = (dif & 0xFFFF);
         }
     }
 }
 
 u16 STA()
 {
-    return regs.fM ? regs.A8 : regs.A16;
+    return regs.fM ? regs.A.l : regs.A.w;
 }
 
 u16 TA_XY()
@@ -367,21 +367,19 @@ u16 TA_XY()
     u16 out;
     if(regs.fX)
     {
-        if(regs.fM)     out = regs.B8 | regs.A8;
-        else            out = regs.A16;
+        out = regs.A.w;
         regs.fN = out & 0x8000;
     }
     else
     {
-        if(regs.fM)     out = regs.A8;
-        else            out = regs.A16 & 0x00FF;
+        out = regs.A.l;
         regs.fN = out & 0x80;
     }
     regs.fZ = out;
     return out;
 }
-void    TAX()   { regs.X = TA_XY();     }
-void    TAY()   { regs.Y = TA_XY();     }
+void    TAX()   { regs.X.w = TA_XY();           }
+void    TAY()   { regs.Y.w = TA_XY();           }
 
 u16 T_XY(u16 src)
 {
@@ -390,82 +388,74 @@ u16 T_XY(u16 src)
     regs.fZ = src;
     return src;
 }
-void    TXY()   { regs.Y = T_XY(regs.X);        }
-void    TYX()   { regs.X = T_XY(regs.Y);        }
+void    TXY()   { regs.Y.w = T_XY(regs.X.w);    }
+void    TYX()   { regs.X.w = T_XY(regs.Y.w);    }
 
 void T_XY_A(u16 src)
 {
     if(regs.fM)
     {
-        regs.fZ = regs.A8 = (src & 0xFF);
+        regs.fZ = regs.A.l = (src & 0xFF);
         regs.fN = (src & 0x80);
     }
     else
     {
-        regs.fZ = regs.A16 = src;
+        regs.fZ = regs.A.w = src;
         regs.fN = src & 0x8000;
     }
 }
-void    TXA()   { T_XY_A( regs.X );     }
-void    TYA()   { T_XY_A( regs.Y );     }
+void    TXA()   { T_XY_A( regs.X.w );   }
+void    TYA()   { T_XY_A( regs.Y.w );   }
 
-void    TXS()   { regs.SP = regs.X;     }
+void    TXS()   { regs.SP = regs.X.w;   }
 void    TSX()
 {
+    regs.X.w = regs.SP;
     if(regs.fX)
     {
-        regs.X = regs.SP & 0x00FF;
-        regs.fN = regs.X & 0x80;
+        regs.X.h = 0;
+        regs.fN = regs.X.l & 0x80;
     }
     else
-    {
-        regs.X = regs.SP;
-        regs.fN = regs.X & 0x8000;
-    }
-    regs.fZ = regs.X;
+        regs.fN = regs.X.w & 0x8000;
+
+    regs.fZ = regs.X.w;
 }
 
 void TCD()
 {
-    if(regs.fM)     regs.DP = regs.B8 | regs.A8;
-    else            regs.DP = regs.A16;
+    regs.fZ = regs.DP = regs.A.w;
     regs.fN = regs.DP & 0x8000;
-    regs.fZ = regs.DP;
 }
 
 void TDC()
 {
-    if(regs.fM)   { regs.A8 = regs.DP & 0xFF;       regs.B8 = regs.DP & 0xFF00; }
-    else            regs.A16 = regs.DP;
+    regs.fZ = regs.A.w = regs.DP;
     regs.fN = regs.DP & 0x8000;
-    regs.fZ = regs.DP;
 }
 
 void TCS()
 {
-    if(regs.fM)     regs.SP = regs.B8 | regs.A8;
-    else            regs.SP = regs.A16;
+    regs.SP = regs.A.w;
 }
 
 void TSC()
 {
-    if(regs.fM)   { regs.A8 = regs.SP & 0xFF;       regs.B8 = regs.SP & 0xFF00; }
-    else            regs.A16 = regs.SP;
+    regs.fZ = regs.A.w = regs.SP;
     regs.fN = regs.SP & 0x8000;
-    regs.fZ = regs.SP;
 }
 
 u16 TRB(u16 v, bool flg)
 {
     if(flg)
     {
-        regs.fZ = regs.A16 & v;
-        v &= ~regs.A16;
+        regs.fZ = regs.A.w & v;
+        v &= ~regs.A.w;
     }
     else
     {
-        regs.fZ = regs.A8 & v;
-        v &= ~regs.A8;
+        regs.fZ = regs.A.l & v;
+        v &= ~regs.A.l;
     }
     return v;
 }
@@ -474,13 +464,13 @@ u16 TSB(u16 v, bool flg)
 {
     if(flg)
     {
-        regs.fZ = regs.A16 & v;
-        v |= regs.A16;
+        regs.fZ = regs.A.w & v;
+        v |= regs.A.w;
     }
     else
     {
-        regs.fZ = regs.A8 & v;
-        v |= regs.A8;
+        regs.fZ = regs.A.l & v;
+        v |= regs.A.l;
     }
     return v;
 }
@@ -543,7 +533,7 @@ void u_JMP_IndirectX()      /* JMP ($aaaa,X)*/
 {
     u16 a =         read_p();
     a |=            read_p() << 8;
-    a += regs.X;    ioCyc();
+    a += regs.X.w;  ioCyc();
     regs.PC =       read_l(a++);
     regs.PC |=      read_l(a) << 8;
 }
@@ -583,7 +573,7 @@ void u_JSR_IndirectX()      /* JSR ($aaaa,X)*/
                     push( regs.PC >> 8 );
                     push( regs.PC & 0xFF );     regs.PC = a;
     a |=            read_p() << 8;
-    a += regs.X;    ioCyc();
+    a += regs.X.w;  ioCyc();
     regs.PC =       read_l(a++);
     regs.PC |=      read_l(a) << 8;
 }
@@ -628,24 +618,29 @@ void u_PER()
                     push(a & 0xFF);
 }
 
-void u_PHA()
-{
-    if(regs.fM)     ad_push(regs.A8 , regs.fM);
-    else            ad_push(regs.A16, regs.fM);
-}
-
 void u_PLA()
 {
-    if(regs.fM)     regs.A8  = ad_pull(regs.fM) & 0xFF;
-    else            regs.A16 = ad_pull(regs.fM);
+    if(regs.fM)     regs.A.l = ad_pull(regs.fM) & 0xFF;
+    else            regs.A.w = ad_pull(regs.fM);
 }
 
 void u_REP()
 {
     u8 v =          read_p();
     ioCyc();
-    
-    regs.setStatusByte( regs.getStatusByte(true) & ~v );
+
+    if(v & CpuState::C_FLAG)            regs.fC = 0;
+    if(v & CpuState::Z_FLAG)            regs.fZ = 1;
+    if(v & CpuState::I_FLAG)            regs.fI = false;    // TODO - repredict IRQs
+    if(v & CpuState::D_FLAG)            regs.fD = false;
+    if(v & CpuState::V_FLAG)            regs.fV = 0;
+    if(v & CpuState::N_FLAG)            regs.fN = 0;
+
+    if(!regs.fE)
+    {
+        if(v & CpuState::X_FLAG)        regs.fX = false;
+        if(v & CpuState::M_FLAG)        regs.fM = false;
+    }
 }
 
 void u_RTI()
@@ -677,8 +672,19 @@ void u_SEP()
 {
     u8 v =          read_p();
     ioCyc();
-    
-    regs.setStatusByte( regs.getStatusByte(true) | v );
+
+    if(v & CpuState::C_FLAG)            regs.fC = 1;
+    if(v & CpuState::Z_FLAG)            regs.fZ = 0;
+    if(v & CpuState::I_FLAG)            regs.fI = true;     // TODO - repredict IRQs
+    if(v & CpuState::D_FLAG)            regs.fD = true;
+    if(v & CpuState::V_FLAG)            regs.fV = 1;
+    if(v & CpuState::N_FLAG)            regs.fN = 1;
+
+    if(!regs.fE)
+    {
+        if(v & CpuState::X_FLAG)    {   regs.fX = true;     regs.X.h = regs.Y.h = 0;    }
+        if(v & CpuState::M_FLAG)        regs.fM = true;
+    }
 }
 
 void u_STP()
@@ -694,19 +700,9 @@ void u_WAI()
 void u_XBA()
 {
     ioCyc(2);
-    if(regs.fM)
-    {
-        u8 tmp = (regs.B8 >> 8);
-        regs.B8 = regs.A8 << 8;
-        regs.fZ = regs.A8 = tmp;
-        regs.fN = regs.A8 & 0x80;
-    }
-    else
-    {
-        regs.A16 = (regs.A16 << 8) | (regs.A16 >> 8);
-        regs.fZ = regs.A16 & 0xFF;
-        regs.fN = regs.A16 & 0x80;
-    }
+    std::swap( regs.A.h, regs.A.l );
+    regs.fZ = regs.A.l;
+    regs.fN = regs.A.l & 0x80;
 }
 
 void u_XCE()
@@ -714,13 +710,7 @@ void u_XCE()
     ioCyc();
     if(!regs.fC != !regs.fE)        // they are changing!
     {
-        if(!regs.fM)                // going to an 8-bit accumulator
-        {
-            regs.A8 = regs.A16 & 0x00FF;
-            regs.B8 = regs.A16 & 0xFF00;
-        }
-        regs.X &= 0x00FF;
-        regs.Y &= 0x00FF;
+        regs.X.h = regs.Y.h = 0;
         regs.fE = !regs.fE;
         regs.fC = !regs.fC;
         regs.fX = true;

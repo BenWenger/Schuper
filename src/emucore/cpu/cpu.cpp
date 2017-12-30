@@ -34,17 +34,17 @@ namespace sch
             case 0x78:  regs.fI = 1;        ioCyc();                break;  /* SEI  */      // TODO - repredict IRQ
 
                 /* Stack ops        */
-            case 0x48:  u_PHA();                                    break;  /* PHA  */
-            case 0xDA:  ad_push(regs.X, regs.fX);                   break;  /* PHX  */
-            case 0x5A:  ad_push(regs.Y, regs.fX);                   break;  /* PHY  */
+            case 0x48:  ad_push(regs.A.w, regs.fM);                 break;  /* PHA  */
+            case 0xDA:  ad_push(regs.X.w, regs.fX);                 break;  /* PHX  */
+            case 0x5A:  ad_push(regs.Y.w, regs.fX);                 break;  /* PHY  */
             case 0x08:  ad_push(regs.getStatusByte(true), true);    break;  /* PHP  */
             case 0x0B:  ad_push(regs.DP, false);                    break;  /* PHD  */
             case 0x8B:  ad_push(regs.DBR >> 16, true);              break;  /* PHB  */
             case 0x4B:  ad_push(regs.PBR >> 16, true);              break;  /* PHK  */
 
             case 0x68:  u_PLA();                                    break;  /* PLA  */
-            case 0xFA:  regs.X = ad_pull(regs.fX);                  break;  /* PLX  */
-            case 0x7A:  regs.Y = ad_pull(regs.fX);                  break;  /* PLY  */
+            case 0xFA:  regs.X.w = ad_pull(regs.fX);                break;  /* PLX  */
+            case 0x7A:  regs.Y.w = ad_pull(regs.fX);                break;  /* PLY  */
             case 0x28:  regs.setStatusByte( ad_pull(true) & 0xFF ); break;  /* PLP  */      // TODO - repredict IRQ
             case 0x2B:  regs.DP  = ad_pull(false);                  break;  /* PLD  */
             case 0xAB:  regs.DBR = ad_pull(true) << 16;             break;  /* PLB  */
@@ -168,8 +168,8 @@ namespace sch
             case 0xCC:  CPY( ad_rd_ab (regs.fX) );                  break;
 
                 /* DEC  */
-            case 0xCA:  DEC( regs.X, regs.fX );     ioCyc();        break;  /* DEX  */
-            case 0x88:  DEC( regs.Y, regs.fX );     ioCyc();        break;  /* DEY  */
+            case 0xCA:  DEC( regs.X.w, regs.fX );     ioCyc();      break;  /* DEX  */
+            case 0x88:  DEC( regs.Y.w, regs.fX );     ioCyc();      break;  /* DEY  */
             case 0x3A:  ad_rw_ac( &Cpu::DEC );                      break;
             case 0xC6:  ad_rw_dp( &Cpu::DEC, regs.fM );             break;
             case 0xCE:  ad_rw_ab( &Cpu::DEC, regs.fM );             break;
@@ -194,8 +194,8 @@ namespace sch
             case 0x5F:  EOR( ad_rd_axl(regs.fM) );                  break;
                 
                 /* INC  */
-            case 0xE8:  INC( regs.X, regs.fX );     ioCyc();        break;  /* INX  */
-            case 0xC8:  INC( regs.Y, regs.fX );     ioCyc();        break;  /* INY  */
+            case 0xE8:  INC( regs.X.w, regs.fX );     ioCyc();      break;  /* INX  */
+            case 0xC8:  INC( regs.Y.w, regs.fX );     ioCyc();      break;  /* INY  */
             case 0x1A:  ad_rw_ac( &Cpu::INC );                      break;
             case 0xE6:  ad_rw_dp( &Cpu::INC, regs.fM );             break;
             case 0xEE:  ad_rw_ab( &Cpu::INC, regs.fM );             break;
@@ -305,14 +305,14 @@ namespace sch
             case 0x9F:  ad_wr_axl( STA(), regs.fM );                break;
                 
                 /* STX  */
-            case 0x86:  ad_wr_dp ( regs.X, regs.fX );               break;
-            case 0x8E:  ad_wr_ab ( regs.X, regs.fX );               break;
-            case 0x96:  ad_wr_dy ( regs.X, regs.fX );               break;
+            case 0x86:  ad_wr_dp ( regs.X.w, regs.fX );             break;
+            case 0x8E:  ad_wr_ab ( regs.X.w, regs.fX );             break;
+            case 0x96:  ad_wr_dy ( regs.X.w, regs.fX );             break;
                 
                 /* STY  */
-            case 0x84:  ad_wr_dp ( regs.Y, regs.fX );               break;
-            case 0x8C:  ad_wr_ab ( regs.Y, regs.fX );               break;
-            case 0x94:  ad_wr_dx ( regs.Y, regs.fX );               break;
+            case 0x84:  ad_wr_dp ( regs.Y.w, regs.fX );             break;
+            case 0x8C:  ad_wr_ab ( regs.Y.w, regs.fX );             break;
+            case 0x94:  ad_wr_dx ( regs.Y.w, regs.fX );             break;
 
                 /* STZ  */
             case 0x64:  ad_wr_dp ( 0, regs.fM );                    break;

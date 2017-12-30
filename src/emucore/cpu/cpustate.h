@@ -9,11 +9,19 @@ namespace sch
     class CpuState
     {
     public:
-        u16         X;
-        u16         Y;
-        u16         A16;        // 16-bit A register
-        u16         B8;         // 'B' register when A is 8 bits (low 8 bits are zero)
-        u8          A8;         // 8-bit A register
+        union SplitReg
+        {
+            u16         w;
+            struct
+            {
+                u8      l;              // TODO - this only works with little endian systems
+                u8      h;
+            };
+        };
+
+        SplitReg    A;
+        SplitReg    X;
+        SplitReg    Y;
         
         u16         DP;
         u16         PC;
@@ -66,31 +74,13 @@ namespace sch
             if(!fE)
             {
                 fX =            (v & X_FLAG) != 0;
-                if(fX)
-                {
-                    X &= 0x00FF;
-                    Y &= 0x00FF;
-                }
-                bool newm =     (v & M_FLAG) != 0;
-                if(newm != fM)
-                {
-                    if(newm)        // turning into 8 bit
-                    {
-                        B8 = A16 & 0xFF00;
-                        A8 = A16 & 0x00FF;
-                    }
-                    else
-                    {
-                        A16 = B8 | A8;
-                    }
-                    fM = newm;
-                }
+                if(fX)          X.h = Y.h = 0;
+                fM =            (v & M_FLAG) != 0;
             }
             fV =                (v & V_FLAG);
             fN =                (v & N_FLAG);
         }
 
-    private:
         enum
         {
             C_FLAG =        0x01,

@@ -54,8 +54,8 @@ u16 ad_rd_dr(u16 index, bool flg)           // Direct, X/Y:     LDA $dd, X   /  
     if(!flg)    v |=        read_l(++a);
     return v;
 }
-u16 ad_rd_dx(bool flg)  { return ad_rd_dr(regs.X, flg);     }
-u16 ad_rd_dy(bool flg)  { return ad_rd_dr(regs.Y, flg);     }
+u16 ad_rd_dx(bool flg)  { return ad_rd_dr(regs.X.w, flg);   }
+u16 ad_rd_dy(bool flg)  { return ad_rd_dr(regs.Y.w, flg);   }
 
 u16 ad_rd_ab(bool flg)                      // Absolute:        LDA $aaaa
 {
@@ -75,8 +75,8 @@ u16 ad_rd_ar(u16 index, bool flg)           // Absolute, X/Y:   LDA $aaaa,X  /  
     if(!flg)    v |=        read_a(a+1) << 8;
     return v;
 }
-u16 ad_rd_ax(bool flg)  { return ad_rd_ar(regs.X, flg);     }
-u16 ad_rd_ay(bool flg)  { return ad_rd_ar(regs.Y, flg);     }
+u16 ad_rd_ax(bool flg)  { return ad_rd_ar(regs.X.w, flg);   }
+u16 ad_rd_ay(bool flg)  { return ad_rd_ar(regs.Y.w, flg);   }
 
 u16 ad_rd_al(bool flg)                      // Absolute Long:   LDA $llllll
 {
@@ -92,7 +92,7 @@ u16 ad_rd_axl(bool flg)                     // Absolute Long X: LDA $llllll,X
 {
     u16 a =                 read_p();
     a |=                    read_p() << 8;
-    u32 bnk =               read_p() << 16;     a += regs.X;
+    u32 bnk =               read_p() << 16;     a += regs.X.w;
     u16 v =                 read_l(bnk | a);
     if(!flg)    v |=        read_l(bnk | ++a) << 8;
     return v;
@@ -104,7 +104,7 @@ u16 ad_rd_iy(bool flg)                      // Indirect, Y:     LDA ($dd),Y
     tmp += regs.DP;         dpCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
-                            doIndex(a, regs.Y);
+                            doIndex(a, regs.Y.w);
     u16 v =                 read_a(a);
     if(!flg)    v |=        read_a(a+1) << 8;
     return v;
@@ -116,7 +116,7 @@ u16 ad_rd_iyl(bool flg)                      // Indirect, Y Lng: LDA [$dd],Y
     tmp += regs.DP;         dpCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp++) << 8;
-    u32 bnk =               read_l(tmp) << 16;      a += regs.Y;
+    u32 bnk =               read_l(tmp) << 16;      a += regs.Y.w;
     u16 v =                 read_l(bnk | a);
     if(!flg)    v |=        read_l(bnk | ++a) << 8;
     return v;
@@ -126,7 +126,7 @@ u16 ad_rd_ix(bool flg)                      // Indirect, X:     LDA ($dd,X)
 {
     u16 tmp =               read_p();
     tmp += regs.DP;         dpCyc();
-    tmp += regs.X;          ioCyc();
+    tmp += regs.X.w;        ioCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
     u16 v =                 read_a(a);
@@ -172,7 +172,7 @@ u16 ad_rd_siy(bool flg)                     // Stack Rel Ind,Y: LDA ($dd,S),Y
     tmp += regs.SP;         ioCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
-    a += regs.Y;            ioCyc();
+    a += regs.Y.w;          ioCyc();
     u16 v =                 read_a(a);
     if(!flg)    v |=        read_a(a+1) << 8;
     return v;
@@ -185,8 +185,8 @@ u16 ad_rd_siy(bool flg)                     // Stack Rel Ind,Y: LDA ($dd,S),Y
 void ad_rw_ac(op_t op)
 {
     ioCyc();
-    if(regs.fM)     regs.A8  = CALLOP(regs.A8, regs.fM) & 0xFF;
-    else            regs.A16 = CALLOP(regs.A16, regs.fM);
+    if(regs.fM)     regs.A.l = CALLOP(regs.A.l, regs.fM) & 0xFF;
+    else            regs.A.w = CALLOP(regs.A.w, regs.fM);
 }
 
 void ad_rw_dp(op_t op, bool flg)
@@ -213,7 +213,7 @@ void ad_rw_dx(op_t op, bool flg)
 {
     u16 a =                 read_p();
     a += regs.DP;           dpCyc();
-    a += regs.X;            ioCyc();
+    a += regs.X.w;          ioCyc();
     u16 v =                 read_l(a);
     if(flg)
     {
@@ -253,7 +253,7 @@ void ad_rw_ax(op_t op, bool flg)
 {
     u16 a =                 read_p();
     a |=                    read_p() << 8;
-    a += regs.X;            ioCyc();
+    a += regs.X.w;          ioCyc();
     u16 v =                 read_a(a);
     if(flg)
     {
@@ -289,8 +289,8 @@ void ad_wr_dr(u16 v, u16 index, bool flg)   // Direct, X/Y:     STA $dd, X   /  
                             write_l(a, v & 0xFF);
     if(!flg)                write_l(++a, v >> 8);
 }
-void ad_wr_dx(u16 v, bool flg)  { ad_wr_dr(v, regs.X, flg);     }
-void ad_wr_dy(u16 v, bool flg)  { ad_wr_dr(v, regs.Y, flg);     }
+void ad_wr_dx(u16 v, bool flg)  { ad_wr_dr(v, regs.X.w, flg);   }
+void ad_wr_dy(u16 v, bool flg)  { ad_wr_dr(v, regs.Y.w, flg);   }
 
 void ad_wr_ab(u16 v, bool flg)              // Absolute:        STA $aaaa
 {
@@ -308,8 +308,8 @@ void ad_wr_ar(u16 v, u16 index, bool flg)   // Absolute, X/Y:   STA $aaaa,X  /  
                             write_a(a, v & 0xFF);
     if(!flg)                write_a(a+1, v >> 8);
 }
-void ad_wr_ax(u16 v, bool flg)  { ad_wr_ar(v, regs.X, flg);     }
-void ad_wr_ay(u16 v, bool flg)  { ad_wr_ar(v, regs.Y, flg);     }
+void ad_wr_ax(u16 v, bool flg)  { ad_wr_ar(v, regs.X.w, flg);   }
+void ad_wr_ay(u16 v, bool flg)  { ad_wr_ar(v, regs.Y.w, flg);   }
 
 void ad_wr_al(u16 v, bool flg)              // Absolute Long:   STA $llllll
 {
@@ -324,7 +324,7 @@ void ad_wr_axl(u16 v, bool flg)             // Absolute Long X: STA $llllll,X
 {
     u16 a =                 read_p();
     a |=                    read_p() << 8;
-    u32 bnk =               read_p() << 16;     a += regs.X;
+    u32 bnk =               read_p() << 16;     a += regs.X.w;
                             write_l(bnk | a, v & 0xFF);
     if(!flg)                write_l(bnk | ++a, v >> 8);
 }
@@ -335,7 +335,7 @@ void ad_wr_iy(u16 v, bool flg)              // Indirect, Y:     STA ($dd),Y
     tmp += regs.DP;         dpCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
-                            doIndex(a, regs.Y);
+                            doIndex(a, regs.Y.w);
                             write_a(a, v & 0xFF);
     if(!flg)                write_a(a+1, v >> 8);
 }
@@ -346,7 +346,7 @@ void ad_wr_iyl(u16 v, bool flg)             // Indirect, Y Lng: STA [$dd],Y
     tmp += regs.DP;         dpCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp++) << 8;
-    u32 bnk =               read_l(tmp) << 16;      a += regs.Y;
+    u32 bnk =               read_l(tmp) << 16;      a += regs.Y.w;
                             write_l(bnk | a, v & 0xFF);
     if(!flg)                write_l(bnk | ++a, v >> 8);
 }
@@ -355,7 +355,7 @@ void ad_wr_ix(u16 v, bool flg)              // Indirect, X:     STA ($dd,X)
 {
     u16 tmp =               read_p();
     tmp += regs.DP;         dpCyc();
-    tmp += regs.X;          ioCyc();
+    tmp += regs.X.w;        ioCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
                             write_a(a, v & 0xFF);
@@ -397,7 +397,7 @@ void ad_wr_siy(u16 v, bool flg)             // Stack Rel Ind,Y: STA ($dd,S),Y
     tmp += regs.SP;         ioCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
-    a += regs.Y;            ioCyc();
+    a += regs.Y.w;          ioCyc();
                             write_a(a, v & 0xFF);
     if(!flg)                write_a(a+1, v >> 8);
 }

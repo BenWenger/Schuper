@@ -2,6 +2,7 @@
 #ifndef SCHUPER_CPU_CPU_H_INCLUDED
 #define SCHUPER_CPU_CPU_H_INCLUDED
 
+#include <algorithm>
 #include "snestypes.h"
 #include "util/clockedsubsystem.h"
 #include "cpustate.h"
