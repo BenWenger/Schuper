@@ -30,6 +30,9 @@ namespace sch
         timestamp_t getTick() const;
 
         void        setAudioBuffer(AudioBuffer* buf)        { dsp->setAudioBuffer(buf);         }
+        
+        u8          readIoReg(u8 a) const                   { return spcIO_Output[a&3];         }
+        void        writeIoReg(u8 a, u8 v)                  { spcIO_Input[a&3] = v;             }
 
 
     private:

@@ -25,6 +25,7 @@
     <ClCompile Include="..\..\..\src\emucore\apu\smptracer.cpp" />
     <ClCompile Include="..\..\..\src\emucore\apu\spc.cpp" />
     <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\cpu\cpu.cpp" />
     <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp" />
     <ClCompile Include="..\..\..\src\emucore\temp\tempspc.cpp" />
   </ItemGroup>
@@ -43,6 +44,10 @@
     <ClInclude Include="..\..\..\src\emucore\apu\spc.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\spcbus.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\spctimer.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />
     <ClInclude Include="..\..\..\src\emucore\util\clockedsubsystem.h" />
   </ItemGroup>

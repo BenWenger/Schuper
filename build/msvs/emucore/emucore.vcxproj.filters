@@ -19,6 +19,9 @@
     <Filter Include="src\util">
       <UniqueIdentifier>{bdb480bd-8fa3-4096-8085-98b0eb48f4bc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\cpu">
+      <UniqueIdentifier>{59c322ae-1a29-4ef0-b80c-56c3ad16d0f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -44,6 +47,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\apu\dsp.cpp">
       <Filter>src\apu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\cpu\cpu.cpp">
+      <Filter>src\cpu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -94,6 +100,18 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h">
       <Filter>src\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h">
+      <Filter>src\cpu</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
