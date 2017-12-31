@@ -15,7 +15,18 @@ namespace sch
         virtual void    runTo(timestamp_t runto) override;
 
     private:
+        enum class IntType
+        {
+            Reset,
+            Abort,
+            Nmi,
+            Irq,
+            Cop,
+            Brk
+        };
         CpuState        regs;
+        bool            stopped;
+        bool            waiting;
 
         void            dpCyc();                    // Do an IO cycle if low byte if DP isn't zero
         void            ioCyc();

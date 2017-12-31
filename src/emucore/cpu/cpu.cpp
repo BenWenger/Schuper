@@ -64,9 +64,9 @@ namespace sch
             case 0xBB:  TYX();              ioCyc();                break;  /* TYX  */
 
                 /* One-off garbage  */
-            case 0x00:  u_BRK();                                    break;  /* BRK  */
+            case 0x00:  doInterrupt(IntType::Brk);                  break;  /* BRK  */
             case 0x82:  u_BRL();                                    break;  /* BRL  */
-            case 0x02:  u_COP();                                    break;  /* COP  */
+            case 0x02:  doInterrupt(IntType::Cop);                  break;  /* COP  */
             case 0x4C:  u_JMP_Absolute();                           break;  /* JMP $aaaa    */
             case 0x5C:  u_JMP_Long();                               break;  /* JMP $llllll  */
             case 0x6C:  u_JMP_Indirect();                           break;  /* JMP ($aaaa)  */

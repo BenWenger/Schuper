@@ -22,8 +22,69 @@
         void            write_l(u32 a, u8 v);       // long write (24-bit)
         void            write_a(u16 a, u8 v);       // absolute write (16-bit, using DBR)
         void            push(u8 v);
+        
+        enum class IntType
+        {
+            Reset,
+            Abort,
+            Nmi,
+            Irq,
+            Cop,
+            Brk
+        };
 #endif
 
+/////////////////////////////////////////////////////////
+//  Interrupts!
+
+void doInterrupt(IntType type)
+{
+    bool is_sw = (type == IntType::Cop) || (type == IntType::Brk);
+    if(is_sw)
+    {
+      //read_p();   <- This is the opcode fetch -- this cycle happened already
+        read_p();   // Signature byte
+    }
+    else
+    {
+        ioCyc(2);   // 2 IO cycles instead of op+signature reads
+    }
+
+    if(type == IntType::Reset)
+    {
+        ioCyc(3);       // don't actually push, do IO cycs instead
+        regs.fE = true;
+        regs.fM = true;
+        regs.fX = true;
+        regs.X.h = regs.Y.h = 0;
+    }
+    else
+    {
+        if(!regs.fE)        push( regs.PBR >> 16 );     // push PBR if in native mode
+        push( regs.PC >> 8 );
+        push( regs.PC & 0xFF );
+        push( regs.getStatusByte(is_sw) );
+    }
+
+    regs.fD = false;
+    regs.fI = true;         // TODO repredict IRQs
+    regs.PBR = 0;
+
+    u16 vec;
+    switch(type)
+    {
+    case IntType::Reset:    vec = 0xFFFC;                       break;
+    case IntType::Abort:    vec = regs.fE ? 0xFFF8 : 0xFFE8;    break;
+    case IntType::Nmi:      vec = regs.fE ? 0xFFFA : 0xFFEA;    break;
+    case IntType::Irq:      vec = regs.fE ? 0xFFFE : 0xFFEE;    break;
+    case IntType::Cop:      vec = regs.fE ? 0xFFF4 : 0xFFE4;    break;
+    case IntType::Brk:      vec = regs.fE ? 0xFFFE : 0xFFE6;    break;
+    }
+
+    regs.PC  = read_l( vec );
+    regs.PC |= read_l( vec+1 ) << 8;
+}
+        
 /////////////////////////////////////////////////////////
 //  Common
 
@@ -490,21 +551,11 @@ void u_Branch(bool condition)
     }
 }
 
-void u_BRK()
-{
-    //TODO
-}
-
 void u_BRL()
 {
     u16 v =         read_p();
     v |=            read_p() << 8;
     regs.PC += v;   ioCyc();
-}
-
-void u_COP()
-{
-    //TODO
 }
 
 void u_JMP_Absolute()       /* JMP $aaaa    */
@@ -586,6 +637,24 @@ void u_MV_PN(int adj)
     //  MVP subtracts from X,Y, MVN adds
     //  both MVP/MVN subtract from A
     //  A is 16 bits REGARDLESS of M flag!!!!
+
+    regs.DBR =      read_p() << 16;
+    u32 src_bank =  read_p() << 16;
+    u8 v =          read_l(src_bank | regs.X.w);
+                    write_a(regs.Y.w, v);
+                    ioCyc(2);
+    if(regs.fX)
+    {
+        regs.X.l += adj;
+        regs.Y.l += adj;
+    }
+    else
+    {
+        regs.X.w += adj;
+        regs.Y.w += adj;
+    }
+    if(!regs.A.w--)
+        regs.PC -= 3;
 }
 
 void u_MVP()    { u_MV_PN(-1);      }
