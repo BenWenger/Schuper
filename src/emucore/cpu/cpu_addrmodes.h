@@ -304,7 +304,7 @@ void ad_wr_ar(u16 v, u16 index, bool flg)   // Absolute, X/Y:   STA $aaaa,X  /  
 {
     u16 a =                 read_p();
     a |=                    read_p() << 8;
-                            doIndex(a, index);
+    a += index;             ioCyc();
                             write_a(a, v & 0xFF);
     if(!flg)                write_a(a+1, v >> 8);
 }
@@ -335,7 +335,7 @@ void ad_wr_iy(u16 v, bool flg)              // Indirect, Y:     STA ($dd),Y
     tmp += regs.DP;         dpCyc();
     u16 a =                 read_l(tmp++);
     a |=                    read_l(tmp) << 8;
-                            doIndex(a, regs.Y.w);
+    a += regs.Y.w;          ioCyc();
                             write_a(a, v & 0xFF);
     if(!flg)                write_a(a+1, v >> 8);
 }

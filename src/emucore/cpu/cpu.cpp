@@ -1,14 +1,53 @@
 
 #include "cpu.h"
+#include "bus/cpubus.h"
+#include "cputracer.h"
 
 namespace sch
 {
+    inline void Cpu::dpCyc()                {   if(regs.DP & 0x00FF)        ioCyc();            }
+    inline void Cpu::ioCyc()                {   curTick += ioTickBase;                          }
+    inline void Cpu::ioCyc(int cycs)        {   curTick += ioTickBase * cycs;                   }
 
+    inline void Cpu::doIndex(u16& a, u16 idx)
+    {
+        u16 tmp = a;
+        a += idx;
+        if(!regs.fX || ((a ^ tmp) & 0xFF00))
+            ioCyc();
+    }
+
+    u8 Cpu::read_l(u32 a)
+    {
+        u8 v;
+        curTick += bus->read(a, v, curTick);
+        return v;
+    }
+    inline u8 Cpu::read_a(u16 a)            { return read_l(regs.DBR | a);              }
+    inline u8 Cpu::read_p()                 { return read_l(regs.PBR | regs.PC++);      }
+    inline u8 Cpu::pull()                   { return read_l(++regs.SP);                 }
+    inline void Cpu::write_l(u32 a, u8 v)   { curTick += bus->write(a, v, curTick);     }
+    inline void Cpu::write_a(u16 a, u8 v)   { write_l( regs.DBR | a, v );               }
+    inline void Cpu::push(u8 v)             { write_l( regs.SP--, v );                  }
 
     void Cpu::runTo(timestamp_t runto)
     {
-        while(getTick() < runto)
+        while(curTick < runto)
         {
+            if(interruptPending)
+            {
+                // TODO trace this
+                // TODO do this better
+                doInterrupt( IntType::Reset );
+
+                interruptPending = false;
+                resetPending = false;
+                continue;
+            }
+
+            if(tracer)
+                tracer->cpuTrace(regs, *bus);
+
             u8 op = read_p();
 
             switch(op)

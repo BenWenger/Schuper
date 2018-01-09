@@ -47,7 +47,8 @@ void doInterrupt(IntType type)
     }
     else
     {
-        ioCyc(2);   // 2 IO cycles instead of op+signature reads
+        read_l( regs.PBR | regs.PC );       // dummy read and IO cyc
+        ioCyc();                            //   instead of op and signature reads
     }
 
     if(type == IntType::Reset)
@@ -764,6 +765,7 @@ void u_STP()
 void u_WAI()
 {
     // TODO
+    //  WAI takes 2 IO cycles to end.  IE, there are 2 cycles between IRQ happening and the actual IRQ execution
 }
 
 void u_XBA()

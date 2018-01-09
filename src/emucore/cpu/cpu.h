@@ -4,15 +4,22 @@
 
 #include <algorithm>
 #include "snestypes.h"
-#include "util/clockedsubsystem.h"
 #include "cpustate.h"
 
 namespace sch
 {
-    class Cpu : public ClockedSubsystem
+    class CpuBus;
+    class CpuTracer;
+
+    class Cpu
     {
     public:
-        virtual void    runTo(timestamp_t runto) override;
+        void            runTo(timestamp_t runto);
+
+        void            setTracer(CpuTracer* trc)       { tracer = trc;             }
+
+    private:
+
 
     private:
         enum class IntType
@@ -24,7 +31,15 @@ namespace sch
             Cop,
             Brk
         };
+        timestamp_t     curTick;        // current timestamp
+        timestamp_t     ioTickBase;     // tick base of 1 "io cycle"
+
+        
+        CpuTracer*      tracer;
+        CpuBus*         bus;
         CpuState        regs;
+        bool            interruptPending;
+        bool            resetPending;
         bool            stopped;
         bool            waiting;
 

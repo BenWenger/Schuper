@@ -22,6 +22,9 @@
     <Filter Include="src\cpu">
       <UniqueIdentifier>{59c322ae-1a29-4ef0-b80c-56c3ad16d0f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\bus">
+      <UniqueIdentifier>{ce00941e-aec7-49d4-87e8-f752559ea2a9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -49,6 +52,9 @@
       <Filter>src\apu</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\cpu\cpu.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp">
       <Filter>src\cpu</Filter>
     </ClCompile>
   </ItemGroup>
@@ -111,6 +117,12 @@
       <Filter>src\cpu</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\bus\cpubus.h">
+      <Filter>src\bus</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h">
       <Filter>src\cpu</Filter>
     </ClInclude>
   </ItemGroup>

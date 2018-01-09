@@ -121,7 +121,7 @@ int WINAPI WinMain(HINSTANCE prev, HINSTANCE inst, LPSTR cmd, int show)
     if(!wnd)
         return 2;
 
-    SoundOut sndObj(32000, true, 200);
+    SoundOut sndObj(32000, true, 500);
     sndObj.stop(true);
     snd = &sndObj;
     
