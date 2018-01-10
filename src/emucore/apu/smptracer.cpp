@@ -328,7 +328,7 @@ const AddrArg md_right[0x100] = {
         doParam( buffer + strlen(buffer), newpc, regs, bus, opbytes[0], rval, rmode, targetaddr, targetbytes, true );
 
         // pad out the buffer to a fixed width  (there's probably a better way to do this -- who cares)
-        int i = strlen(buffer);
+        int i = (int)strlen(buffer);
         for(; i < 14; ++i)  buffer[i] = ' ';
         buffer[i] = 0;
 

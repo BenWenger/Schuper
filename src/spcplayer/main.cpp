@@ -13,7 +13,7 @@ namespace
 
     void textOut(HDC dc, int x, int y, const char* txt)
     {
-        TextOutA(dc,x,y,txt, strlen(txt));
+        TextOutA(dc,x,y,txt, (int)strlen(txt));
     }
 
     const char* const wndClassName = "Temp Spc Player";
