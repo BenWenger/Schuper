@@ -155,6 +155,176 @@ const char* const opnames[0x100] = {
         return 1;
     }
 
+    void doParam(FILE* traceFile, const CpuState& regs, const CpuBus& bus, AddrMode mode, u32 arg)
+    {
+        char buf[80] = "";
+        u16 tmp;
+        u32 previewaddr;
+        int previewbytes = -1;
+
+        bool mdflg = regs.fM;
+        switch(mode)
+        {
+        case im__x: mdflg = regs.fX;    mode = im__m;   break;
+        case im__8: mdflg = true;       mode = im__m;   break;
+        case dp__x: mdflg = regs.fX;    mode = dp__m;   break;
+        case dx__x: mdflg = regs.fX;    mode = dx__m;   break;
+        case ab__x: mdflg = regs.fX;    mode = ab__m;   break;
+        case ax__x: mdflg = regs.fX;    mode = ax__m;   break;
+        case ay__x: mdflg = regs.fX;    mode = ay__m;   break;
+        }
+
+        int mdbytes = mdflg ? 1 : 2;
+
+        switch(mode)
+        {
+        case impld:                                                     break;
+        case accum: sprintf(buf, "A");                                  break;
+        case im__m: sprintf(buf, mdflg ? "#$%02X" : "#$%04X", arg);     break;
+
+        case dp__m: sprintf(buf, "$%02X", arg);
+                    previewaddr = (arg + regs.DP) & 0xFFFF;
+                    previewbytes = mdbytes;                             break;
+
+        case dx__m: sprintf(buf, "$%02X,X", arg);
+                    previewaddr = (arg + regs.X.w + regs.DP) & 0xFFFF;
+                    previewbytes = mdbytes;                             break;
+
+        case dy__x: sprintf(buf, "$%02X,Y", arg);
+                    previewaddr = (arg + regs.X.w + regs.DP) & 0xFFFF;
+                    previewbytes = mdbytes;                             break;
+
+        case sr__m: sprintf(buf, "$%02X,S", arg);
+                    previewaddr = (arg + regs.SP) & 0xFFFF;
+                    previewbytes = mdbytes;                             break;
+
+        case ab__m: sprintf(buf, "$%04X", arg);
+                    previewaddr = arg | regs.DBR;
+                    previewbytes = mdbytes;                             break;
+
+        case ax__m: sprintf(buf, "$%04X,X", arg);
+                    previewaddr = ((arg + regs.X.w) & 0xFFFF) | regs.DBR;
+                    previewbytes = mdbytes;                             break;
+
+        case ay__m: sprintf(buf, "$%04X,Y", arg);
+                    previewaddr = ((arg + regs.Y.w) & 0xFFFF) | regs.DBR;
+                    previewbytes = mdbytes;                             break;
+
+        case abl_m: sprintf(buf, "$%02X:%04X", (arg >> 16), (arg & 0xFFFF));
+                    previewaddr = arg;
+                    previewbytes = mdbytes;                             break;
+
+        case axl_m: sprintf(buf, "$%02X:%04X,X", (arg >> 16), (arg & 0xFFFF));
+                    previewaddr = ((arg + regs.X.w) & 0xFFFF) | (arg & 0xFF0000);
+                    previewbytes = mdbytes;                             break;
+
+        case di__m: sprintf(buf, "($%02X)", arg);
+                    tmp = (arg + regs.DP) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr |= regs.DBR;
+                    previewbytes = mdbytes;                             break;
+                    
+        case dil_m: sprintf(buf, "[$%02X]", arg);
+                    tmp = (arg + regs.DP) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp++) << 8;
+                    previewaddr |= bus.peek(tmp) << 16;
+                    previewbytes = mdbytes;                             break;
+
+        case ix__m: sprintf(buf, "($%02X,X)", arg);
+                    tmp = (arg + regs.DP + regs.X.w) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr |= regs.DBR;
+                    previewbytes = mdbytes;                             break;
+                    
+        case iy__m: sprintf(buf, "($%02X),Y", arg);
+                    tmp = (arg + regs.DP) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr  = ((previewaddr + regs.Y.w) & 0xFFFF) | regs.DBR;
+                    previewbytes = mdbytes;                             break;
+                    
+        case iyl_m: sprintf(buf, "[$%02X],Y", arg);
+                    tmp = (arg + regs.DP) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp++) << 8;
+                    previewaddr  = ((previewaddr + regs.Y.w) & 0xFFFF);
+                    previewaddr |= bus.peek(tmp) << 16;
+                    previewbytes = mdbytes;                             break;
+                    
+        case siy_m: sprintf(buf, "($%02X,S),Y", arg);
+                    tmp = (arg + regs.SP) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr  = ((previewaddr + regs.Y.w) & 0xFFFF) | regs.DBR;
+                    previewbytes = mdbytes;                             break;
+
+        case brnch: previewaddr  = (regs.PC + (arg ^ 0x80) - 0x80) & 0xFFFF;
+                    sprintf(buf, "$%04X", previewaddr);
+                    previewaddr |= regs.PBR;
+                    previewbytes = 0;                                   break;
+                    
+        case jp_rl: previewaddr  = (regs.PC + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
+                    sprintf(buf, "$%04X", previewaddr);
+                    previewaddr |= regs.PBR;
+                    previewbytes = 0;                                   break;
+                    
+        case jp_ab: previewaddr  = arg;
+                    sprintf(buf, "$%04X", previewaddr);
+                    previewaddr |= regs.PBR;
+                    previewbytes = 0;                                   break;
+                    
+        case jp_al: previewaddr  = arg;
+                    sprintf(buf, "$%02X:%04X", (previewaddr >> 16), (previewaddr & 0xFFFF));
+                    previewbytes = 0;                                   break;
+                    
+        case jp_ix: sprintf(buf, "($%04X,X)", arg);
+                    tmp = (arg + regs.X.w) & 0xFFFF;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr |= regs.PBR;
+                    previewbytes = 0;                                   break;
+                    
+        case jp_in: sprintf(buf, "($%04X)", arg);
+                    tmp = arg + regs.DP;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr |= regs.PBR;
+                    previewbytes = 0;                                   break;
+                    
+        case jp_il: sprintf(buf, "[$%04X]", arg);
+                    tmp = arg + regs.DP;
+                    previewaddr  = bus.peek(tmp++);
+                    previewaddr |= bus.peek(tmp++) << 8;
+                    previewaddr |= bus.peek(tmp) << 16;
+                    previewbytes = 0;                                   break;
+
+        case mv_np: sprintf(buf, "$%02X, $%02X", (arg >> 8), (arg & 0xFF));
+                    previewbytes = -1;                                  break;
+
+        case __pei: sprintf(buf, "($%02X)", arg);
+                    previewaddr = (arg + regs.DP) & 0xFFFF;
+                    previewbytes = 2;                                   break;
+
+        case __per: previewaddr = (regs.PC + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
+                    sprintf(buf, "$%04X", previewaddr);
+                    previewbytes = 0;                                   break;
+        }
+
+        static const char* const padding = "            \0~~~~~~~~~~~~~~~~~~~";
+        fprintf(traceFile, "%s%s", buf, padding + strlen(buf));
+
+        switch(previewbytes)
+        {
+        case 2:  fprintf(traceFile, "[%02X:%04X=%02X%02X]", previewaddr >> 16, previewaddr & 0xFFFF, bus.peek(previewaddr+1), bus.peek(previewaddr));   break;
+        case 1:  fprintf(traceFile, "  [%02X:%04X=%02X]",   previewaddr >> 16, previewaddr & 0xFFFF, bus.peek(previewaddr));                            break;
+        case 0:  fprintf(traceFile, "     [%02X:%04X]",     previewaddr >> 16, previewaddr & 0xFFFF);                                                   break;
+        default: fprintf(traceFile, "              ");                                                                                                  break;
+        }
+    }
+
 
     }
 
@@ -203,6 +373,34 @@ const char* const opnames[0x100] = {
 
         //////////////////////////////
         //  Print the parameter
+        doParam(traceFile, regs, bus, mode, param);
+
+
+        //////////////////////////////
+        //  A register
+        if(regs.fM) fprintf(traceFile, "  (%02X) %02X ", regs.A.h, regs.A.l);
+        else        fprintf(traceFile, "     %04X ", regs.A.w);
+
+        //////////////////////////////
+        //  X,Y regs
+        if(regs.fX) fprintf(traceFile, "  %02X   %02X", regs.X.w, regs.Y.w);
+        else        fprintf(traceFile, "%04X %04X", regs.X.w, regs.Y.w);
+
+        //////////////////////////////
+        //  Status flags & DP, SP
+        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  %04X  %04X\n",
+                (regs.fE ? 'E' : '.'),
+                (regs.fN ? 'N' : '.'),
+                (regs.fV ? 'V' : '.'),
+                (regs.fM ? 'M' : '.'),
+                (regs.fX ? 'X' : '.'),
+                (regs.fD ? 'D' : '.'),
+                (regs.fI ? 'I' : '.'),
+                (regs.fZ ? '.' : 'Z'),
+                (regs.fC ? 'C' : '.'),
+                regs.DP,
+                regs.SP
+        );
     }
 
 }
