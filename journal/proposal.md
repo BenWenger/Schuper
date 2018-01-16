@@ -11,7 +11,6 @@ I'm scheduling for 18 weeks even though we have more time than that, in case som
 
 Complete By | Task | Deliverable
 --- | --- | ---
-
 Week 3, Winter | APU Processor, Tracelogger, and virtual memory | Be able to run ‘SPC’ files (APU subunit snapshots) and view a tracelog of the code executed.
 Week 4, Winter | APU Audio generation   | Run SPC files and hear the actual music being played.
 Week 7, Winter | Main CPU, memory, and tracelogger | Load games and run them, and be able to view a tracelog of the executed CPU instructions.
