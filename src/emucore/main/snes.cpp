@@ -4,6 +4,7 @@
 #include "apu/spc.h"
 #include "cpu/cpu.h"
 #include "bus/cpubus.h"
+#include "cpu/cputracer.h"
 
 namespace sch
 {
@@ -12,7 +13,7 @@ namespace sch
     {
         spc = std::make_unique<Spc>();
         cpu = std::make_unique<Cpu>();
-        cpubus = std::make_unique<CpuBus>();
+        cpuBus = std::make_unique<CpuBus>();
 
         spdSlow = 1;
         spdFast = 1;
@@ -41,9 +42,9 @@ namespace sch
                 switch(file.memmap)
                 {
                 case SnesFile::MemMap::LoRom:
-                    cpubus->setReader(this, &Snes::rd_LoRom);
-                    cpubus->setWriter(this, &Snes::wr_LoRom);
-                    cpubus->setPeeker(this, &Snes::pk_LoRom);
+                    cpuBus->setReader(this, &Snes::rd_LoRom);
+                    cpuBus->setWriter(this, &Snes::wr_LoRom);
+                    cpuBus->setPeeker(this, &Snes::pk_LoRom);
                     break;
 
                 default:
@@ -71,9 +72,39 @@ namespace sch
     {
         if(currentFile)
         {
-            cpubus->reset();
-            cpu->reset(cpubus.get(), 1);
+            cpuBus->reset();
+            cpu->reset(cpuBus.get(), 1);
             spc->reset();
         }
+    }
+
+    u8 Snes::rd_Reg(u16 a, timestamp_t clk)
+    {
+        return 0;
+    }
+    
+    void Snes::wr_Reg(u16 a, u8 v, timestamp_t clk)
+    {
+    }
+
+
+    void Snes::startCpuTrace(const char* filename)
+    {
+        if(!cpuTracer)
+            cpuTracer = std::make_unique<CpuTracer>();
+        cpuTracer->openTraceFile(filename);
+        cpu->setTracer(cpuTracer.get());
+    }
+
+    void Snes::stopCpuTrace()
+    {
+        if(cpuTracer)
+            cpuTracer->closeTraceFile();
+        cpu->setTracer(nullptr);
+    }
+
+    void Snes::doFrame()
+    {
+        cpu->runTo(10000);  // TODO
     }
 }

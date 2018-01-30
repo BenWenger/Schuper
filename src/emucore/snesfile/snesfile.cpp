@@ -105,4 +105,24 @@ namespace sch
             throw;
         }
     }
+
+    SnesFile::SnesFile(SnesFile&& rhs)
+    {
+        *this = std::move(rhs);
+    }
+    
+    SnesFile& SnesFile::operator = (SnesFile&& rhs)
+    {
+        type =          rhs.type;
+        memmap =        rhs.memmap;
+        memory =        std::move(rhs.memory);
+        for(int i = 0; i < 0x80; ++i) {
+            dspRegs[i] = rhs.dspRegs[i];
+        }
+        smpRegs = rhs.smpRegs;
+
+        rhs.type = Type::Invalid;
+
+        return *this;
+    }
 }

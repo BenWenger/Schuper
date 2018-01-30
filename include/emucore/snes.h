@@ -12,6 +12,7 @@ namespace sch
     class Spc;
     class Cpu;
     class CpuBus;
+    class CpuTracer;
 
     class Snes
     {
@@ -24,6 +25,11 @@ namespace sch
 
         SnesFile::Type  loadFile(SnesFile&& file);
         void            hardReset();
+
+        void            startCpuTrace(const char* filename);
+        void            stopCpuTrace();
+
+        void            doFrame();
 
     private:
         
@@ -46,7 +52,8 @@ namespace sch
 
         std::unique_ptr<Spc>        spc;
         std::unique_ptr<Cpu>        cpu;
-        std::unique_ptr<CpuBus>     cpubus;
+        std::unique_ptr<CpuBus>     cpuBus;
+        std::unique_ptr<CpuTracer>  cpuTracer;
     };
 
 }
