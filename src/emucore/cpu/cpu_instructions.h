@@ -429,13 +429,13 @@ u16 TA_XY()
     u16 out;
     if(regs.fX)
     {
-        out = regs.A.w;
-        regs.fN = out & 0x8000;
+        out = regs.A.l;
+        regs.fN = out & 0x80;
     }
     else
     {
-        out = regs.A.l;
-        regs.fN = out & 0x80;
+        out = regs.A.w;
+        regs.fN = out & 0x8000;
     }
     regs.fZ = out;
     return out;

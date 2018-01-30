@@ -261,12 +261,12 @@ const char* const opnames[0x100] = {
                     previewaddr  = ((previewaddr + regs.Y.w) & 0xFFFF) | regs.DBR;
                     previewbytes = mdbytes;                             break;
 
-        case brnch: previewaddr  = (regs.PC + (arg ^ 0x80) - 0x80) & 0xFFFF;
+        case brnch: previewaddr  = (regs.PC + 2 + (arg ^ 0x80) - 0x80) & 0xFFFF;
                     sprintf(buf, "$%04X", previewaddr);
                     previewaddr |= regs.PBR;
                     previewbytes = 0;                                   break;
                     
-        case jp_rl: previewaddr  = (regs.PC + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
+        case jp_rl: previewaddr  = (regs.PC + 3 + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
                     sprintf(buf, "$%04X", previewaddr);
                     previewaddr |= regs.PBR;
                     previewbytes = 0;                                   break;

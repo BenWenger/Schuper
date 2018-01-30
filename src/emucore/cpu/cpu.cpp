@@ -237,13 +237,13 @@ namespace sch
             case 0xCC:  CPY( ad_rd_ab (regs.fX) );                  break;
 
                 /* DEC  */
-            case 0xCA:  DEC( regs.X.w, regs.fX );     ioCyc();      break;  /* DEX  */
-            case 0x88:  DEC( regs.Y.w, regs.fX );     ioCyc();      break;  /* DEY  */
-            case 0x3A:  ad_rw_ac( &Cpu::DEC );                      break;
-            case 0xC6:  ad_rw_dp( &Cpu::DEC, regs.fM );             break;
-            case 0xCE:  ad_rw_ab( &Cpu::DEC, regs.fM );             break;
-            case 0xD6:  ad_rw_dx( &Cpu::DEC, regs.fM );             break;
-            case 0xDE:  ad_rw_ax( &Cpu::DEC, regs.fM );             break;
+            case 0xCA:  regs.X.w = DEC( regs.X.w, regs.fX );    ioCyc();    break;  /* DEX  */
+            case 0x88:  regs.Y.w = DEC( regs.Y.w, regs.fX );    ioCyc();    break;  /* DEY  */
+            case 0x3A:  ad_rw_ac( &Cpu::DEC );                              break;
+            case 0xC6:  ad_rw_dp( &Cpu::DEC, regs.fM );                     break;
+            case 0xCE:  ad_rw_ab( &Cpu::DEC, regs.fM );                     break;
+            case 0xD6:  ad_rw_dx( &Cpu::DEC, regs.fM );                     break;
+            case 0xDE:  ad_rw_ax( &Cpu::DEC, regs.fM );                     break;
                 
                 /* EOR  */
             case 0x41:  EOR( ad_rd_ix (regs.fM) );                  break;
@@ -263,13 +263,13 @@ namespace sch
             case 0x5F:  EOR( ad_rd_axl(regs.fM) );                  break;
                 
                 /* INC  */
-            case 0xE8:  INC( regs.X.w, regs.fX );     ioCyc();      break;  /* INX  */
-            case 0xC8:  INC( regs.Y.w, regs.fX );     ioCyc();      break;  /* INY  */
-            case 0x1A:  ad_rw_ac( &Cpu::INC );                      break;
-            case 0xE6:  ad_rw_dp( &Cpu::INC, regs.fM );             break;
-            case 0xEE:  ad_rw_ab( &Cpu::INC, regs.fM );             break;
-            case 0xF6:  ad_rw_dx( &Cpu::INC, regs.fM );             break;
-            case 0xFE:  ad_rw_ax( &Cpu::INC, regs.fM );             break;
+            case 0xE8:  regs.X.w = INC( regs.X.w, regs.fX );    ioCyc();    break;  /* INX  */
+            case 0xC8:  regs.Y.w = INC( regs.Y.w, regs.fX );    ioCyc();    break;  /* INY  */
+            case 0x1A:  ad_rw_ac( &Cpu::INC );                              break;
+            case 0xE6:  ad_rw_dp( &Cpu::INC, regs.fM );                     break;
+            case 0xEE:  ad_rw_ab( &Cpu::INC, regs.fM );                     break;
+            case 0xF6:  ad_rw_dx( &Cpu::INC, regs.fM );                     break;
+            case 0xFE:  ad_rw_ax( &Cpu::INC, regs.fM );                     break;
                 
                 /* LDA  */
             case 0xA1:  LDA( ad_rd_ix (regs.fM) );                  break;
