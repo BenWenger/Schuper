@@ -20,6 +20,8 @@ namespace sch
         void        loadSpcFile(const SnesFile& file);
         void        setTrace(const char* filename);
 
+        void        reset();
+
         void        runTo(timestamp_t runto);
         void        runToFillAudio();
         

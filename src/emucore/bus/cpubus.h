@@ -17,18 +17,23 @@ namespace sch
         
         typedef     std::function<int(u32,u8&,timestamp_t)>     rd_proc;
         typedef     std::function<int(u32,u8 ,timestamp_t)>     wr_proc;
-        typedef     std::function<void(u32,u8&)>                pk_proc;
+        typedef     std::function<u8(u32)>                      pk_proc;
         
-        void        addReader(int pagestart, int pageend, const rd_proc& proc)          { reader = proc;                    }
-        void        addWriter(int pagestart, int pageend, const wr_proc& proc)          { writer = proc;                    }
-        void        addPeeker(int pagestart, int pageend, const pk_proc& proc)          { peeker = proc;                    }
+        void        setReader(const rd_proc& proc)          { reader = proc;                    }
+        void        setWriter(const wr_proc& proc)          { writer = proc;                    }
+        void        setPeeker(const pk_proc& proc)          { peeker = proc;                    }
 
-        template <typename T> void addReader(int pagestart, int pageend, int (T::*proc)(u32,u8&,timestamp_t), T* obj)
-        {   addReader(pagestart, pageend, std::bind(proc, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));       }
-        template <typename T> void addWriter(int pagestart, int pageend, int (T::*proc)(u32,u8 ,timestamp_t), T* obj)
-        {   addWriter(pagestart, pageend, std::bind(proc, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));       }
-        template <typename T> void addPeeker(int pagestart, int pageend, void (T::*proc)(u32,u8&) const, const T* obj)
-        {   addPeeker(pagestart, pageend, std::bind(proc, obj, std::placeholders::_1, std::placeholders::_2));                              }
+        template <typename T> void setReader(T* obj, int (T::*proc)(u32,u8&,timestamp_t))
+        {   setReader(std::bind(proc, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));       }
+        template <typename T> void setWriter(T* obj, int (T::*proc)(u32,u8 ,timestamp_t))
+        {   setWriter(std::bind(proc, obj, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));       }
+        template <typename T> void setPeeker(const T* obj, u8 (T::*proc)(u32) const)
+        {   setPeeker(std::bind(proc, obj, std::placeholders::_1));                                                     }
+
+        void reset()
+        {
+            data = 0;
+        }
 
     private:
         // TODO -- is it worth it to split by bank?  I kind of doubt it... 3 lookup tables of 256 entries each seems like a waste
@@ -55,9 +60,7 @@ namespace sch
 
     inline u8 CpuBus::peek(u32 a) const
     {
-        u8 v = 0;
-        peeker(a, v);
-        return v;
+        return peeker(a);
     }
 }
 

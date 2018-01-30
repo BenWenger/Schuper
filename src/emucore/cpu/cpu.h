@@ -15,10 +15,9 @@ namespace sch
     {
     public:
         void            runTo(timestamp_t runto);
-
         void            setTracer(CpuTracer* trc)       { tracer = trc;             }
 
-    private:
+        void            reset(CpuBus* thebus, int iocycrate);
 
 
     private:

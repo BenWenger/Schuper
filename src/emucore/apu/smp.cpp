@@ -38,6 +38,20 @@ namespace sch
         bus =       bs;
         stopped =   false;
     }
+    
+    void Smp::reset(SpcBus* bs)
+    {
+        // TODO reset timestamp?
+        regs.PC     = 0xFFC0;
+        regs.A      = 0;
+        regs.X      = 0;
+        regs.Y      = 0;
+        regs.SP     = 0x80;
+        regs.setStatusByte( 0 );
+
+        bus =       bs;
+        stopped =   false;
+    }
 
     void Smp::runTo(timestamp_t runto)
     {

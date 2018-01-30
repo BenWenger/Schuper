@@ -25,6 +25,9 @@
     <Filter Include="src\bus">
       <UniqueIdentifier>{ce00941e-aec7-49d4-87e8-f752559ea2a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\main">
+      <UniqueIdentifier>{81a8e25f-6c9f-4bca-959f-511adaa04808}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -56,6 +59,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp">
       <Filter>src\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\main\snes.cpp">
+      <Filter>src\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp">
+      <Filter>src\main</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -124,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h">
       <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\snes.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -29,6 +29,36 @@ namespace sch
     inline void Cpu::write_l(u32 a, u8 v)   { curTick += bus->write(a, v, curTick);     }
     inline void Cpu::write_a(u16 a, u8 v)   { write_l( regs.DBR | a, v );               }
     inline void Cpu::push(u8 v)             { write_l( regs.SP--, v );                  }
+    
+    void Cpu::reset(CpuBus* thebus, int iocycrate)
+    {
+        curTick = 0;
+        ioTickBase = iocycrate;
+
+        bus = thebus;
+        regs.A.w = 0;
+        regs.X.w = 0;
+        regs.Y.w = 0;
+        regs.DBR = 0;
+        regs.PBR = 0;
+        regs.DP = 0;
+        regs.fC = 0;
+        regs.fD = false;
+        regs.fI = true;
+        regs.fM = true;
+        regs.fE = true;
+        regs.fN = 0;
+        regs.fV = 0;
+        regs.fX = true;
+        regs.fZ = 1;
+        regs.PC = 0;
+        regs.SP = 0x0100;
+
+        interruptPending = true;
+        resetPending = true;
+        stopped = false;
+        waiting = false;
+    }
 
     void Cpu::runTo(timestamp_t runto)
     {

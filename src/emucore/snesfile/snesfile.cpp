@@ -13,6 +13,7 @@ namespace sch
                 return false;
 
             snes.type = SnesFile::Type::Invalid;
+            snes.memmap = SnesFile::MemMap::Unknown;
             snes.memory.resize(0x10000);            // always 64K of memory
 
             // SMP regs
@@ -34,6 +35,35 @@ namespace sch
 
             // done!
             snes.type = SnesFile::Type::Spc;
+
+            return true;
+        }
+        
+        bool load_Rom(SnesFile& snes, FILE* file, s32 filesize)
+        {
+            s32 start = 0;
+
+            // is there a header?  If yes, skip over it.
+            if((filesize & 0x7FFF) == 0x0200)
+                start = 0x0200;
+
+            // TODO determine  Hi/Lo ROM
+            snes.memmap = SnesFile::MemMap::LoRom;      // just assume LoRom for now.  Fuggit.
+            snes.type = SnesFile::Type::Rom;
+
+            // get minimum buffer size
+            s32 usesize = filesize - start;
+            s32 buffersize = 0x10000;
+            while(buffersize < usesize)
+                buffersize <<= 1;
+
+            // allocate the buffer!  Fill it with the ROM!
+            snes.memory.resize(buffersize);
+            fseek(file, start, SEEK_SET);
+            fread(&snes.memory[0], 1, usesize, file);
+            if(usesize != buffersize)
+                memset(&snes.memory[usesize], 0, buffersize - usesize);
+            
 
             return true;
         }
@@ -63,7 +93,8 @@ namespace sch
 
             if(!memcmp(hdr, "SNES-SPC700", 11))
                 load_ok = load_Spc(*this, file, filesize);
-            // else try to load as ROM   TODO
+            else
+                load_ok = load_Rom(*this, file, filesize);
 
             fclose(file);
             return load_ok;

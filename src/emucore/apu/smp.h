@@ -19,6 +19,7 @@ namespace sch
         void            setTracer(SmpTracer* trcr)          { tracer = trcr;            }
 
         void            resetWithFile(SpcBus* bs, const SnesFile& file);
+        void            reset(SpcBus* bs);
 
     private:
         SmpRegs         regs;

@@ -159,7 +159,24 @@ namespace sch
         ram[a] = v;
     }
 
+    
+    //////////////////////////////////////////////////////////////
 
+    void Spc::reset()
+    {
+        cpu.reset(&bus);
+        for(auto& t : timers)       t.hardReset();
+        dsp->reset();
+
+        for(auto& i : ram)          i = 0;
+        for(auto& i : fauxRam)      i = 0;
+        dspAddr = 0;
+        
+        for(auto& i : spcIO_Input)  i = 0;
+        for(auto& i : spcIO_Output) i = 0;
+
+        useIplBootRom = true;
+    }
 
     //////////////////////////////////////////////////////////////
 

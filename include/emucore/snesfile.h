@@ -25,10 +25,17 @@ namespace sch
         enum class Type
         {
             Invalid,
-            Spc
+            Spc,
+            Rom
+        };
+        enum class MemMap
+        {
+            Unknown,
+            LoRom
         };
 
         Type                        type;
+        MemMap                      memmap;
         std::vector<u8>             memory;
         u8                          dspRegs[0x80];
         struct SmpRegs
@@ -40,6 +47,11 @@ namespace sch
             u8      PSW;
             u8      SP;
         }                           smpRegs;
+
+        inline operator bool ()
+        {
+            return type != Type::Invalid;
+        }
 
     };
 }
