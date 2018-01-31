@@ -8,6 +8,11 @@ namespace sch
     inline void Cpu::dpCyc()                {   if(regs.DP & 0x00FF)        ioCyc();            }
     inline void Cpu::ioCyc()                {   curTick += ioTickBase;                          }
     inline void Cpu::ioCyc(int cycs)        {   curTick += ioTickBase * cycs;                   }
+    
+    void Cpu::adjustTimestamp(timestamp_t adj)
+    {
+        curTick += adj;
+    }
 
     inline void Cpu::doIndex(u16& a, u16 idx)
     {
@@ -66,9 +71,11 @@ namespace sch
         {
             if(interruptPending)
             {
+                if(tracer)
+                    tracer->traceLine("*** INTERRUPT ***");
                 // TODO trace this
                 // TODO do this better
-                doInterrupt( IntType::Reset );
+                doInterrupt( resetPending ? IntType::Reset : IntType::Nmi );
 
                 interruptPending = false;
                 resetPending = false;

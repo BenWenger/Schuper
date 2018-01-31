@@ -14,10 +14,11 @@ namespace sch
         spc = std::make_unique<Spc>();
         cpu = std::make_unique<Cpu>();
         cpuBus = std::make_unique<CpuBus>();
-
-        spdSlow = 1;
-        spdFast = 1;
-        spdXSlow = 1;
+        
+        spdFast = 6;
+        spdSlow = 8;
+        spdXSlow = 12;
+        spc->setClockBase(21);                  // roughly 21 master cycles per SPC cycle
     }
 
     Snes::~Snes()
@@ -73,18 +74,39 @@ namespace sch
         if(currentFile)
         {
             cpuBus->reset();
-            cpu->reset(cpuBus.get(), 1);
+            cpu->reset(cpuBus.get(), spdSlow);
             spc->reset();
+
+            nmiEnabled = false;
         }
     }
 
     u8 Snes::rd_Reg(u16 a, timestamp_t clk)
     {
-        return 0;
+        u8 out = 0;
+        switch(a)
+        {
+        case 0x2140:  case 0x2141:  case 0x2142:  case 0x2143:
+            spc->runTo(clk);
+            out = spc->readIoReg(a&3);
+            break;
+        }
+        return out;
     }
     
     void Snes::wr_Reg(u16 a, u8 v, timestamp_t clk)
     {
+        switch(a)
+        {
+        case 0x2140:  case 0x2141:  case 0x2142:  case 0x2143:
+            spc->runTo(clk);
+            spc->writeIoReg(a&3, v);
+            break;
+
+        case 0x4200:
+            nmiEnabled = (v & 0x80) != 0;
+            break;
+        }
     }
 
 
@@ -105,6 +127,20 @@ namespace sch
 
     void Snes::doFrame()
     {
-        cpu->runTo(10000);  // TODO
+        if(!currentFile)
+            return;
+
+        //  ~21477272.7272 master cycles per second
+        //    ~357954.5454 master cycles per frame
+        timestamp_t frm = 357955;
+
+        if(nmiEnabled)
+            cpu->triggerNmi();
+
+        cpu->runTo(frm);
+        spc->runTo(frm);
+
+        cpu->adjustTimestamp(-frm);
+        spc->adjustTimestamp(-frm);
     }
 }

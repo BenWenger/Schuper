@@ -19,6 +19,8 @@ namespace sch
         void        closeTraceFile();
         void        cpuTrace(const CpuState& regs, const CpuBus& bus);
 
+        void        traceLine(const char* line);
+
     private:
         CpuTracer(const CpuTracer&) = delete;
         CpuTracer& operator = (const CpuTracer&) = delete;

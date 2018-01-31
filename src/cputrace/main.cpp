@@ -26,9 +26,14 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if(snes.loadFile(std::move(file)) != sch::SnesFile::Type::Rom)
         return 3;
 
-    snes.startCpuTrace("schuper_65816_trace.txt");
+    for(int i = 0; i < 0; ++i) {
+        snes.doFrame();
+    }
 
-    for(int i = 0; i < 10; ++i) {
+    snes.startCpuTrace("schuper_65816_trace.txt");
+    
+
+    for(int i = 0; i < 80; ++i) {
         snes.doFrame();
     }
 

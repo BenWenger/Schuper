@@ -402,5 +402,14 @@ const char* const opnames[0x100] = {
                 regs.SP
         );
     }
+    
+    void CpuTracer::traceLine(const char* line)
+    {
+        if(!traceFile)          return;
+
+        /////////////////////////
+        //  Print PC
+        fprintf(traceFile, "%s\n", line);
+    }
 
 }

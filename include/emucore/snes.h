@@ -44,6 +44,8 @@ namespace sch
 
         u32                         romMask;
 
+        bool                        nmiEnabled;   // TODO remove this shit!
+
         std::unique_ptr<u8[]>       ram;
             
         int                         spdSlow;

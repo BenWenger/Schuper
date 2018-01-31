@@ -15,10 +15,12 @@ namespace sch
     {
     public:
         void            runTo(timestamp_t runto);
+        void            adjustTimestamp(timestamp_t adj);
         void            setTracer(CpuTracer* trc)       { tracer = trc;             }
 
         void            reset(CpuBus* thebus, int iocycrate);
 
+        void            triggerNmi() { interruptPending = true; }       // TODO this is hacky
 
     private:
         enum class IntType
