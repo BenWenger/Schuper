@@ -1,3 +1,6 @@
+
+### [Proposal](proposal.md) - [Timeline](timeline.md) - [Journal](journal.md) - [Bibliography](bibliography.md) - [Samples](samples.md)
+
 # Bibliography and Resources
 
 

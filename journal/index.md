@@ -6,12 +6,12 @@ Ben Wenger
 
 ## Table of Contents
 
-[Proposal](proposal.md)
+### [Proposal](proposal.md) 
 
-[Timeline](timeline.md)
+### [Timeline](timeline.md)
 
-[Journal](journal.md)
+### [Journal](journal.md)
 
-[Bibliography](bibliography.md)
+### [Bibliography](bibliography.md)
 
-[Samples](samples.md)
+### [Samples](samples.md)
