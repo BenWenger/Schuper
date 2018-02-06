@@ -84,7 +84,7 @@ namespace sch
 
             if(tracer)
                 tracer->cpuTrace(regs, *bus);
-
+            
             u8 op = read_p();
 
             switch(op)

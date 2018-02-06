@@ -87,7 +87,7 @@ const char* const opnames[0x100] = {
 /*         x0    x1    x2    x3      x4    x5    x6    x7        x8    x9    xA    xB      xC    xD    xE    xF         */
 /* 0x */ "BRK","ORA","COP","ORA",  "TSB","ORA","ASL","ORA",    "PHP","ORA","ASL","PHD",  "TSB","ORA","ASL","ORA", /* 0x */
 /* 1x */ "BPL","ORA","ORA","ORA",  "TRB","ORA","ASL","ORA",    "CLC","ORA","INC","TCS",  "TRB","ORA","ASL","ORA", /* 1x */
-/* 2x */ "JSR","AND","JSR","AND",  "BIT","AND","ROL","AND",    "PLP","AND","ROL","PLD",  "BIT","AND","ROL","AND", /* 2x */
+/* 2x */ "JSR","AND","JSL","AND",  "BIT","AND","ROL","AND",    "PLP","AND","ROL","PLD",  "BIT","AND","ROL","AND", /* 2x */
 /* 3x */ "BMI","AND","AND","AND",  "BIT","AND","ROL","AND",    "SEC","AND","DEC","TSC",  "BIT","AND","ROL","AND", /* 3x */
 /* 4x */ "RTI","EOR","WDM","EOR",  "MVP","EOR","LSR","EOR",    "PHA","EOR","LSR","PHK",  "JMP","EOR","LSR","EOR", /* 4x */
 /* 5x */ "BVC","EOR","EOR","EOR",  "MVN","EOR","LSR","EOR",    "CLI","EOR","PHY","TCD",  "JMP","EOR","LSR","EOR", /* 5x */

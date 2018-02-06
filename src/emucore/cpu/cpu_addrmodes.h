@@ -41,7 +41,7 @@ u16 ad_rd_dp(bool flg)                      // Direct Page:     LDA $dd
     u16 a =                 read_p();
     a += regs.DP;           dpCyc();
     u16 v =                 read_l(a);
-    if(!flg)    v |=        read_l(++a);
+    if(!flg)    v |=        read_l(++a) << 8;
     return v;
 }
 
@@ -51,7 +51,7 @@ u16 ad_rd_dr(u16 index, bool flg)           // Direct, X/Y:     LDA $dd, X   /  
     a += regs.DP;           dpCyc();
     a += index;             ioCyc();
     u16 v =                 read_l(a);
-    if(!flg)    v |=        read_l(++a);
+    if(!flg)    v |=        read_l(++a) << 8;
     return v;
 }
 u16 ad_rd_dx(bool flg)  { return ad_rd_dr(regs.X.w, flg);   }
@@ -152,8 +152,8 @@ u16 ad_rd_dil(bool flg)                     // DP Indirect Lng: LDA [$dd]
     u32 a =                 read_l(tmp++);
     a |=                    read_l(tmp++) << 8;
     a |=                    read_l(tmp) << 16;
-    u16 v =                 read_a(a);
-    if(!flg)    v |=        read_a(a+1) << 8;
+    u16 v =                 read_l(a);
+    if(!flg)    v |=        read_l(a+1) << 8;
     return v;
 }
 
