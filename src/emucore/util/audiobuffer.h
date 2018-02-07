@@ -44,6 +44,7 @@ namespace sch
         sizeB = sizb >> 2;
         bufOutA = bufa;
         bufOutB = bufb;
+        bytesWritten = 0;
 
         // validate
         if(!bufOutB || (sizeB <= 0))

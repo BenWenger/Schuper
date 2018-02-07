@@ -14,6 +14,9 @@ namespace sch
         spc = std::make_unique<Spc>();
         cpu = std::make_unique<Cpu>();
         cpuBus = std::make_unique<CpuBus>();
+        audioBuffer = std::make_unique<AudioBuffer>();
+
+        spc->setAudioBuffer(audioBuffer.get());
         
         spdFast = 6;
         spdSlow = 8;
@@ -34,8 +37,7 @@ namespace sch
         switch(file.type)
         {
         case SnesFile::Type::Spc:
-            return SnesFile::Type::Invalid;
-            // TODO
+            // nothing needs to be done here -- the load happens during reset
             break;
 
         case SnesFile::Type::Rom:
@@ -71,13 +73,19 @@ namespace sch
 
     void Snes::hardReset()
     {
-        if(currentFile)
+        switch(currentFile.type)
         {
+        case SnesFile::Type::Rom:
             cpuBus->reset();
             cpu->reset(cpuBus.get(), spdSlow);
             spc->reset();
 
             nmiEnabled = false;
+            break;
+
+        case SnesFile::Type::Spc:
+            spc->loadSpcFile(currentFile);
+            break;
         }
     }
 
@@ -127,20 +135,48 @@ namespace sch
 
     void Snes::doFrame()
     {
-        if(!currentFile)
-            return;
+        spc->setAudioBuffer(audioBuffer.get());
 
-        //  ~21477272.7272 master cycles per second
-        //    ~357954.5454 master cycles per frame
-        timestamp_t frm = 357955;
+        switch(currentFile.type)
+        {
+        case SnesFile::Type::Rom:
+            {
+                //  ~21477272.7272 master cycles per second
+                //    ~357954.5454 master cycles per frame
+                timestamp_t frm = 357955;
 
-        if(nmiEnabled)
-            cpu->triggerNmi();
+                if(nmiEnabled)
+                    cpu->triggerNmi();
 
-        cpu->runTo(frm);
-        spc->runTo(frm);
+                cpu->runTo(frm);
+                spc->runTo(frm);
 
-        cpu->adjustTimestamp(-frm);
-        spc->adjustTimestamp(-frm);
+                cpu->adjustTimestamp(-frm);
+                spc->adjustTimestamp(-frm);
+            }
+            break;
+
+        case SnesFile::Type::Spc:
+            spc->runToFillAudio();
+            break;
+
+        }
+        spc->setAudioBuffer(nullptr);
+    }
+
+    int Snes::getBytesOfAudioForAFrame()
+    {
+        // TODO do this better
+        return (32000 * 4 / 60) + 50;
+    }
+
+    int Snes::getBytesOfAudioWritten()
+    {
+        return audioBuffer->getBytesWritten();
+    }
+
+    void Snes::setAudioBuffer(s16* bufA, int sizInBytesA, s16* bufB, int sizInBytesB)
+    {
+        audioBuffer->setBuffer(bufA, sizInBytesA, bufB, sizInBytesB);
     }
 }

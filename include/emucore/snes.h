@@ -13,6 +13,7 @@ namespace sch
     class Cpu;
     class CpuBus;
     class CpuTracer;
+    class AudioBuffer;
 
     class Snes
     {
@@ -28,6 +29,10 @@ namespace sch
 
         void            startCpuTrace(const char* filename);
         void            stopCpuTrace();
+
+        void            setAudioBuffer(s16* bufA, int sizInBytesA, s16* bufB = nullptr, int sizInBytesB = 0);
+        int             getBytesOfAudioWritten();
+        int             getBytesOfAudioForAFrame();
 
         void            doFrame();
 
@@ -52,10 +57,11 @@ namespace sch
         int                         spdFast;
         int                         spdXSlow;
 
-        std::unique_ptr<Spc>        spc;
-        std::unique_ptr<Cpu>        cpu;
-        std::unique_ptr<CpuBus>     cpuBus;
-        std::unique_ptr<CpuTracer>  cpuTracer;
+        std::unique_ptr<Spc>            spc;
+        std::unique_ptr<Cpu>            cpu;
+        std::unique_ptr<CpuBus>         cpuBus;
+        std::unique_ptr<CpuTracer>      cpuTracer;
+        std::unique_ptr<AudioBuffer>    audioBuffer;
     };
 
 }

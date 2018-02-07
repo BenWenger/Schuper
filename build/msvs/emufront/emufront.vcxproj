@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\cputrace\main.cpp" />
+    <ClCompile Include="..\..\..\src\emufront\main.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1CEB3E45-C78A-43C1-904B-CEE12F6E8481}</ProjectGuid>
