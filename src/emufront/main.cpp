@@ -53,15 +53,6 @@ namespace
         snd->stop(true);
     }
 
-    void clearSoundBuffer()
-    {
-        snd->stop(true);
-        auto lk = snd->lock();
-        memset( lk.getBuffer(0), 0, lk.getSize(0) );
-        memset( lk.getBuffer(1), 0, lk.getSize(1) );
-        lk.setWritten( lk.getSize(0) + lk.getSize(1) );
-    }
-
     void doFileSelect(HWND wnd)
     {
         char filename[MAX_PATH+1] = "";
@@ -81,7 +72,7 @@ namespace
             sch::SnesFile file;
             if(file.load(filename))
             {
-                clearSoundBuffer();
+                snd->stop(true);
                 loadState = snes->loadFile(std::move(file));
             }
         }
