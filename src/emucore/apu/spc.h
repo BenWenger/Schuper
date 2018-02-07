@@ -4,7 +4,6 @@
 
 #include "spcbus.h"
 #include "smp.h"
-#include "smptracer.h"
 #include "spctimer.h"
 #include "dsp.h"
 #include <memory>
@@ -12,13 +11,15 @@
 namespace sch
 {
     class SnesFile;
+    class SmpTracer;
 
     class Spc
     {
     public:
                     Spc();
         void        loadSpcFile(const SnesFile& file);
-        void        setTrace(const char* filename);
+
+        void        setTracer(SmpTracer* tracer)            { cpu.setTracer(tracer);        }
 
         void        reset();
 
@@ -41,7 +42,6 @@ namespace sch
         typedef     std::unique_ptr<Dsp>    DspPtr;
 
         Smp         cpu;
-        SmpTracer   tracer;
         SpcTimer    timers[3];
         SpcBus      bus;
         DspPtr      dsp;

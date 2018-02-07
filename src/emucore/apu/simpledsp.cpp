@@ -352,7 +352,7 @@ namespace sch
         
         mvol[0] = mvol[1] = 0;
         evol[0] = evol[1] = 0;
-        flg = 0;
+        flg = 0xE0;
         endx = 0;
         echoFeedback = 0;
         pmon = 0;

@@ -207,20 +207,6 @@ namespace sch
         spcIO_Input[3] = ram[r_CPUIO_3];
     }
 
-    void Spc::setTrace(const char* filename)
-    {
-        if(filename)
-        {
-            tracer.openTraceFile(filename);
-            cpu.setTracer(&tracer);
-        }
-        else
-        {
-            tracer.closeTraceFile();
-            cpu.setTracer(nullptr);
-        }
-    }
-
     ////////////////////////////////////////////////////////////
 
     void Spc::setClockBase(timestamp_t base)

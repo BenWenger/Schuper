@@ -18,6 +18,7 @@ namespace sch
         void        openTraceFile(const char* filename);
         void        closeTraceFile();
         void        cpuTrace(const CpuState& regs, const CpuBus& bus);
+        bool        isOpen() const          { return traceFile != nullptr;      }
 
         void        traceLine(const char* line);
 

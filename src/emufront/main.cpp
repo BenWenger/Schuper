@@ -10,6 +10,10 @@
 namespace
 {
     const char* const       wndClassName = "Schuper_Window_Class";
+    
+    const char* const       cpuTraceFileName = "Schuper_cpu_trace.txt";
+    const char* const       spcTraceFileName = "Schuper_spc_trace.txt";
+
 
     typedef sch::SnesFile::Type     FileType;
 
@@ -17,6 +21,18 @@ namespace
     sch::Snes*              snes;
     bool                    runapp;
     FileType                loadState;
+
+    void toggleCpuTrace()
+    {
+        if(snes->isCpuTracing())    snes->stopCpuTrace();
+        else                        snes->startCpuTrace(cpuTraceFileName);
+    }
+    
+    void toggleSpcTrace()
+    {
+        if(snes->isSpcTracing())    snes->stopSpcTrace();
+        else                        snes->startSpcTrace(spcTraceFileName);
+    }
 
     bool isLoaded()
     {
@@ -29,6 +45,12 @@ namespace
         snes->setAudioBuffer( lk.getBuffer<sch::s16>(0), lk.getSize(0), lk.getBuffer<sch::s16>(1), lk.getSize(1) );
         snes->doFrame();
         lk.setWritten( snes->getBytesOfAudioWritten() );
+    }
+
+    void unloadFile()
+    {
+        loadState = FileType::Invalid;
+        snd->stop(true);
     }
 
     void clearSoundBuffer()
@@ -73,9 +95,16 @@ namespace
         switch(msg)
         {
         case WM_KEYDOWN:
-            if(w == VK_ESCAPE)
+            switch(w)
             {
-                doFileSelect(wnd);
+            case VK_ESCAPE:
+                if(GetAsyncKeyState(VK_LSHIFT) & 0x8000)        unloadFile();
+                else                                            doFileSelect(wnd);
+
+                break;
+
+            case VK_F7:         toggleCpuTrace();               break;
+            case VK_F8:         toggleSpcTrace();               break;
             }
             break;
         case WM_SYSCOMMAND:

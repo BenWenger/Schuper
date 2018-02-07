@@ -13,6 +13,7 @@ namespace sch
     class Cpu;
     class CpuBus;
     class CpuTracer;
+    class SmpTracer;
     class AudioBuffer;
 
     class Snes
@@ -29,6 +30,11 @@ namespace sch
 
         void            startCpuTrace(const char* filename);
         void            stopCpuTrace();
+        bool            isCpuTracing();
+        
+        void            startSpcTrace(const char* filename);
+        void            stopSpcTrace();
+        bool            isSpcTracing();
 
         void            setAudioBuffer(s16* bufA, int sizInBytesA, s16* bufB = nullptr, int sizInBytesB = 0);
         int             getBytesOfAudioWritten();
@@ -61,6 +67,7 @@ namespace sch
         std::unique_ptr<Cpu>            cpu;
         std::unique_ptr<CpuBus>         cpuBus;
         std::unique_ptr<CpuTracer>      cpuTracer;
+        std::unique_ptr<SmpTracer>      smpTracer;
         std::unique_ptr<AudioBuffer>    audioBuffer;
     };
 

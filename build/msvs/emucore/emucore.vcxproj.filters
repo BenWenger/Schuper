@@ -13,9 +13,6 @@
     <Filter Include="src\snesfile">
       <UniqueIdentifier>{bbb6f8dc-aab6-48b8-8272-34a3618ca0c8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\temp">
-      <UniqueIdentifier>{3e49168f-e309-40c4-b21a-41d0ed36ca7e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\util">
       <UniqueIdentifier>{bdb480bd-8fa3-4096-8085-98b0eb48f4bc}</UniqueIdentifier>
     </Filter>
@@ -41,9 +38,6 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp">
       <Filter>src\apu</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\emucore\temp\tempspc.cpp">
-      <Filter>src\temp</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp">
       <Filter>src\snesfile</Filter>
@@ -93,9 +87,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\emucore\snesfile.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\emucore\tempspc.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\emucore\snestypes.h">

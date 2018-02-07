@@ -5,6 +5,7 @@
 #include "cpu/cpu.h"
 #include "bus/cpubus.h"
 #include "cpu/cputracer.h"
+#include "apu/smptracer.h"
 
 namespace sch
 {
@@ -131,6 +132,31 @@ namespace sch
         if(cpuTracer)
             cpuTracer->closeTraceFile();
         cpu->setTracer(nullptr);
+    }
+
+    bool Snes::isCpuTracing()
+    {
+        return cpuTracer && cpuTracer->isOpen();
+    }
+    
+    void Snes::startSpcTrace(const char* filename)
+    {
+        if(!smpTracer)
+            smpTracer = std::make_unique<SmpTracer>();
+        smpTracer->openTraceFile(filename);
+        spc->setTracer(smpTracer.get());
+    }
+
+    void Snes::stopSpcTrace()
+    {
+        if(smpTracer)
+            smpTracer->closeTraceFile();
+        spc->setTracer(nullptr);
+    }
+
+    bool Snes::isSpcTracing()
+    {
+        return smpTracer && smpTracer->isOpen();
     }
 
     void Snes::doFrame()

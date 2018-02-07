@@ -30,13 +30,11 @@
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\snes.cpp" />
     <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\temp\tempspc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\include\emucore\schuper.h" />
     <ClInclude Include="..\..\..\include\emucore\snes.h" />
     <ClInclude Include="..\..\..\include\emucore\snesfile.h" />
-    <ClInclude Include="..\..\..\include\emucore\tempspc.h" />
     <ClInclude Include="..\..\..\include\emucore\snestypes.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\dsp.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\simpledsp.h" />
