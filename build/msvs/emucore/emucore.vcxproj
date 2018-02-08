@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\snes.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp" />
     <ClCompile Include="..\..\..\src\emucore\snesfile\snesfile.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -52,8 +53,12 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
+    <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h" />
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />
     <ClInclude Include="..\..\..\src\emucore\util\clockedsubsystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\emucore\ppu\ppu.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D13CC37D-55A4-42DF-878B-165A074FB161}</ProjectGuid>

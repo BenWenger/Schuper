@@ -25,6 +25,9 @@
     <Filter Include="src\main">
       <UniqueIdentifier>{81a8e25f-6c9f-4bca-959f-511adaa04808}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\ppu">
+      <UniqueIdentifier>{22bdc319-4987-4ffe-a5de-a13321afa84d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -59,6 +62,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp">
       <Filter>src\main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp">
+      <Filter>src\ppu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -128,5 +134,13 @@
     <ClInclude Include="..\..\..\include\emucore\snes.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h">
+      <Filter>src\ppu</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\emucore\ppu\ppu.h">
+      <Filter>src\ppu</Filter>
+    </None>
   </ItemGroup>
 </Project>
