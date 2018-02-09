@@ -53,7 +53,9 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
+    <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h" />
+    <ClInclude Include="..\..\..\src\emucore\ppu\color.h" />
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />
     <ClInclude Include="..\..\..\src\emucore\util\clockedsubsystem.h" />
   </ItemGroup>

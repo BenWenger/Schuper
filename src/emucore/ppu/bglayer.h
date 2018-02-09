@@ -9,6 +9,7 @@ namespace sch
     {
     public:
         bool        use16Tiles;
+        bool        priorityBit;
         unsigned    tileMapAddr;
         unsigned    tileMapXOverflow;
         unsigned    tileMapYOverflow;

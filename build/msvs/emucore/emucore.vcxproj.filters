@@ -28,6 +28,9 @@
     <Filter Include="src\ppu">
       <UniqueIdentifier>{22bdc319-4987-4ffe-a5de-a13321afa84d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\dma">
+      <UniqueIdentifier>{401c4743-0c02-47c3-a9e0-48766c08ab28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -136,6 +139,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h">
       <Filter>src\ppu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\ppu\color.h">
+      <Filter>src\ppu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h">
+      <Filter>src\dma</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

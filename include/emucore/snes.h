@@ -58,6 +58,7 @@ namespace sch
         bool                        nmiEnabled;   // TODO remove this shit!
 
         std::unique_ptr<u8[]>       ram;
+        u32                         altRamAddr;
             
         int                         spdSlow;
         int                         spdFast;

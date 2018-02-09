@@ -3,6 +3,8 @@
 #define SCHUPER_PPU_PPU_H_INCLUDED
 
 #include "snestypes.h"
+#include "bglayer.h"
+#include "color.h"
 
 namespace sch
 {
@@ -10,7 +12,12 @@ namespace sch
     class Ppu
     {
 
+    public:
+        void        regWrite(u16 a, u8 v);
+
     private:
+        BgLayer     bgLayers[4];
+
         // 2100
         bool        forceBlank;
         int         brightness;
@@ -21,13 +28,29 @@ namespace sch
         // 2105
         int         bgMode;
         bool        mode1AltPriority;
-        bool        bgPriority[4];
 
-        // 2106 - TODO Mosaic
+        u8          scrollRegPrev;
 
-        // 2107 - 210C
-        int         bgTileMapAddr[4];
-        int         bgTileMapX
+        // 2115
+        bool        addrIncOnHigh;
+        unsigned    addrInc;
+        int         vramRemapMode;
+        u16         getEffectiveVramAddr() const;
+
+        // 2116, 7
+        u16         vramAddr;
+        u16         vram[0x8000];
+
+        // 2121
+        u16         cgAddr;
+        u16         cgRegPrev;
+        bool        cgRegToggle;
+        Color       cgRam[0x100];
+
+        // 212C, D
+        u8          manScrLayers;
+        u8          subScrLayers;
+
 
 
     };

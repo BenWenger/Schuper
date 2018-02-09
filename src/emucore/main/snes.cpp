@@ -95,6 +95,12 @@ namespace sch
         u8 out = 0;
         switch(a)
         {
+        case 0x2180:
+            out = ram[altRamAddr];
+            altRamAddr++;
+            altRamAddr &= 0x1FFFF;
+            break;
+
         case 0x2140:  case 0x2141:  case 0x2142:  case 0x2143:
             spc->runTo(clk);
             out = spc->readIoReg(a&3);
@@ -105,8 +111,19 @@ namespace sch
     
     void Snes::wr_Reg(u16 a, u8 v, timestamp_t clk)
     {
+        int tmp;
         switch(a)
         {
+        case 0x2180:
+            ram[altRamAddr] = v;
+            altRamAddr++;
+            altRamAddr &= 0x1FFFF;
+            break;
+            
+        case 0x2181:        altRamAddr = (altRamAddr & 0x1FF00) | v;                break;
+        case 0x2182:        altRamAddr = (altRamAddr & 0x100FF) | (v << 8);         break;
+        case 0x2183:        altRamAddr = (altRamAddr & 0x0FFFF) | ((v & 1) << 16);  break;
+
         case 0x2140:  case 0x2141:  case 0x2142:  case 0x2143:
             spc->runTo(clk);
             spc->writeIoReg(a&3, v);
@@ -114,6 +131,10 @@ namespace sch
 
         case 0x4200:
             nmiEnabled = (v & 0x80) != 0;
+            break;
+
+        case 0x420B:
+            tmp = 15;
             break;
         }
     }
