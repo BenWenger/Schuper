@@ -69,6 +69,9 @@
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp">
       <Filter>src\ppu</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\dma\dmaunit.cpp">
+      <Filter>src\dma</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">

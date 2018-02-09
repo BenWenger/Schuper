@@ -15,6 +15,8 @@ namespace sch
     class CpuTracer;
     class SmpTracer;
     class AudioBuffer;
+    class DmaUnit;
+    class Ppu;
 
     class Snes
     {
@@ -70,6 +72,8 @@ namespace sch
         std::unique_ptr<CpuTracer>      cpuTracer;
         std::unique_ptr<SmpTracer>      smpTracer;
         std::unique_ptr<AudioBuffer>    audioBuffer;
+        std::unique_ptr<DmaUnit>        dmaUnit;
+        std::unique_ptr<Ppu>            ppu;
     };
 
 }

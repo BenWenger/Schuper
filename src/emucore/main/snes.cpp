@@ -6,6 +6,8 @@
 #include "bus/cpubus.h"
 #include "cpu/cputracer.h"
 #include "apu/smptracer.h"
+#include "dma/dmaunit.h"
+#include "ppu/ppu.h"
 
 namespace sch
 {
@@ -16,6 +18,8 @@ namespace sch
         cpu = std::make_unique<Cpu>();
         cpuBus = std::make_unique<CpuBus>();
         audioBuffer = std::make_unique<AudioBuffer>();
+        dmaUnit = std::make_unique<DmaUnit>();
+        ppu = std::make_unique<Ppu>();
 
         spc->setAudioBuffer(audioBuffer.get());
         
@@ -80,6 +84,8 @@ namespace sch
             cpuBus->reset();
             cpu->reset(cpuBus.get(), spdSlow);
             spc->reset();
+            dmaUnit->reset(true, cpuBus.get(), cpu.get(), 12, 8, 8);
+            ppu->reset(true);
 
             nmiEnabled = false;
             break;
@@ -105,13 +111,24 @@ namespace sch
             spc->runTo(clk);
             out = spc->readIoReg(a&3);
             break;
+
+        default:
+            if(a >= 0x2100 && a < 0x2140)
+            {
+                ppu->runTo(clk);
+                ppu->regRead(a, out);
+            }
+            else if(a >= 0x4300 && a < 0x4400)
+            {
+                dmaUnit->read(a, out, clk);
+            }
+            break;
         }
         return out;
     }
     
     void Snes::wr_Reg(u16 a, u8 v, timestamp_t clk)
     {
-        int tmp;
         switch(a)
         {
         case 0x2180:
@@ -133,8 +150,21 @@ namespace sch
             nmiEnabled = (v & 0x80) != 0;
             break;
 
-        case 0x420B:
-            tmp = 15;
+        case 0x420B: case 0x420C:
+            ppu->runTo(clk);
+            dmaUnit->write(a, v, clk);
+            break;
+
+        default:
+            if(a >= 0x2100 && a < 0x2140)
+            {
+                ppu->runTo(clk);
+                ppu->regWrite(a, v);
+            }
+            else if(a >= 0x4300 && a < 0x4400)
+            {
+                dmaUnit->write(a, v, clk);
+            }
             break;
         }
     }
