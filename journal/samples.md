@@ -10,4 +10,4 @@ Link to the CPU code I want to show:  [cpu.cpp](../src/emucore/cpu/cpu.cpp)
 
 SNES Roadmap:
 
-![rc/roadmap1.png]
+![Roadmap](rc/roadmap1.png)
