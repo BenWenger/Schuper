@@ -5,4 +5,4 @@
 
 ##  First presentation stuff
 
-Link to the CPU code I want to show:  [../src/emucore/cpu/cpu.cpp](cpu.cpp)
+Link to the CPU code I want to show:  [cpu.cpp](../src/emucore/cpu/cpu.cpp)
