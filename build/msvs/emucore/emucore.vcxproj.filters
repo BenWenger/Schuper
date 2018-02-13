@@ -31,6 +31,9 @@
     <Filter Include="src\dma">
       <UniqueIdentifier>{401c4743-0c02-47c3-a9e0-48766c08ab28}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\event">
+      <UniqueIdentifier>{360cc144-bff6-40fe-9425-5a26d40e3d5a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -68,6 +71,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp">
       <Filter>src\ppu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\dma\dmaunit.cpp">
+      <Filter>src\dma</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp">
+      <Filter>src\event</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -145,6 +154,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h">
       <Filter>src\dma</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\event\eventmanager.h">
+      <Filter>src\event</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h">
+      <Filter>src\event</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

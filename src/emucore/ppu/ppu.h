@@ -14,6 +14,12 @@ namespace sch
 
     public:
         void        regWrite(u16 a, u8 v);
+        void        regRead(u16 a, u8& v);
+
+        void        runTo(timestamp_t runto);
+        void        adjustTimestamp(timestamp_t adj);
+
+        void        reset(bool hard);
 
     private:
         BgLayer     bgLayers[4];

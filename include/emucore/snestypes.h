@@ -3,6 +3,7 @@
 #define SCHUPER_EMUCORE_TYPES_H_INCLUDED
 
 #include <cstdint>
+#include <limits>
 
 namespace sch
 {
@@ -17,6 +18,16 @@ namespace sch
     typedef     std::int64_t            s64;
 
     typedef     std::int_fast32_t       timestamp_t;
+
+
+    class Time
+    {
+        Time() = delete;
+        ~Time() = delete;
+
+    public:
+        static const timestamp_t    Never = std::numeric_limits<timestamp_t>::max();
+    };
 
 }
 

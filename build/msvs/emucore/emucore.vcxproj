@@ -27,6 +27,8 @@
     <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp" />
     <ClCompile Include="..\..\..\src\emucore\cpu\cpu.cpp" />
     <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\dma\dmaunit.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\snes.cpp" />
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp" />
@@ -54,6 +56,8 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
+    <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h" />
+    <ClInclude Include="..\..\..\src\emucore\event\eventmanager.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\color.h" />
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />

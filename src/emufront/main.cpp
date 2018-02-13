@@ -3,6 +3,7 @@
 #undef UNICODE
 #endif
 
+#define NOMINMAX
 #include <Windows.h>
 #include "soundout.h"
 #include "snes.h"

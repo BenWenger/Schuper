@@ -3,6 +3,52 @@
 
 namespace sch
 {
+    void Ppu::reset(bool hard)
+    {
+        if(hard)
+        {
+            for(auto& i : bgLayers)
+            {
+                i.chrAddr = 0;
+                i.priorityBit = false;
+                i.scrollX = 0;
+                i.scrollY = 0;
+                i.tileMapAddr = 0;
+                i.tileMapXOverflow = 0;
+                i.tileMapYOverflow = 0;
+                i.use16Tiles = false;
+            }
+
+            forceBlank = true;
+            brightness = 0;
+
+            bgMode = 0;
+            mode1AltPriority = false;
+            scrollRegPrev = 0;
+            
+            addrIncOnHigh = true;
+            addrInc = 1;
+            vramRemapMode = 0;
+            vramAddr = 0;
+
+            cgAddr = 0;
+            cgRegPrev = 0;
+            cgRegToggle = false;
+
+            manScrLayers = 0;
+            subScrLayers = 0;
+
+            for(auto& i : vram)
+                i = 0;
+            for(auto& i : cgRam)
+            {
+                i.r = i.g = i.b = i.prio = 0;
+            }
+        }
+    }
+
+
+
     inline u16 Ppu::getEffectiveVramAddr() const
     {
         /*
@@ -128,7 +174,7 @@ namespace sch
             cgRegToggle = false;        // should this be done here?
             break;
         case 0x2122:
-            if(cgRegToggle)     cgRam[cgAddr].from15Bit( (v << 8) | cgRegPrev );
+            if(cgRegToggle)     cgRam[cgAddr++].from15Bit( (v << 8) | cgRegPrev );
             else                cgRegPrev = v;
             cgRegToggle = !cgRegToggle;
             break;
@@ -167,6 +213,21 @@ namespace sch
             // TODO interlace and overscand and UGH
             break;
         }
+    }
+
+    void Ppu::regRead(u16 a, u8& v)
+    {
+        // TODO
+    }
+
+    void Ppu::runTo(timestamp_t runto)
+    {
+        // TODO
+    }
+    
+    void Ppu::adjustTimestamp(timestamp_t adj)
+    {
+        // TODO
     }
 
 
