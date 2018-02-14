@@ -86,8 +86,7 @@ namespace sch
                 if(interruptPending)        // note:  PENDING, not ready!   That's important, as ready won't
                 {                           //    be set by runToNextEvent!
                     waiting = false;
-                    ioCyc(2);               // TODO:  verify this eventually -- I think there's a 2 cycle delay
-                                            //   before we actually wake up
+                    ioCyc(2);
                 }
                 else
                     clock->runToNextEvent(runto);

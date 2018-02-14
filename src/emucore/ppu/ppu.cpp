@@ -210,7 +210,7 @@ namespace sch
             break;
 
         case 0x2133:
-            // TODO interlace and overscand and UGH
+            // TODO interlace and overscan and UGH
             break;
         }
     }
