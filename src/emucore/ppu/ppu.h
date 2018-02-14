@@ -5,11 +5,12 @@
 #include "snestypes.h"
 #include "bglayer.h"
 #include "color.h"
+#include "event/eventhandler.h"
 
 namespace sch
 {
 
-    class Ppu
+    class Ppu : public EventHandler
     {
 
     public:
@@ -20,6 +21,8 @@ namespace sch
         void        adjustTimestamp(timestamp_t adj);
 
         void        reset(bool hard);
+        
+        void        performEvent(int eventId, timestamp_t clk) override;
 
     private:
         BgLayer     bgLayers[4];

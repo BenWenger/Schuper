@@ -33,58 +33,6 @@
             Brk
         };
 #endif
-
-/////////////////////////////////////////////////////////
-//  Interrupts!
-
-void doInterrupt(IntType type)
-{
-    bool is_sw = (type == IntType::Cop) || (type == IntType::Brk);
-    if(is_sw)
-    {
-      //read_p();   <- This is the opcode fetch -- this cycle happened already
-        read_p();   // Signature byte
-    }
-    else
-    {
-        read_l( regs.PBR | regs.PC );       // dummy read and IO cyc
-        ioCyc();                            //   instead of op and signature reads
-    }
-
-    if(type == IntType::Reset)
-    {
-        ioCyc(3);       // don't actually push, do IO cycs instead
-        regs.fE = true;
-        regs.fM = true;
-        regs.fX = true;
-        regs.X.h = regs.Y.h = 0;
-    }
-    else
-    {
-        if(!regs.fE)        push( regs.PBR >> 16 );     // push PBR if in native mode
-        push( regs.PC >> 8 );
-        push( regs.PC & 0xFF );
-        push( regs.getStatusByte(is_sw) );
-    }
-
-    regs.fD = false;
-    regs.fI = true;         // TODO repredict IRQs
-    regs.PBR = 0;
-
-    u16 vec;
-    switch(type)
-    {
-    case IntType::Reset:    vec = 0xFFFC;                       break;
-    case IntType::Abort:    vec = regs.fE ? 0xFFF8 : 0xFFE8;    break;
-    case IntType::Nmi:      vec = regs.fE ? 0xFFFA : 0xFFEA;    break;
-    case IntType::Irq:      vec = regs.fE ? 0xFFFE : 0xFFEE;    break;
-    case IntType::Cop:      vec = regs.fE ? 0xFFF4 : 0xFFE4;    break;
-    case IntType::Brk:      vec = regs.fE ? 0xFFFE : 0xFFE6;    break;
-    }
-
-    regs.PC  = read_l( vec );
-    regs.PC |= read_l( vec+1 ) << 8;
-}
         
 /////////////////////////////////////////////////////////
 //  Common
@@ -699,24 +647,25 @@ void u_REP()
     u8 v =          read_p();
     ioCyc();
 
-    if(v & CpuState::C_FLAG)            regs.fC = 0;
-    if(v & CpuState::Z_FLAG)            regs.fZ = 1;
-    if(v & CpuState::I_FLAG)            regs.fI = false;    // TODO - repredict IRQs
-    if(v & CpuState::D_FLAG)            regs.fD = false;
-    if(v & CpuState::V_FLAG)            regs.fV = 0;
-    if(v & CpuState::N_FLAG)            regs.fN = 0;
+    if(v & CpuState::C_FLAG)    regs.fC = 0;
+    if(v & CpuState::Z_FLAG)    regs.fZ = 1;
+    if(v & CpuState::I_FLAG) {  regs.fI = false;    checkInterruptPending();    }
+    if(v & CpuState::D_FLAG)    regs.fD = false;
+    if(v & CpuState::V_FLAG)    regs.fV = 0;
+    if(v & CpuState::N_FLAG)    regs.fN = 0;
 
     if(!regs.fE)
     {
         if(v & CpuState::X_FLAG)        regs.fX = false;
         if(v & CpuState::M_FLAG)        regs.fM = false;
     }
+
 }
 
 void u_RTI()
 {
                             ioCyc(2);
-    regs.setStatusByte( pull() );       // TODO - repredict IRQ
+    regs.setStatusByte( pull() );   checkInterruptPending();
     regs.PC =               pull();
     regs.PC |=              pull() << 8;
     if(!regs.fE) regs.PBR = pull() << 16;
@@ -743,29 +692,18 @@ void u_SEP()
     u8 v =          read_p();
     ioCyc();
 
-    if(v & CpuState::C_FLAG)            regs.fC = 1;
-    if(v & CpuState::Z_FLAG)            regs.fZ = 0;
-    if(v & CpuState::I_FLAG)            regs.fI = true;     // TODO - repredict IRQs
-    if(v & CpuState::D_FLAG)            regs.fD = true;
-    if(v & CpuState::V_FLAG)            regs.fV = 1;
-    if(v & CpuState::N_FLAG)            regs.fN = 1;
+    if(v & CpuState::C_FLAG)    regs.fC = 1;
+    if(v & CpuState::Z_FLAG)    regs.fZ = 0;
+    if(v & CpuState::I_FLAG) {  regs.fI = true; checkInterruptPending();    }
+    if(v & CpuState::D_FLAG)    regs.fD = true;
+    if(v & CpuState::V_FLAG)    regs.fV = 1;
+    if(v & CpuState::N_FLAG)    regs.fN = 1;
 
     if(!regs.fE)
     {
         if(v & CpuState::X_FLAG)    {   regs.fX = true;     regs.X.h = regs.Y.h = 0;    }
         if(v & CpuState::M_FLAG)        regs.fM = true;
     }
-}
-
-void u_STP()
-{
-    // TODO
-}
-
-void u_WAI()
-{
-    // TODO
-    //  WAI takes 2 IO cycles to end.  IE, there are 2 cycles between IRQ happening and the actual IRQ execution
 }
 
 void u_XBA()

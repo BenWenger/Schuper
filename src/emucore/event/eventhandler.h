@@ -12,7 +12,7 @@ namespace sch
     public:
         virtual ~EventHandler() {}
 
-        virtual timestamp_t     performEvent(int eventId, timestamp_t clk) = 0;
+        virtual void    performEvent(int eventId, timestamp_t clk) = 0;
     };
 
 }

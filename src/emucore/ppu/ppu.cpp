@@ -215,6 +215,10 @@ namespace sch
         }
     }
 
+    void Ppu::performEvent(int eventId, timestamp_t clk)
+    {
+    }
+
     void Ppu::regRead(u16 a, u8& v)
     {
         // TODO

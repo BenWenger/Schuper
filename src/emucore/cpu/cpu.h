@@ -10,17 +10,19 @@ namespace sch
 {
     class CpuBus;
     class CpuTracer;
+    class MainClock;
 
     class Cpu
     {
     public:
         void            runTo(timestamp_t runto);
-        void            adjustTimestamp(timestamp_t adj);
         void            setTracer(CpuTracer* trc)       { tracer = trc;             }
 
-        void            reset(CpuBus* thebus, int iocycrate);
+        void            reset(CpuBus* thebus, MainClock* theclock);
 
-        void            triggerNmi() { interruptPending = true; }       // TODO this is hacky
+        void            signalNmi();
+        void            signalIrq(u32 irqmask);
+        void            acknowledgeIrq(u32 irqmask);
 
     private:
         enum class IntType
@@ -32,21 +34,26 @@ namespace sch
             Cop,
             Brk
         };
-        timestamp_t     curTick;        // current timestamp
-        timestamp_t     ioTickBase;     // tick base of 1 "io cycle"
+        MainClock*      clock;
 
         
         CpuTracer*      tracer;
         CpuBus*         bus;
         CpuState        regs;
-        bool            interruptPending;
-        bool            resetPending;
-        bool            stopped;
-        bool            waiting;
+
+        bool            interruptReady;     // An interrupt can happen now
+        bool            interruptPending;   // An interrupt is pending, but can't happen for 1 cycle (simulate 1 cycle delay)
+        bool            resetPending;       // The pending interrupt is a reset
+        bool            nmiPending;         // The pending interrupt is an NMI
+        u32             irqFlags;           // Bitmask of any IRQs pending (0 = no IRQs)
+
+        bool            stopped;            // The CPU is stopped / deadlocked  (happens on STP instruction)
+        bool            waiting;            // The CPU is sleeping / waiting for interrupt (WAI instruction)
 
         void            dpCyc();                    // Do an IO cycle if low byte if DP isn't zero
         void            ioCyc();
         void            ioCyc(int cycs);
+        void            tallyCycle(int cycs);
         void            doIndex(u16& a, u16 idx);   // Add an index to an address, and add an extra IO cyc when appropriate
 
         u8              read_l(u32 a);              // long read (24-bit)
@@ -57,6 +64,11 @@ namespace sch
         void            write_l(u32 a, u8 v);       // long write (24-bit)
         void            write_a(u16 a, u8 v);       // absolute write (16-bit, using DBR)
         void            push(u8 v);
+        
+        void            doInterrupt(IntType type);
+        void            checkInterruptPending();
+
+        void            innerRun(timestamp_t runto);
 
         typedef         u16 (Cpu::*op_t)(u16, bool);
         #define         CALLOP(v,flg)       (this->*op)(v,flg)
