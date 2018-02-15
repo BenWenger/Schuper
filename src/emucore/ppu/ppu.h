@@ -42,12 +42,38 @@
 
 
     Now... you might think the most logical thing would be to have the frame start at V=0.  But
-    this doesn't work well because to emulate on a frame-by-frame basis...
+    this doesn't work well because we want to emulate on a frame-by-frame basis, and there are
+    some hiccups with that:
+
+    - We can't stop the frame at any CPU cycle.  We can only stop between instructions
+    - We also can't stop in the middle of a DMA.
+    - For those reasons, there is going to be "spillover" and the CPU is going to run past the
+        end of the frame.
+    - This is accompanied with reads/writes after the end of the frame, which could have
+        an impact on PPU behavior of the next frame!
 
 
-    TODO - explain why frame needs to start at V=241
+    Basically we don't want anything of significance to the PPU to happen after the end of the frame.
+    But that's unavoidable.  So instead, we want anything that happens we don't want to interfere
+    with rendering the next frame.  Which means we want the frame to start with as much VBlank time
+    as possible, so that any spillover won't change anything.
 
+    This is complicated by the fact that VBlank starts at different times (depending on whether
+    overscan is enabled), and that the frame itself is of variable length (depending on whether
+    interlace mode is enabled).
 
+    So I'm starting the frame at V=241!
+
+    --frame start--
+    V=241-261           VBlank
+    V=262               More VBlank, but skipped unless interlace yadda yadda
+    V=0                 Pre-render
+    V=1-224             Render
+    V=225-239           VBlank or Render, depending on overscan     \____  NMI happens somewhere in here
+    V=240               VBlank                                      /
+
+    It is still technically possible for DMA to spill into rendering of the next frame (DMAs can
+    be VERY long), but this should be "good enough" for all actual games.
 */
 
 namespace sch
@@ -68,7 +94,9 @@ namespace sch
         void        performEvent(int eventId, timestamp_t clk) override;
 
     private:
-        BgLayer     bgLayers[4];
+        BgLayer         bgLayers[4];
+        timestamp_t     curTick;
+        int             curScanline;
 
         // 2100
         bool        forceBlank;
@@ -103,6 +131,30 @@ namespace sch
         u8          manScrLayers;
         u8          subScrLayers;
 
+        
+        // 2133
+        bool        mode7ExtraBg;
+        bool        hiResMode;
+        bool        overscanMode;
+        bool        interlaceObjects;
+        bool        interlaceMode;
+
+        // 4200
+        bool        nmiEnabled;
+        enum class IrqMode
+        {
+            Disabled,
+            H,
+            V,
+            HV
+        }           irqMode;
+        bool        irqPending;
+
+        // 4210
+        bool        nmiReadFlag;
+
+        // 4212
+        u8          ppuStatus;
 
 
     };
