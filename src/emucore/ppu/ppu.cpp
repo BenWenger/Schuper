@@ -223,16 +223,31 @@ namespace sch
     {
         // TODO
     }
-
-    void Ppu::runTo(timestamp_t runto)
-    {
-        // TODO
-    }
     
     void Ppu::adjustTimestamp(timestamp_t adj)
     {
         // TODO
     }
+    
+    void Ppu::runTo(timestamp_t runto)
+    {
+        Coord   targetPos = getCoordFromTimestamp(runto);
 
+        //TODO
+    }
+
+
+    inline Ppu::Coord Ppu::getCoordFromTimestamp(timestamp_t t)
+    {
+        Coord out;
+        out.H = out.V = 0;
+        if(t > v0_time)     t -= v0_time;
+        else                out.V = 241;
+
+        out.V += (t / (341*4));     // TODO move the '4' somewhere
+        out.H += (t % (341*4));
+
+        return out;
+    }
 
 }

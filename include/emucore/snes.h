@@ -1,6 +1,6 @@
 
-#ifndef SCHUPER_SNES_H_INCLUDED
-#define SCHUPER_SNES_H_INCLUDED
+#ifndef SCHUPER_EMUCORE_SNES_H_INCLUDED
+#define SCHUPER_EMUCORE_SNES_H_INCLUDED
 
 #include <memory>
 #include <vector>

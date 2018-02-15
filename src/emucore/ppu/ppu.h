@@ -6,6 +6,7 @@
 #include "bglayer.h"
 #include "color.h"
 #include "event/eventhandler.h"
+#include "videosettings.h"
 
 /*
     Some notes on frame structure.
@@ -14,9 +15,18 @@
     Each "dot" is 4 master cycles.
 
     With some oddities:
-    - 2 dots are actually 6 cycles long instead of 4 (effectively making
+    a) 2 dots are actually 6 cycles long instead of 4 (effectively making
         the scanline 341 dots long, even though there are only 340 dots)
-    - when in interlace mode, even frames are 263 scanlines long
+        (dots 323 and 327 are the long ones)
+    b) when in interlace mode, even frames are 263 scanlines long
+    c) when NOT in interlace mode, on odd frames, scanline 240 is 4 cycles shorter.
+        This is for a weird NTSC sync thing -- I'm completely ignoring this in
+        my emulator. There's no way those 4 cycles are going to make a
+        difference, and implementing this is a big complication.
+
+    ****  technically, 'a' and 'c' above are related. the 4 cycles lost on that scanline
+        are because the "long" dots run at normal speed for that scanline, but again I'm
+        fudging both of these a bit  ****
 
     This means that a full frame is [usually] 4*341*262 =   357,368 master cycles
 
@@ -74,6 +84,12 @@
 
     It is still technically possible for DMA to spill into rendering of the next frame (DMAs can
     be VERY long), but this should be "good enough" for all actual games.
+
+
+
+    Note agian that there are only 340 dots per line and that two dots are 50% longer than the others.
+    To simplify this, I'm just going to emulate 341 dots per line all at the same length.  This will
+    throw off IRQ timing *VERY SLIGHTLY* but I doubt it will matter.
 */
 
 namespace sch
@@ -93,10 +109,51 @@ namespace sch
         
         void        performEvent(int eventId, timestamp_t clk) override;
 
+        void        frameStart(const VideoSettings& vid);
+
+        timestamp_t getMaxTicksPerFrame() const
+        {
+            return 341 * 263 * 4;       // TODO - move this '4' somewhere?
+        }
+
+        timestamp_t getPrevFrameLength() const
+        {
+            return vEnd_time;
+        }
+
     private:
+        struct Coord
+        {
+            int H;
+            int V;
+
+            int compare(const Coord& rhs) const {
+                if(V < rhs.V)       return -1;
+                if(V > rhs.V)       return 1;
+                if(H < rhs.H)       return -1;
+                if(H > rhs.H)       return 1;
+                return 0;
+            }
+            bool operator < (const Coord& rhs) const {      return compare(rhs) < 0;    }
+        };
+
+
+        Coord getCoordFromTimestamp(timestamp_t t);
+
+        VideoSettings   video;
+
         BgLayer         bgLayers[4];
         timestamp_t     curTick;
-        int             curScanline;
+        bool            oddFrame;               // toggles every frame
+        timestamp_t     v0_time;                // the timestamp at which V=0, H=0 happened
+                                                //     or Time::Never if that hasn't happened yet
+                                                // this is useful for calculating V/H coords based on timestamps
+        timestamp_t     vEnd_time;              // the timestamp at which the "frame" actually ended
+        
+        Coord           curPos;
+
+        Color           renderBufMain[256];
+        Color           renderBufSub[256];
 
         // 2100
         bool        forceBlank;
