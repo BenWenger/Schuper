@@ -1,7 +1,7 @@
 
 #include "dmaunit.h"
 #include "bus/cpubus.h"
-#include "cpu/cpu.h"
+#include "main/mainclock.h"
 
 namespace sch
 {
@@ -31,7 +31,7 @@ namespace sch
         if(a == 0x420B)
         {
             if(!v)          return;
-            doDma(v, clk);
+            doDma(v);                   //  TODO Move this to an event?  I guess it happens a few cycles after the write?
         }
         else if(a == 0x420C)
         {
@@ -70,7 +70,7 @@ namespace sch
 
     ///////////////////////////////////////////////////////////////
 
-    void DmaUnit::doDma(u8 chanmask, timestamp_t clk)
+    void DmaUnit::doDma(u8 chanmask)
     {
         static const u8 modePatterns[8][4] = {
             {0,0,0,0},
@@ -83,15 +83,14 @@ namespace sch
             {0,0,1,1}
         };
 
-        timestamp_t origclk = clk;
         u8 v;
 
-        clk += dmaDelay;
+        clock->tallyCycle(dmaDelay);
         for(int i = 0; i < 8; ++i)
         {
             if(chanmask & (1<<i))
             {
-                clk += chanDelay;
+                clock->tallyCycle(chanDelay);
 
                 auto& chan = chans[i];
                 int phase = 0;
@@ -101,33 +100,31 @@ namespace sch
 
                     if(chan.ppuRead)
                     {
-                        bus->read(0x2100 | dst, v, clk);
-                        bus->write(chan.srcAddr | chan.srcBank, v, clk);
+                        bus->read(0x2100 | dst, v, clock->getTick());
+                        bus->write(chan.srcAddr | chan.srcBank, v, clock->getTick());
                     }
                     else
                     {
-                        bus->read(chan.srcAddr | chan.srcBank, v, clk);
-                        bus->write(0x2100 | dst, v, clk);
+                        bus->read(chan.srcAddr | chan.srcBank, v, clock->getTick());
+                        bus->write(0x2100 | dst, v, clock->getTick());
                     }
 
                     phase = (phase + 1) & 3;
                     chan.srcAddr += chan.addrAdj;
                     --chan.size;
-                    clk += xferDelay;
+                    clock->tallyCycle(xferDelay);
 
                 }while(chan.size);
             }
         }
-
-        cpu->adjustTimestamp(clk - origclk);
     }
 
 
     
-    void DmaUnit::reset(bool hard, CpuBus* b, Cpu* c, timestamp_t dma_len, timestamp_t chan_len, timestamp_t xfer_len)
+    void DmaUnit::reset(bool hard, CpuBus* b, MainClock* c, timestamp_t dma_len, timestamp_t chan_len, timestamp_t xfer_len)
     {
         bus = b;
-        cpu = c;
+        clock = c;
         dmaDelay = dma_len;
         chanDelay = chan_len;
         xferDelay = xfer_len;

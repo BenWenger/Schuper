@@ -7,12 +7,12 @@
 namespace sch
 {
     class CpuBus;
-    class Cpu;
+    class MainClock;
 
     class DmaUnit
     {
     public:
-        void            reset(bool hard, CpuBus* b, Cpu* c, timestamp_t dma_len, timestamp_t chan_len, timestamp_t xfer_len);
+        void            reset(bool hard, CpuBus* b, MainClock* c, timestamp_t dma_len, timestamp_t chan_len, timestamp_t xfer_len);
         void            write(u16 a, u8 v, timestamp_t clk);
         void            read(u16 a, u8& v, timestamp_t clk);
 
@@ -36,11 +36,11 @@ namespace sch
         timestamp_t     chanDelay;
         timestamp_t     xferDelay;
         CpuBus*         bus = nullptr;
-        Cpu*            cpu = nullptr;
+        MainClock*      clock = nullptr;
         Channel         chans[8];
 
 
-        void            doDma(u8 chanmask, timestamp_t clk);
+        void            doDma(u8 chanmask);
 
     };
 }

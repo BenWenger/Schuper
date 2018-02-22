@@ -210,17 +210,16 @@ namespace sch
             break;
 
         case 0x2133:
-            // TODO interlace and overscand and UGH
+            // TODO interlace and overscan and UGH
             break;
         }
     }
 
-    void Ppu::regRead(u16 a, u8& v)
+    void Ppu::performEvent(int eventId, timestamp_t clk)
     {
-        // TODO
     }
 
-    void Ppu::runTo(timestamp_t runto)
+    void Ppu::regRead(u16 a, u8& v)
     {
         // TODO
     }
@@ -229,6 +228,26 @@ namespace sch
     {
         // TODO
     }
+    
+    void Ppu::runTo(timestamp_t runto)
+    {
+        Coord   targetPos = getCoordFromTimestamp(runto);
 
+        //TODO
+    }
+
+
+    inline Ppu::Coord Ppu::getCoordFromTimestamp(timestamp_t t)
+    {
+        Coord out;
+        out.H = out.V = 0;
+        if(t > v0_time)     t -= v0_time;
+        else                out.V = 241;
+
+        out.V += (t / (341*4));     // TODO move the '4' somewhere
+        out.H += (t % (341*4));
+
+        return out;
+    }
 
 }

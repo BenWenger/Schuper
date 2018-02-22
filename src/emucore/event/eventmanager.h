@@ -8,20 +8,23 @@
 namespace sch
 {
     class EventHandler;
-    class Cpu;
 
     class EventManager
     {
     public:
-        EventManager(Cpu* c);
+        EventManager();
 
         inline void processEvents(timestamp_t clk)
         {
-            if(clk < nextEvent)     return;
+            if(clk < nextEvent)         return;
             doEvents(clk);
         }
 
         void        addEvent(timestamp_t clk, EventHandler* evt, int id);
+
+        void        reset();
+
+        timestamp_t getNextEventTime() const    { return nextEvent;        }
 
     private:
         void        doEvents(timestamp_t clk);
@@ -46,8 +49,6 @@ namespace sch
 
         timestamp_t             nextEvent;
         std::set<EventBlock>    events;
-        Cpu*                    cpu;
-
     };
 }
 

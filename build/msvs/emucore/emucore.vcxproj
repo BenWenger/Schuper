@@ -39,6 +39,7 @@
     <ClInclude Include="..\..\..\include\emucore\snes.h" />
     <ClInclude Include="..\..\..\include\emucore\snesfile.h" />
     <ClInclude Include="..\..\..\include\emucore\snestypes.h" />
+    <ClInclude Include="..\..\..\include\emucore\videosettings.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\dsp.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\simpledsp.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h" />
@@ -58,6 +59,7 @@
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventmanager.h" />
+    <ClInclude Include="..\..\..\src\emucore\main\mainclock.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\color.h" />
     <ClInclude Include="..\..\..\src\emucore\util\audiobuffer.h" />

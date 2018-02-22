@@ -2,6 +2,8 @@
 #ifndef SCHUPER_UTIL_CLOCKEDSUBSYSTEM_H_INCLUDED
 #define SCHUPER_UTIL_CLOCKEDSUBSYSTEM_H_INCLUDED
 
+// This class is kind of dumb.  Maybe get rid of it?
+
 #include "snestypes.h"
 
 namespace sch

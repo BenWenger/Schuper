@@ -1,15 +1,20 @@
 
 #include "eventmanager.h"
 #include "eventhandler.h"
-#include "cpu/cpu.h"
+#include "main/mainclock.h"
 
 namespace sch
 {
 
-    EventManager::EventManager(Cpu* c)
+    EventManager::EventManager()
     {
         nextEvent = Time::Never;
-        cpu = c;
+    }
+
+    void EventManager::reset()
+    {
+        events.clear();
+        nextEvent = Time::Never;
     }
     
     void EventManager::addEvent(timestamp_t clk, EventHandler* evt, int id)
@@ -21,24 +26,23 @@ namespace sch
 
     void EventManager::doEvents(timestamp_t clk)
     {
-        timestamp_t origclk = clk;
-
+        // This routine has to be re-entrant, since an event may update the clock which 
+        //   may call this function again!  Therefore I cannot hold onto iterators,
+        //   and I have to remove events from the list BEFORE actually performing them.
         while(!events.empty())
         {
             auto x = *events.begin();
-            if(clk > x.time)
+            if(clk < x.time)
                 break;
 
             events.erase(events.begin());
 
-            clk = x.evt->performEvent(x.id, clk);
+            x.evt->performEvent(x.id, clk);
         }
 
         if(events.empty())
             nextEvent = Time::Never;
         else
             nextEvent = events.begin()->time;
-
-        cpu->adjustTimestamp(clk - origclk);
     }
 }

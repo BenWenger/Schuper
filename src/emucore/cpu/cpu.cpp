@@ -2,16 +2,18 @@
 #include "cpu.h"
 #include "bus/cpubus.h"
 #include "cputracer.h"
+#include "main/mainclock.h"
 
 namespace sch
 {
-    inline void Cpu::dpCyc()                {   if(regs.DP & 0x00FF)        ioCyc();            }
-    inline void Cpu::ioCyc()                {   curTick += ioTickBase;                          }
-    inline void Cpu::ioCyc(int cycs)        {   curTick += ioTickBase * cycs;                   }
-    
-    void Cpu::adjustTimestamp(timestamp_t adj)
+    inline void Cpu::dpCyc()            {   if(regs.DP & 0x00FF)        ioCyc();            }
+    inline void Cpu::ioCyc()            {   tallyCycle(8);                                  }       // TODO move this '8' somewhere
+    inline void Cpu::ioCyc(int cycs)    {   tallyCycle(cycs*8);                             }       // TODO move this '8' somewhere
+
+    inline void Cpu::tallyCycle(int cycs)
     {
-        curTick += adj;
+        interruptReady = interruptPending;
+        clock->tallyCycle(cycs);
     }
 
     inline void Cpu::doIndex(u16& a, u16 idx)
@@ -25,22 +27,21 @@ namespace sch
     u8 Cpu::read_l(u32 a)
     {
         u8 v;
-        curTick += bus->read(a, v, curTick);
+        tallyCycle( bus->read(a, v, clock->getTick()) );
         return v;
     }
     inline u8 Cpu::read_a(u16 a)            { return read_l(regs.DBR | a);              }
     inline u8 Cpu::read_p()                 { return read_l(regs.PBR | regs.PC++);      }
     inline u8 Cpu::pull()                   { return read_l(++regs.SP);                 }
-    inline void Cpu::write_l(u32 a, u8 v)   { curTick += bus->write(a, v, curTick);     }
+    inline void Cpu::write_l(u32 a, u8 v)   { tallyCycle( bus->write(a, v, clock->getTick() ) );    }
     inline void Cpu::write_a(u16 a, u8 v)   { write_l( regs.DBR | a, v );               }
     inline void Cpu::push(u8 v)             { write_l( regs.SP--, v );                  }
     
-    void Cpu::reset(CpuBus* thebus, int iocycrate)
+    void Cpu::reset(CpuBus* thebus, MainClock* theclock)
     {
-        curTick = 0;
-        ioTickBase = iocycrate;
-
+        clock = theclock;
         bus = thebus;
+        
         regs.A.w = 0;
         regs.X.w = 0;
         regs.Y.w = 0;
@@ -57,28 +58,62 @@ namespace sch
         regs.fX = true;
         regs.fZ = 1;
         regs.PC = 0;
-        regs.SP = 0x0100;
+        regs.SP = 0x0180;
+        
+        // Set interrupt stuff
+            // immediately interrupt with a RESET
+        interruptReady = interruptPending = resetPending = true;
+        nmiPending = false;
+        irqFlags = 0;
 
-        interruptPending = true;
-        resetPending = true;
         stopped = false;
         waiting = false;
     }
 
+    // Running is split into both 'runTo' and 'innerRun' because STP and WAI are awkward and
+    //   disrupt the normal flow.  'innerRun' does pretty much all the work, but WAI/STP exit
+    //   that function immediately so they can zoom ahead in time.
     void Cpu::runTo(timestamp_t runto)
     {
-        while(curTick < runto)
+        while(clock->getTick() < runto)
         {
-            if(interruptPending)
+            if(stopped)
             {
-                if(tracer)
-                    tracer->traceLine("*** INTERRUPT ***");
-                // TODO trace this
-                // TODO do this better
-                doInterrupt( resetPending ? IntType::Reset : IntType::Nmi );
+                clock->runToNextEvent(runto);
+            }
+            else if(waiting)
+            {
+                if(interruptPending)        // note:  PENDING, not ready!   That's important, as ready won't
+                {                           //    be set by runToNextEvent!
+                    waiting = false;
+                    ioCyc(2);
+                }
+                else
+                    clock->runToNextEvent(runto);
+            }
+            else
+            {
+                // normal flow goes here
+                innerRun(runto);
+            }
+        }
+    }
 
-                interruptPending = false;
-                resetPending = false;
+    void Cpu::innerRun(timestamp_t runto)
+    {
+        while(clock->getTick() < runto)
+        {
+            if(interruptReady)
+            {
+                // Default to IRQ, even if irqFlags is zero (theoretically the IRQ could have been
+                //   acknowledged after the 'point of no return' where interruptReady is true
+
+                IntType t = IntType::Irq;
+
+                if( resetPending )          t = IntType::Reset;     // reset overrides everything
+                else if( nmiPending )       t = IntType::Nmi;       // NMI overrides IRQ
+
+                doInterrupt( t );
                 continue;
             }
 
@@ -101,13 +136,13 @@ namespace sch
             case 0x80:  u_Branch( true );                           break;  /* BRA  */
 
                 /* Flag toggling    */
-            case 0x18:  regs.fC = 0;        ioCyc();                break;  /* CLC  */
-            case 0xD8:  regs.fD = 0;        ioCyc();                break;  /* CLD  */
-            case 0x58:  regs.fI = 0;        ioCyc();                break;  /* CLI  */      // TODO - repredict IRQ
-            case 0xB8:  regs.fV = 0;        ioCyc();                break;  /* CLV  */
-            case 0x38:  regs.fC = 1;        ioCyc();                break;  /* SEC  */
-            case 0xF8:  regs.fD = 1;        ioCyc();                break;  /* SED  */
-            case 0x78:  regs.fI = 1;        ioCyc();                break;  /* SEI  */      // TODO - repredict IRQ
+            case 0x18:  regs.fC = 0; ioCyc();                           break;  /* CLC  */
+            case 0xD8:  regs.fD = 0; ioCyc();                           break;  /* CLD  */
+            case 0x58:  regs.fI = 0; ioCyc(); checkInterruptPending();  break;  /* CLI  */
+            case 0xB8:  regs.fV = 0; ioCyc();                           break;  /* CLV  */
+            case 0x38:  regs.fC = 1; ioCyc();                           break;  /* SEC  */
+            case 0xF8:  regs.fD = 1; ioCyc();                           break;  /* SED  */
+            case 0x78:  regs.fI = 1; ioCyc(); checkInterruptPending();  break;  /* SEI  *
 
                 /* Stack ops        */
             case 0x48:  ad_push(regs.A.w, regs.fM);                 break;  /* PHA  */
@@ -121,9 +156,10 @@ namespace sch
             case 0x68:  u_PLA();                                    break;  /* PLA  */
             case 0xFA:  regs.X.w = ad_pull(regs.fX);                break;  /* PLX  */
             case 0x7A:  regs.Y.w = ad_pull(regs.fX);                break;  /* PLY  */
-            case 0x28:  regs.setStatusByte( ad_pull(true) & 0xFF ); break;  /* PLP  */      // TODO - repredict IRQ
             case 0x2B:  regs.DP  = ad_pull(false);                  break;  /* PLD  */
             case 0xAB:  regs.DBR = ad_pull(true) << 16;             break;  /* PLB  */
+            case 0x28:  regs.setStatusByte( ad_pull(true) & 0xFF );         /* PLP  */
+                        checkInterruptPending();                    break;
 
                 /* Reg Xfer     */
             case 0xAA:  TAX();              ioCyc();                break;  /* TAX  */
@@ -158,12 +194,12 @@ namespace sch
             case 0xD4:  u_PEI();                                    break;  /* PEI  */
             case 0x62:  u_PER();                                    break;  /* PER  */
             case 0xC2:  u_REP();                                    break;  /* REP  */
-            case 0x40:  u_RTI();                                    break;  /* RTI  */      // TODO repredict IRQ
+            case 0x40:  u_RTI();                                    break;  /* RTI  */
             case 0x6B:  u_RTL();                                    break;  /* RTL  */
             case 0x60:  u_RTS();                                    break;  /* RTS  */
             case 0xE2:  u_SEP();                                    break;  /* SEP  */
-            case 0xDB:  u_STP();                                    break;  /* STP  */
-            case 0xCB:  u_WAI();                                    break;  /* WAI  */
+            case 0xDB:  stopped = true;     return;                         /* STP  -- note: it returns */
+            case 0xCB:  waiting = true;     return;                         /* WAI  -- note: it returns */
             case 0x42:  ioCyc();                                    break;  /* WDP  */
             case 0xEB:  u_XBA();                                    break;  /* XBA  */
             case 0xFB:  u_XCE();                                    break;  /* XCE  */
@@ -407,4 +443,86 @@ namespace sch
         }
     }
 
+    
+    /////////////////////////////////////////////////////////
+    //  Interrupts!
+
+    void Cpu::doInterrupt(IntType type)
+    {
+        bool is_sw = (type == IntType::Cop) || (type == IntType::Brk);
+        if(is_sw)
+        {
+          //read_p();   <- This is the opcode fetch -- this cycle happened already
+            read_p();   // Signature byte
+        }
+        else
+        {
+            read_l( regs.PBR | regs.PC );       // dummy read and IO cyc
+            ioCyc();                            //   instead of op and signature reads
+        }
+
+        if(type == IntType::Reset)
+        {
+            ioCyc(3);       // don't actually push, do IO cycs instead
+            regs.fE = true;
+            regs.fM = true;
+            regs.fX = true;
+            regs.X.h = regs.Y.h = 0;
+        }
+        else
+        {
+            if(!regs.fE)        push( regs.PBR >> 16 );     // push PBR if in native mode
+            push( regs.PC >> 8 );
+            push( regs.PC & 0xFF );
+            push( regs.getStatusByte(is_sw) );
+        }
+
+        regs.fD = false;
+        regs.fI = true;
+        regs.PBR = 0;
+
+        // TODO:  Can interrupts be interrupted like on the NES?
+        //   if so, add that here at some point.  Maybe.. it's just a bizarre edge case
+
+        u16 vec;
+        switch(type)
+        {
+        case IntType::Reset:    vec = 0xFFFC;                       resetPending = false;   break;
+        case IntType::Abort:    vec = regs.fE ? 0xFFF8 : 0xFFE8;                            break;
+        case IntType::Nmi:      vec = regs.fE ? 0xFFFA : 0xFFEA;    nmiPending = false;     break;
+        case IntType::Irq:      vec = regs.fE ? 0xFFFE : 0xFFEE;                            break;
+        case IntType::Cop:      vec = regs.fE ? 0xFFF4 : 0xFFE4;                            break;
+        case IntType::Brk:      vec = regs.fE ? 0xFFFE : 0xFFE6;                            break;
+        }
+
+        checkInterruptPending();
+
+        regs.PC  = read_l( vec );
+        regs.PC |= read_l( vec+1 ) << 8;
+    }
+
+    void Cpu::signalNmi()
+    {
+        interruptPending = nmiPending = true;
+    }
+
+    void Cpu::signalIrq(u32 irq)
+    {
+        irqFlags |= irq;
+        if(!regs.fI && irqFlags)
+            interruptPending = true;
+    }
+
+    void Cpu::acknowledgeIrq(u32 irq)
+    {
+        irqFlags &= ~irq;
+        checkInterruptPending();
+    }
+
+    void Cpu::checkInterruptPending()
+    {
+        interruptPending = resetPending || nmiPending;
+        if(!regs.fI && irqFlags)
+            interruptPending = true;
+    }
 }

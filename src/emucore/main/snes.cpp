@@ -8,6 +8,7 @@
 #include "apu/smptracer.h"
 #include "dma/dmaunit.h"
 #include "ppu/ppu.h"
+#include "mainclock.h"
 
 namespace sch
 {
@@ -20,6 +21,8 @@ namespace sch
         audioBuffer = std::make_unique<AudioBuffer>();
         dmaUnit = std::make_unique<DmaUnit>();
         ppu = std::make_unique<Ppu>();
+        mainClock = std::make_unique<MainClock>();
+        eventManager = std::make_unique<EventManager>();
 
         spc->setAudioBuffer(audioBuffer.get());
         
@@ -82,10 +85,12 @@ namespace sch
         {
         case SnesFile::Type::Rom:
             cpuBus->reset();
-            cpu->reset(cpuBus.get(), spdSlow);
+            mainClock->reset(eventManager.get());
+            cpu->reset(cpuBus.get(), mainClock.get());
             spc->reset();
-            dmaUnit->reset(true, cpuBus.get(), cpu.get(), 12, 8, 8);
+            dmaUnit->reset(true, cpuBus.get(), mainClock.get(), 12, 8, 8);
             ppu->reset(true);
+            eventManager->reset();
 
             nmiEnabled = false;
             break;
@@ -223,12 +228,12 @@ namespace sch
                 timestamp_t frm = 357955;
 
                 if(nmiEnabled)
-                    cpu->triggerNmi();
+                    cpu->signalNmi();
 
                 cpu->runTo(frm);
                 spc->runTo(frm);
 
-                cpu->adjustTimestamp(-frm);
+                mainClock->adjustTimestamp(-frm);
                 spc->adjustTimestamp(-frm);
             }
             break;

@@ -161,6 +161,12 @@
     <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h">
       <Filter>src\event</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\main\mainclock.h">
+      <Filter>src\main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\videosettings.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\emucore\ppu\ppu.h">
