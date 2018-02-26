@@ -233,7 +233,12 @@ namespace sch
     {
         Coord   targetPos = getCoordFromTimestamp(runto);
 
-        //TODO
+        // If we are mid-line, run to the start of the next line
+        //    Note that scanline rendering (and NMIs) happen at H=0, therefore
+        //    if curPos.H is already > 0, we don't need to do any rendering to
+        //    get to the next line
+        if(curPos.H && (curPos.V < targetPos.V))
+            targetPos.V += advance(341 - curPos.H);
     }
 
 
@@ -248,6 +253,21 @@ namespace sch
         out.H += (t % (341*4));
 
         return out;
+    }
+
+    // Advance returns any V counter adjustment that needs to be made.  Normally this is zero
+    int Ppu::advance(timestamp_t cycs)
+    {
+        int line_adj = 0;
+
+        curTick += (cycs * 4);      // TODO move this '4' somewhere
+        curPos.H += cycs;
+        while(curPos.H >= 341)
+        {
+            curPos.H -= 341;
+            ++curPos.V;
+            if(curPos.V 
+        }
     }
 
 }

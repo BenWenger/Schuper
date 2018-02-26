@@ -139,6 +139,7 @@ namespace sch
 
 
         Coord getCoordFromTimestamp(timestamp_t t);
+        int   advance(timestamp_t cycs);
 
         VideoSettings   video;
 
@@ -149,8 +150,11 @@ namespace sch
                                                 //     or Time::Never if that hasn't happened yet
                                                 // this is useful for calculating V/H coords based on timestamps
         timestamp_t     vEnd_time;              // the timestamp at which the "frame" actually ended
+        timestamp_t     nmi_time;               // the timestamp that NMI happened (even if disabled), or Never
+                                                //   if that point in the frame hasn't been reached yet)
         
-        Coord           curPos;
+        Coord           curPos;                 // current position of rendering (should match 'curTick')
+        Coord           irqPos;                 //  next IRQ position
 
         Color           renderBufMain[256];
         Color           renderBufSub[256];
