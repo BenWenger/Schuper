@@ -7,6 +7,7 @@
 #include "color.h"
 #include "event/eventhandler.h"
 #include "videosettings.h"
+#include "event/eventmanager.h"
 
 /*
     Some notes on frame structure.
@@ -94,6 +95,7 @@
 
 namespace sch
 {
+    class Cpu;
 
     class Ppu : public EventHandler
     {
@@ -103,13 +105,9 @@ namespace sch
         void        regRead(u16 a, u8& v);
 
         void        runTo(timestamp_t runto);
-        void        adjustTimestamp(timestamp_t adj);
-
-        void        reset(bool hard);
-        
+        void        reset(bool hard, EventManager* evt);        
         void        performEvent(int eventId, timestamp_t clk) override;
-
-        void        frameStart(const VideoSettings& vid);
+        void        frameStart(Cpu* c, const VideoSettings& vid);
 
         timestamp_t getMaxTicksPerFrame() const
         {
@@ -134,14 +132,27 @@ namespace sch
                 if(H > rhs.H)       return 1;
                 return 0;
             }
-            bool operator < (const Coord& rhs) const {      return compare(rhs) < 0;    }
+            bool operator <  (const Coord& rhs) const { return compare(rhs) <  0;    }
+            bool operator <= (const Coord& rhs) const { return compare(rhs) <= 0;    }
+            bool operator >  (const Coord& rhs) const { return compare(rhs) >  0;    }
+            bool operator >= (const Coord& rhs) const { return compare(rhs) >= 0;    }
+            bool operator == (const Coord& rhs) const { return (V == rhs.V) && (H == rhs.H);    }
+            bool operator != (const Coord& rhs) const { return !(*this == rhs);                 }
         };
 
 
         Coord getCoordFromTimestamp(timestamp_t t);
         int   advance(timestamp_t cycs);
+        bool  frameIsOver() const;
+        void  doScanline(int line);
+        void  renderLine(int line);
+        u32   getRawColor(const Color& clr);
+
+        Cpu*            cpu;        // need a pointer so we can signal interrupts
+        EventManager*   evtManager;
 
         VideoSettings   video;
+        int             linesRendered;
 
         BgLayer         bgLayers[4];
         timestamp_t     curTick;
@@ -150,8 +161,7 @@ namespace sch
                                                 //     or Time::Never if that hasn't happened yet
                                                 // this is useful for calculating V/H coords based on timestamps
         timestamp_t     vEnd_time;              // the timestamp at which the "frame" actually ended
-        timestamp_t     nmi_time;               // the timestamp that NMI happened (even if disabled), or Never
-                                                //   if that point in the frame hasn't been reached yet)
+        bool            nmiHasHappened;         // Whether or not NMI has already happened this frame
         
         Coord           curPos;                 // current position of rendering (should match 'curTick')
         Coord           irqPos;                 //  next IRQ position
@@ -218,6 +228,10 @@ namespace sch
         u8          ppuStatus;
 
 
+        enum EventCode
+        {
+            CatchUp = 0,
+        };
     };
 
 }

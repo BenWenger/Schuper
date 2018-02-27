@@ -6,6 +6,7 @@
 #include <vector>
 #include "snestypes.h"
 #include "snesfile.h"
+#include "videosettings.h"
 
 namespace sch
 {
@@ -59,14 +60,14 @@ namespace sch
 
         u32                         romMask;
 
-        bool                        nmiEnabled;   // TODO remove this shit!
-
         std::unique_ptr<u8[]>       ram;
         u32                         altRamAddr;
             
         int                         spdSlow;
         int                         spdFast;
         int                         spdXSlow;
+
+        VideoSettings               videoSettings;
 
         std::unique_ptr<Spc>            spc;
         std::unique_ptr<Cpu>            cpu;

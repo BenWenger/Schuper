@@ -1,10 +1,13 @@
 
+#include <algorithm>
 #include "ppu.h"
+#include "cpu/cpu.h"
 
 namespace sch
 {
-    void Ppu::reset(bool hard)
+    void Ppu::reset(bool hard, EventManager* evt)
     {
+        evtManager = evt;
         if(hard)
         {
             for(auto& i : bgLayers)
@@ -47,6 +50,27 @@ namespace sch
         }
     }
 
+    void Ppu::frameStart(Cpu* c, const VideoSettings& vid)
+    {
+        video = vid;
+        video.buffer = nullptr;
+        cpu = c;
+
+        linesRendered =     0;
+        oddFrame =          !oddFrame;
+        v0_time =           Time::Never;
+        vEnd_time =         Time::Never;
+        nmiHasHappened =    false;
+
+        curTick =           0;
+        curPos.V =          241;
+        curPos.H =          0;
+
+        // set events for when NMI might trigger  (TODO this is wrong, touch this up)
+        evtManager->addEvent( 246*341*4, this, EventCode::CatchUp );
+        evtManager->addEvent( 247*341*4, this, EventCode::CatchUp );
+        evtManager->addEvent( 248*341*4, this, EventCode::CatchUp );
+    }
 
 
     inline u16 Ppu::getEffectiveVramAddr() const
@@ -212,6 +236,11 @@ namespace sch
         case 0x2133:
             // TODO interlace and overscan and UGH
             break;
+
+        case 0x4200:
+            nmiEnabled =        (v & 0x80) != 0;
+            // TODO other shit here
+            break;
         }
     }
 
@@ -224,21 +253,42 @@ namespace sch
         // TODO
     }
     
-    void Ppu::adjustTimestamp(timestamp_t adj)
-    {
-        // TODO
-    }
-    
     void Ppu::runTo(timestamp_t runto)
     {
-        Coord   targetPos = getCoordFromTimestamp(runto);
+        if(frameIsOver())           // don't run past end of frame
+            return;
 
-        // If we are mid-line, run to the start of the next line
-        //    Note that scanline rendering (and NMIs) happen at H=0, therefore
-        //    if curPos.H is already > 0, we don't need to do any rendering to
-        //    get to the next line
-        if(curPos.H && (curPos.V < targetPos.V))
-            targetPos.V += advance(341 - curPos.H);
+        Coord   targetPos = getCoordFromTimestamp(runto);
+        if(curPos >= targetPos) return; // we're already caught up
+
+        // TODO put in IRQ stuff at some point
+
+        // Scenario 1!  Partial scanline
+        if((curPos.V == targetPos.V) && (curPos.H > 0))
+        {
+            // we already did the work for this line (at cyc 0).  Just count up the cycles and don't really do anything
+            advance(targetPos.H - curPos.H);
+        }
+        // Scenario 2!  We're either at the exact start of a line, or the target is on a different line
+        else
+        {
+            // if we're not at the start, fill out the rest of the line
+            if(curPos.H > 0)            targetPos.V += advance(341 - curPos.H);
+
+            // Now start doing full scanlines!
+            while((curPos.V < targetPos.V) && !frameIsOver())
+            {
+                doScanline(curPos.V);
+                targetPos.V += advance(341);
+            }
+            // Now, curPos.V == targetPos.V .. run to proper H time
+            //    curPos.H should be 0 at this time
+            if(targetPos.H > 0 && !frameIsOver())
+            {
+                doScanline(curPos.V);
+                advance(targetPos.H);
+            }
+        }
     }
 
 
@@ -248,9 +298,11 @@ namespace sch
         out.H = out.V = 0;
         if(t > v0_time)     t -= v0_time;
         else                out.V = 241;
+        
+        t /= 4;     // TODO move the 4 somewhere
 
-        out.V += (t / (341*4));     // TODO move the '4' somewhere
-        out.H += (t % (341*4));
+        out.V += (t / 341);
+        out.H += (t % 341);
 
         return out;
     }
@@ -258,6 +310,9 @@ namespace sch
     // Advance returns any V counter adjustment that needs to be made.  Normally this is zero
     int Ppu::advance(timestamp_t cycs)
     {
+        if(frameIsOver())
+            return 0;
+
         int line_adj = 0;
 
         curTick += (cycs * 4);      // TODO move this '4' somewhere
@@ -266,8 +321,83 @@ namespace sch
         {
             curPos.H -= 341;
             ++curPos.V;
-            if(curPos.V 
+            //    b) when in interlace mode, even frames are 263 scanlines long
+            if(curPos.V > 262 || (curPos.V == 262 && (!interlaceMode || oddFrame)))
+            {
+                line_adj = -curPos.V;
+                v0_time = (curPos.V - 241) * 341 * 4;     // TODO move this '4' somewhere
+                curPos.V = 0;
+            }
         }
+
+        return line_adj;
+    }
+
+    inline bool Ppu::frameIsOver() const
+    {
+        return vEnd_time != Time::Never;
+    }
+
+    void Ppu::doScanline(int line)
+    {
+        // see if we trigger an NMI on this line
+        if(!nmiHasHappened)
+        {
+            if(overscanMode && line == 240)         nmiHasHappened = true;
+            if(!overscanMode && line == 224)        nmiHasHappened = true;
+
+            if(nmiEnabled && nmiHasHappened)        cpu->signalNmi();
+        }
+
+        // otherwise, see if we render it!
+        if( (line >= 1) && (line <= (overscanMode ? 240 : 224)) )
+        {
+            if(video.buffer)
+                renderLine(line);
+        }
+
+        // if this is line 241, and we hit scanline 0 already, then we are done with the frame!
+        if((line == 241) && (v0_time != Time::Never))
+        {
+            vEnd_time = 241 * 341 * 4;  // TODO move this 4
+            vEnd_time += v0_time;
+        }
+    }
+
+    void Ppu::renderLine(int line)
+    {
+        u32 bgclr = getRawColor(cgRam[0]);
+
+        if(forceBlank)
+        {
+            for(int i = 0; i < 512; ++i)
+                video.buffer[i] = bgclr;
+        }
+        else
+        {
+            // clear buffers
+            for(int i = 0; i < 256; ++i)
+            {
+                renderBufMain[i] = cgRam[0];
+                renderBufSub[i]  = cgRam[0];
+            }
+
+            // Render BGs
+
+            // TODO do different gfx modes
+        }
+    }
+
+    u32 Ppu::getRawColor(const Color& clr)
+    {
+        u32 out;
+        
+        out  = (((clr.r * brightness) >> 1) + 20) << video.r_shift;
+        out |= (((clr.g * brightness) >> 1) + 20) << video.g_shift;
+        out |= (((clr.b * brightness) >> 1) + 20) << video.b_shift;
+        out |= video.alpha_or;
+
+        return out;
     }
 
 }

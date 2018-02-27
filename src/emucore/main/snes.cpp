@@ -85,14 +85,12 @@ namespace sch
         {
         case SnesFile::Type::Rom:
             cpuBus->reset();
+            eventManager->reset();
             mainClock->reset(eventManager.get());
             cpu->reset(cpuBus.get(), mainClock.get());
             spc->reset();
             dmaUnit->reset(true, cpuBus.get(), mainClock.get(), 12, 8, 8);
-            ppu->reset(true);
-            eventManager->reset();
-
-            nmiEnabled = false;
+            ppu->reset(true, eventManager.get());
             break;
 
         case SnesFile::Type::Spc:
@@ -152,7 +150,8 @@ namespace sch
             break;
 
         case 0x4200:
-            nmiEnabled = (v & 0x80) != 0;
+            ppu->runTo(clk);
+            ppu->regWrite(a, v);
             break;
 
         case 0x420B: case 0x420C:
@@ -225,16 +224,17 @@ namespace sch
             {
                 //  ~21477272.7272 master cycles per second
                 //    ~357954.5454 master cycles per frame
-                timestamp_t frm = 357955;
 
-                if(nmiEnabled)
-                    cpu->signalNmi();
+                timestamp_t target = ppu->getMaxTicksPerFrame();
+                ppu->frameStart(cpu.get(), videoSettings);
 
-                cpu->runTo(frm);
-                spc->runTo(frm);
+                cpu->runTo(target);
+                spc->runTo(target);
+                ppu->runTo(target);
 
-                mainClock->adjustTimestamp(-frm);
-                spc->adjustTimestamp(-frm);
+                auto adj = -ppu->getPrevFrameLength();
+                mainClock->adjustTimestamp(adj);
+                spc->adjustTimestamp(adj);
             }
             break;
 
