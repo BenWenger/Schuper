@@ -15,6 +15,13 @@ namespace sch
         int         b_shift;
         u32         alpha_or;
     };
+    
+    enum class RenderMode
+    {
+        Progressive,
+        InterlaceEven,
+        InterlaceOdd
+    };
 }
 
 

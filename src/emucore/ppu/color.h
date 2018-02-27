@@ -18,6 +18,14 @@ namespace sch
             g = (v >>  5) & 0x1F;
             b = (v >> 10) & 0x1F;
         }
+
+        inline void multiplex(u8 bit, const Color* plt, u8 newprio)
+        {
+            if(!bit)            return;
+            if(prio > newprio)  return;
+            *this = plt[bit];
+            prio = newprio;
+        }
     };
 
 

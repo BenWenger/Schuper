@@ -78,6 +78,9 @@
     <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp">
       <Filter>src\event</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\ppu\ppu_bgrender.cpp">
+      <Filter>src\ppu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">

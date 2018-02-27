@@ -119,6 +119,9 @@ namespace sch
             return vEnd_time;
         }
 
+        RenderMode  getRenderMode() const;
+        int         getLinesRendered() const    { return linesRendered; }
+
     private:
         struct Coord
         {
@@ -166,12 +169,13 @@ namespace sch
         Coord           curPos;                 // current position of rendering (should match 'curTick')
         Coord           irqPos;                 //  next IRQ position
 
-        Color           renderBufMain[256];
-        Color           renderBufSub[256];
+        Color           renderBufMan[256+32];
+        Color           renderBufSub[256+32];
 
         // 2100
         bool        forceBlank;
-        int         brightness;
+        int         brightness_4bit;
+        int         brightnessMultiplier;
 
         // 2101 - 2104
             // TODO OAM stuff
@@ -232,6 +236,11 @@ namespace sch
         {
             CatchUp = 0,
         };
+
+        ////////////////////////////////////////
+        void    bgLine_normal(int bg, int line, int planes, u8 loprio, u8 hiprio);
+
+        void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio);
     };
 
 }

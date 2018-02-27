@@ -23,7 +23,8 @@ namespace sch
             }
 
             forceBlank = true;
-            brightness = 0;
+            brightness_4bit = 0;
+            brightnessMultiplier = 0;
 
             bgMode = 0;
             mode1AltPriority = false;
@@ -101,7 +102,8 @@ namespace sch
         {
         case 0x2100:
             forceBlank = (v & 0x80) != 0;
-            brightness = v & 0x0F;
+            brightness_4bit = v & 0x0F;
+            brightnessMultiplier = (0xFF00 * brightness_4bit) / (0x0F * 0x1F);
             break;
             
         case 0x2101:
@@ -246,6 +248,8 @@ namespace sch
 
     void Ppu::performEvent(int eventId, timestamp_t clk)
     {
+        if(eventId == EventCode::CatchUp)
+            runTo(clk);
     }
 
     void Ppu::regRead(u16 a, u8& v)
@@ -376,15 +380,21 @@ namespace sch
         else
         {
             // clear buffers
-            for(int i = 0; i < 256; ++i)
+            for(int i = 0; i < 256+32; ++i)
             {
-                renderBufMain[i] = cgRam[0];
-                renderBufSub[i]  = cgRam[0];
+                renderBufMan[i] = cgRam[0];
+                renderBufSub[i] = cgRam[0];
             }
 
-            // Render BGs
+            switch(bgMode)
+            {
+            case 1:
+                bgLine_normal(0, line, 4, 8, 11);
+                bgLine_normal(1, line, 4, 7, 10);
+                bgLine_normal(2, line, 4, 2, mode1AltPriority ? 5 : 13);
+                break;
+            }
 
-            // TODO do different gfx modes
         }
     }
 
@@ -392,9 +402,9 @@ namespace sch
     {
         u32 out;
         
-        out  = (((clr.r * brightness) >> 1) + 20) << video.r_shift;
-        out |= (((clr.g * brightness) >> 1) + 20) << video.g_shift;
-        out |= (((clr.b * brightness) >> 1) + 20) << video.b_shift;
+        out  = ((clr.r * brightnessMultiplier) >> 8) << video.r_shift;
+        out |= ((clr.g * brightnessMultiplier) >> 8) << video.g_shift;
+        out |= ((clr.b * brightnessMultiplier) >> 8) << video.b_shift;
         out |= video.alpha_or;
 
         return out;
