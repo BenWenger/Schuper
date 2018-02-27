@@ -238,7 +238,7 @@ namespace sch
         };
 
         ////////////////////////////////////////
-        void    bgLine_normal(int bg, int line, int planes, u8 loprio, u8 hiprio);
+        void    bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio);
 
         void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio);
     };

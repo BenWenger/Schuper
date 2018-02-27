@@ -3,7 +3,7 @@
 
 namespace sch
 {
-    void Ppu::bgLine_normal(int bg, int line, int planes, u8 loprio, u8 hiprio)
+    void Ppu::bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio)
     {
         Color*      manscr = (manScrLayers & (1<<bg)) ? renderBufMan : nullptr;
         Color*      subscr = (subScrLayers & (1<<bg)) ? renderBufSub : nullptr;
@@ -25,15 +25,33 @@ namespace sch
             int coarseX = (fineX >> 3);
             fineX = 16 - (fineX & 7);
 
-            u16 basetileaddr =      ((coarseY & 0x1F) << 5) | layer.tileMapAddr;
-            if(coarseY & 0x20)      basetileaddr |= layer.tileMapYOverflow;
+            u16 basetileaddr =      ((coarseY & 0x1F) << 5) + layer.tileMapAddr;
+            if(coarseY & 0x20)      basetileaddr += layer.tileMapYOverflow;
 
             for(; fineX < (256+16); fineX += 8, ++coarseX)
             {
                 u16 tileaddr =          basetileaddr | (coarseX & 0x1F);
-                if(coarseX & 0x20)      tileaddr |= layer.tileMapXOverflow;
+                if(coarseX & 0x20)      tileaddr += layer.tileMapXOverflow;
 
-                u16 tile = vram[tileaddr];
+                u16 tile = vram[tileaddr & 0x7FFF];
+                int y = (tile & 0x8000) ? (fineY ^ 7) : fineY;
+
+                u16 chraddr = (tile & 0x03FF) * (8/2) * planes;
+                chraddr |= y;
+                chraddr += layer.chrAddr;
+
+                auto* pal = palette;
+                if(planes != 8)     pal += (1 << planes) * ((tile & 0x1C00) >> 10);
+
+                renderPixelsToBuf(
+                    manscr ? (manscr+fineX) : nullptr,
+                    subscr ? (subscr+fineX) : nullptr,
+                    planes,
+                    chraddr,
+                    pal,
+                    (tile & 0x4000) != 0,
+                    (tile & 0x2000) ? hiprio : loprio
+                );
             }
         }
     }
