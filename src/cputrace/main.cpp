@@ -4,6 +4,8 @@
 
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
 {
+    sch::VideoSettings  vid;
+
     char path[MAX_PATH] = "";
     OPENFILENAMEA ofn = {};
     ofn.Flags =             OFN_HIDEREADONLY | OFN_FILEMUSTEXIST;
@@ -30,14 +32,14 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     int stop = 200;
 
     for(int i = 0; i < start; ++i) {
-        snes.doFrame();
+        snes.doFrame(vid);
     }
 
     snes.startCpuTrace("schuper_65816_trace.txt");
     
     
     for(int i = start; i < stop; ++i) {
-        snes.doFrame();
+        snes.doFrame(vid);
     }
 
     return 0;

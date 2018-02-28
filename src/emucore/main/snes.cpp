@@ -214,19 +214,18 @@ namespace sch
         return smpTracer && smpTracer->isOpen();
     }
 
-    void Snes::doFrame()
+    VideoResult Snes::doFrame(const VideoSettings& vid)
     {
+        VideoResult out;
+
         spc->setAudioBuffer(audioBuffer.get());
 
         switch(currentFile.type)
         {
         case SnesFile::Type::Rom:
             {
-                //  ~21477272.7272 master cycles per second
-                //    ~357954.5454 master cycles per frame
-
                 timestamp_t target = ppu->getMaxTicksPerFrame();
-                ppu->frameStart(cpu.get(), videoSettings);
+                ppu->frameStart(cpu.get(), vid);
 
                 cpu->runTo(target);
                 spc->runTo(target);
@@ -235,6 +234,8 @@ namespace sch
                 auto adj = -ppu->getPrevFrameLength();
                 mainClock->adjustTimestamp(adj);
                 spc->adjustTimestamp(adj);
+
+                out = ppu->getVideoResult();
             }
             break;
 
@@ -243,7 +244,9 @@ namespace sch
             break;
 
         }
+
         spc->setAudioBuffer(nullptr);
+        return out;
     }
 
     int Snes::getBytesOfAudioForAFrame()

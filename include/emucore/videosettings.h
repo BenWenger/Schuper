@@ -8,19 +8,26 @@ namespace sch
 {
     struct VideoSettings
     {
-        u32*        buffer;
-        int         pitch;
+        u32*        buffer = nullptr;
+        int         pitch;              // pitch in u32s
         int         r_shift;
         int         g_shift;
         int         b_shift;
         u32         alpha_or;
     };
-    
-    enum class RenderMode
+
+    struct VideoResult
     {
-        Progressive,
-        InterlaceEven,
-        InterlaceOdd
+        enum class RenderMode
+        {
+            Progressive,
+            InterlaceEven,
+            InterlaceOdd,
+            None
+        };
+
+        RenderMode          mode = RenderMode::None;
+        int                 lines = 0;
     };
 }
 

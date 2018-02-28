@@ -119,8 +119,7 @@ namespace sch
             return vEnd_time;
         }
 
-        RenderMode  getRenderMode() const;
-        int         getLinesRendered() const    { return linesRendered; }
+        VideoResult getVideoResult() const;
 
     private:
         struct Coord
@@ -150,6 +149,7 @@ namespace sch
         void  doScanline(int line);
         void  renderLine(int line);
         u32   getRawColor(const Color& clr);
+        void  outputLinePixels();
 
         Cpu*            cpu;        // need a pointer so we can signal interrupts
         EventManager*   evtManager;

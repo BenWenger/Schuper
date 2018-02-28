@@ -7,6 +7,7 @@
 #include <Windows.h>
 #include "soundout.h"
 #include "snes.h"
+#include "dibsection.h"
 
 namespace
 {
@@ -22,6 +23,10 @@ namespace
     sch::Snes*              snes;
     bool                    runapp;
     FileType                loadState;
+    sch::VideoSettings      videoSettings;
+    sch::u32                tmpVidBuffer[240 * 512];
+    DibSection              dibBuffer;
+    int                     displayedLines = 0;
 
     void toggleCpuTrace()
     {
@@ -40,12 +45,29 @@ namespace
         return loadState != FileType::Invalid;
     }
 
-    void doFrame()
+    void doDraw(HDC screendc)
+    {
+        if(loadState == FileType::Rom)
+        {
+            BitBlt(screendc, 0, 0, 512, displayedLines, dibBuffer, 0, 0, SRCCOPY);
+        }
+    }
+
+    void doFrame(HWND wnd)
     {
         auto lk = snd->lock();
         snes->setAudioBuffer( lk.getBuffer<sch::s16>(0), lk.getSize(0), lk.getBuffer<sch::s16>(1), lk.getSize(1) );
-        snes->doFrame();
+        auto res = snes->doFrame(videoSettings);
         lk.setWritten( snes->getBytesOfAudioWritten() );
+        dibBuffer.supplyPixels(tmpVidBuffer, res);
+        displayedLines = res.lines * 2;
+
+        if(loadState == FileType::Rom)
+        {
+            HDC dc = GetDC(wnd);
+            doDraw(dc);
+            ReleaseDC(wnd,dc);
+        }
     }
 
     void unloadFile()
@@ -86,6 +108,13 @@ namespace
     {
         switch(msg)
         {
+        case WM_PAINT:
+            {
+                PAINTSTRUCT ps;
+                HDC dc = BeginPaint(wnd,&ps);
+                doDraw(dc);
+                EndPaint(wnd,&ps);
+            };
         case WM_KEYDOWN:
             switch(w)
             {
@@ -115,6 +144,13 @@ namespace
 
 int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
 {
+    videoSettings.buffer = tmpVidBuffer;
+    videoSettings.alpha_or = 0;
+    videoSettings.r_shift = 16;
+    videoSettings.g_shift =  8;
+    videoSettings.b_shift =  0;
+    videoSettings.pitch =    512;
+
     sch::Snes snesobj;
     snes = &snesobj;
     runapp = true;
@@ -133,7 +169,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if(!RegisterClassExA(&wc))
         return 1;
 
-    HWND wnd = CreateWindowA(wndClassName, "Schpuer", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, 400, 200, 640, 480, nullptr, nullptr, inst, nullptr);
+    HWND wnd = CreateWindowA(wndClassName, "Schpuer", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, 400, 200, 640, 550, nullptr, nullptr, inst, nullptr);
     if(!wnd)
         return 2;
 
@@ -151,7 +187,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         if(isLoaded())
         {
             if(snd->canWrite() >= snes->getBytesOfAudioForAFrame())
-                doFrame();
+                doFrame(wnd);
             else
                 Sleep(1);
         }

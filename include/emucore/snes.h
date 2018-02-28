@@ -45,7 +45,7 @@ namespace sch
         int             getBytesOfAudioWritten();
         int             getBytesOfAudioForAFrame();
 
-        void            doFrame();
+        VideoResult     doFrame(const VideoSettings& vidset);
 
     private:
         
@@ -66,8 +66,6 @@ namespace sch
         int                         spdSlow;
         int                         spdFast;
         int                         spdXSlow;
-
-        VideoSettings               videoSettings;
 
         std::unique_ptr<Spc>            spc;
         std::unique_ptr<Cpu>            cpu;

@@ -54,7 +54,6 @@ namespace sch
     void Ppu::frameStart(Cpu* c, const VideoSettings& vid)
     {
         video = vid;
-        video.buffer = nullptr;
         cpu = c;
 
         linesRendered =     0;
@@ -357,7 +356,10 @@ namespace sch
         if( (line >= 1) && (line <= (overscanMode ? 240 : 224)) )
         {
             if(video.buffer)
+            {
+                ++linesRendered;
                 renderLine(line);
+            }
         }
 
         // if this is line 241, and we hit scanline 0 already, then we are done with the frame!
@@ -386,6 +388,7 @@ namespace sch
                 renderBufSub[i] = cgRam[0];
             }
 
+            // render BGs
             switch(bgMode)
             {
             case 1:
@@ -393,8 +396,25 @@ namespace sch
                 bgLine_normal(1, line, 4, cgRam, 7, 10);
                 bgLine_normal(2, line, 4, cgRam, 2, mode1AltPriority ? 5 : 13);
                 break;
+
+                // TODO do other BG modes
             }
+
+            // TODO render sprites
+
+            // actually output the lines!
+            outputLinePixels();
         }
+    }
+
+    void Ppu::outputLinePixels()
+    {
+        // TODO - color math and hi res stuff goes here eventually
+        for(int i = 0; i < 256; ++i)
+        {
+            video.buffer[i*2] = video.buffer[i*2+1] = getRawColor(renderBufMan[i+16]);
+        }
+        video.buffer += video.pitch;
     }
 
     u32 Ppu::getRawColor(const Color& clr)
@@ -405,6 +425,17 @@ namespace sch
         out |= ((clr.g * brightnessMultiplier) >> 8) << video.g_shift;
         out |= ((clr.b * brightnessMultiplier) >> 8) << video.b_shift;
         out |= video.alpha_or;
+
+        return out;
+    }
+
+    VideoResult Ppu::getVideoResult() const
+    {
+        VideoResult out;
+        out.lines = linesRendered;
+        out.mode = VideoResult::RenderMode::Progressive;
+        if(interlaceMode)
+            out.mode = oddFrame ? VideoResult::RenderMode::InterlaceOdd : VideoResult::RenderMode::InterlaceEven;
 
         return out;
     }
