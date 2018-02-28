@@ -10,6 +10,7 @@ namespace sch
 
         if(!manscr && !subscr)  return;     // nothing to draw if both screens are disabled
         auto& layer = bgLayers[bg];
+        bool mathParticipate = (colorMathLayers & (1<<bg)) != 0;
 
         if(layer.use16Tiles)
         {
@@ -50,7 +51,8 @@ namespace sch
                     chraddr,
                     pal,
                     (tile & 0x4000) != 0,
-                    (tile & 0x2000) ? hiprio : loprio
+                    (tile & 0x2000) ? hiprio : loprio,
+                    mathParticipate
                 );
             }
         }
@@ -58,7 +60,7 @@ namespace sch
 
     
     void Ppu::renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr,
-                                const Color* palette, bool hflip, u8 prio)
+                                const Color* palette, bool hflip, u8 prio, bool math)
     {
         u8 buf[8] = {0};
 
@@ -88,11 +90,11 @@ namespace sch
 
         if(mainbuf)
         {
-            for(int i = 0; i < 8; ++i)      mainbuf[i].multiplex(buf[i^xx], palette, prio);
+            for(int i = 0; i < 8; ++i)      mainbuf[i].multiplex(buf[i^xx], palette, prio, math);
         }
         if(subbuf)
         {
-            for(int i = 0; i < 8; ++i)      subbuf[i].multiplex(buf[i^xx], palette, prio);
+            for(int i = 0; i < 8; ++i)      subbuf[i].multiplex(buf[i^xx], palette, prio, math);
         }
     }
 }

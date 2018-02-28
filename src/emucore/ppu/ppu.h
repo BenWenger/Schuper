@@ -206,6 +206,27 @@ namespace sch
         u8          manScrLayers;
         u8          subScrLayers;
 
+        enum WindowMode
+        {
+            Never = 0,
+            Outside = 1,
+            Inside = 2,
+            Always = 3
+        };
+
+        // 2130
+        WindowMode  colorWindowClip;
+        WindowMode  colorWindowStopMath;
+        bool        colorMathSubscr;
+        bool        direct256;
+
+        // 2131
+        bool        colorMathSubtract;
+        bool        colorHalfMath;
+        u8          colorMathLayers;
+
+        // 2132
+        Color       fixedColor;
         
         // 2133
         bool        mode7ExtraBg;
@@ -240,7 +261,7 @@ namespace sch
         ////////////////////////////////////////
         void    bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio);
 
-        void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio);
+        void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math);
     };
 
 }

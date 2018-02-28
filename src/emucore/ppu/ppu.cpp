@@ -44,10 +44,16 @@ namespace sch
 
             for(auto& i : vram)
                 i = 0;
-            for(auto& i : cgRam)
-            {
-                i.r = i.g = i.b = i.prio = 0;
-            }
+            for(auto& i : cgRam)        i.reset();
+
+            colorWindowClip = WindowMode::Never;
+            colorWindowStopMath = WindowMode::Never;
+            colorMathSubscr = false;
+            direct256 = false;
+            colorMathSubtract = false;
+            colorHalfMath = false;
+            colorMathLayers = 0;
+            fixedColor.reset();
         }
     }
 
@@ -226,12 +232,22 @@ namespace sch
             break;
             
         case 0x2130:
+            colorWindowClip =       static_cast<WindowMode>((v >> 6) & 3);
+            colorWindowStopMath =   static_cast<WindowMode>((v >> 4) & 3);
+            colorMathSubscr =       (v & 0x02) != 0;
+            direct256 =             (v & 0x01) != 0;
+            break;
+
         case 0x2131:
-            // TODO color math bullshit
+            colorMathSubtract =     (v & 0x80) != 0;
+            colorHalfMath =         (v & 0x40) != 0;
+            colorMathLayers =       (v & 0x3F);
             break;
 
         case 0x2132:
-            // TODO color intensity??????
+            if(v & 0x20)        fixedColor.r = (v & 0x1F);
+            if(v & 0x40)        fixedColor.g = (v & 0x1F);
+            if(v & 0x80)        fixedColor.b = (v & 0x1F);
             break;
 
         case 0x2133:
@@ -381,11 +397,14 @@ namespace sch
         }
         else
         {
+            auto bgcolor = cgRam[0];
+            bgcolor.colorMath = (colorMathLayers & 0x20) != 0;
+
             // clear buffers
             for(int i = 0; i < 256+32; ++i)
             {
-                renderBufMan[i] = cgRam[0];
-                renderBufSub[i] = cgRam[0];
+                renderBufMan[i] = bgcolor;
+                renderBufSub[i] = bgcolor;
             }
 
             // render BGs
@@ -394,7 +413,7 @@ namespace sch
             case 1:
                 bgLine_normal(0, line, 4, cgRam, 8, 11);
                 bgLine_normal(1, line, 4, cgRam, 7, 10);
-                bgLine_normal(2, line, 4, cgRam, 2, mode1AltPriority ? 5 : 13);
+        //        bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 5 : 13);
                 break;
 
                 // TODO do other BG modes
@@ -409,10 +428,17 @@ namespace sch
 
     void Ppu::outputLinePixels()
     {
-        // TODO - color math and hi res stuff goes here eventually
-        for(int i = 0; i < 256; ++i)
+        if(0)
         {
-            video.buffer[i*2] = video.buffer[i*2+1] = getRawColor(renderBufMan[i+16]);
+            //  TODO Hi-res
+        }
+        else
+        {
+            for(int i = 0; i < 256; ++i)
+            {
+                // TODO do color math here!!!!
+                video.buffer[i*2] = video.buffer[i*2+1] = getRawColor(renderBufMan[i+16]);
+            }
         }
         video.buffer += video.pitch;
     }
