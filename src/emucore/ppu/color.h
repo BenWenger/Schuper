@@ -7,9 +7,9 @@ namespace sch
 
     struct Color
     {
-        u8      r = 0;
-        u8      g = 0;
-        u8      b = 0;
+        s8      r = 0;              //  rgb should be signed to allow for clipping
+        s8      g = 0;              //   during color math
+        s8      b = 0;
         u8      prio = 0;
         bool    colorMath = false;
 
@@ -35,6 +35,45 @@ namespace sch
         {
             r = g = b = prio = 0;
             colorMath = false;
+        }
+
+        Color   doMath(const Color& rhs, bool subtract, bool half) const
+        {
+            if(!colorMath)      return *this;
+            Color out;
+
+            if(subtract)
+            {
+                out.r = r - rhs.r;
+                out.g = g - rhs.g;
+                out.b = b - rhs.b;
+                if(half)
+                {
+                    out.r >>= 1;
+                    out.g >>= 1;
+                    out.b >>= 1;
+                }
+                if(out.r < 0)       out.r = 0;
+                if(out.g < 0)       out.g = 0;
+                if(out.b < 0)       out.b = 0;
+            }
+            else
+            {
+                out.r = r + rhs.r;
+                out.g = g + rhs.g;
+                out.b = b + rhs.b;
+                if(half)
+                {
+                    out.r >>= 1;
+                    out.g >>= 1;
+                    out.b >>= 1;
+                }
+                if(out.r > 0x1F)    out.r = 0x1F;
+                if(out.g > 0x1F)    out.g = 0x1F;
+                if(out.b > 0x1F)    out.b = 0x1F;
+            }
+
+            return out;
         }
     };
 

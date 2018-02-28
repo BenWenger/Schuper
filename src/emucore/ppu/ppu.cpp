@@ -434,10 +434,35 @@ namespace sch
         }
         else
         {
-            for(int i = 0; i < 256; ++i)
+            if(colorMathSubscr)
             {
-                // TODO do color math here!!!!
-                video.buffer[i*2] = video.buffer[i*2+1] = getRawColor(renderBufMan[i+16]);
+                for(int i = 0; i < 256; ++i)
+                {
+                    bool half = colorHalfMath;
+                    const Color* c = &renderBufSub[i+16];
+                    if(!c->prio)
+                    {
+                        c = &fixedColor;
+                        half = false;
+                    }
+
+                    video.buffer[i*2] = video.buffer[i*2+1] = getRawColor( renderBufMan[i+16].doMath(
+                            *c,
+                            colorMathSubtract,
+                            half
+                    ));
+                }
+            }
+            else
+            {
+                for(int i = 0; i < 256; ++i)
+                {
+                    video.buffer[i*2] = video.buffer[i*2+1] = getRawColor( renderBufMan[i+16].doMath(
+                            fixedColor,
+                            colorMathSubtract,
+                            colorHalfMath
+                    ));
+                }
             }
         }
         video.buffer += video.pitch;

@@ -169,7 +169,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if(!RegisterClassExA(&wc))
         return 1;
 
-    HWND wnd = CreateWindowA(wndClassName, "Schpuer", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, 400, 200, 640, 550, nullptr, nullptr, inst, nullptr);
+    HWND wnd = CreateWindowA(wndClassName, "Schpuer", WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU, 250, 100, 640, 550, nullptr, nullptr, inst, nullptr);
     if(!wnd)
         return 2;
 
