@@ -27,6 +27,7 @@ namespace
     sch::u32                tmpVidBuffer[240 * 512];
     DibSection              dibBuffer;
     int                     displayedLines = 0;
+    int                     frameCount = 0;
 
     void toggleCpuTrace()
     {
@@ -51,6 +52,9 @@ namespace
         {
             BitBlt(screendc, 0, 0, 512, displayedLines, dibBuffer, 0, 0, SRCCOPY);
         }
+        char buf[20];
+        sprintf(buf,"%d      ", frameCount);
+        TextOutA(screendc, 520, 0, buf, strlen(buf));
     }
 
     void doFrame(HWND wnd)
@@ -68,6 +72,7 @@ namespace
             doDraw(dc);
             ReleaseDC(wnd,dc);
         }
+        ++frameCount;
     }
 
     void unloadFile()
@@ -101,7 +106,10 @@ namespace
         }
 
         if(isLoaded())
+        {
+            frameCount = 0;
             snd->play();
+        }
     }
 
     LRESULT CALLBACK mainWndProc(HWND wnd, UINT msg, WPARAM w, LPARAM l)

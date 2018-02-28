@@ -227,6 +227,9 @@ namespace sch
                 timestamp_t target = ppu->getMaxTicksPerFrame();
                 ppu->frameStart(cpu.get(), vid);
 
+                if(isCpuTracing())
+                    cpuTracer->traceLine(">>  Beginning Frame  >>");
+
                 cpu->runTo(target);
                 spc->runTo(target);
                 ppu->runTo(target);

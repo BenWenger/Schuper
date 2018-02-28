@@ -28,8 +28,8 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     if(snes.loadFile(std::move(file)) != sch::SnesFile::Type::Rom)
         return 3;
 
-    int start = 0;
-    int stop = 200;
+    int start = 0x42;
+    int stop = 310;
 
     for(int i = 0; i < start; ++i) {
         snes.doFrame(vid);

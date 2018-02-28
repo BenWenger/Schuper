@@ -411,9 +411,9 @@ namespace sch
             switch(bgMode)
             {
             case 1:
-                bgLine_normal(0, line, 4, cgRam, 8, 11);
-                bgLine_normal(1, line, 4, cgRam, 7, 10);
-        //        bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 5 : 13);
+       //         bgLine_normal(0, line, 4, cgRam, 8, 11);
+         //       bgLine_normal(1, line, 4, cgRam, 7, 10);
+                bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 13 : 5);
                 break;
 
                 // TODO do other BG modes

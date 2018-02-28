@@ -485,15 +485,19 @@ namespace sch
         //   if so, add that here at some point.  Maybe.. it's just a bizarre edge case
 
         u16 vec;
+        const char* tracemsg = nullptr;
         switch(type)
         {
-        case IntType::Reset:    vec = 0xFFFC;                       resetPending = false;   break;
+        case IntType::Reset:    vec = 0xFFFC;                       resetPending = false;   tracemsg = "*** RESET ***";     break;
         case IntType::Abort:    vec = regs.fE ? 0xFFF8 : 0xFFE8;                            break;
-        case IntType::Nmi:      vec = regs.fE ? 0xFFFA : 0xFFEA;    nmiPending = false;     break;
-        case IntType::Irq:      vec = regs.fE ? 0xFFFE : 0xFFEE;                            break;
+        case IntType::Nmi:      vec = regs.fE ? 0xFFFA : 0xFFEA;    nmiPending = false;     tracemsg = "*** NMI ***";       break;
+        case IntType::Irq:      vec = regs.fE ? 0xFFFE : 0xFFEE;                            tracemsg = "*** IRQ ***";       break;
         case IntType::Cop:      vec = regs.fE ? 0xFFF4 : 0xFFE4;                            break;
         case IntType::Brk:      vec = regs.fE ? 0xFFFE : 0xFFE6;                            break;
         }
+        
+        if(tracer && tracemsg)
+            tracer->traceLine(tracemsg);
 
         checkInterruptPending();
 
