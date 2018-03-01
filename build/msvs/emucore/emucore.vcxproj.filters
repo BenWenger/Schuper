@@ -87,6 +87,9 @@
     <ClCompile Include="..\..\..\src\emucore\internaldebug\internaldebug.cpp">
       <Filter>src\internaldebug</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\ppu\ppu_sprites.cpp">
+      <Filter>src\ppu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">
@@ -178,6 +181,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\internaldebug\internaldebug.h">
       <Filter>src\internaldebug</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\ppu\sprite.h">
+      <Filter>src\ppu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

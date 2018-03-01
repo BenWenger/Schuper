@@ -22,7 +22,6 @@ namespace sch
             for(auto& i : bgLayers)
             {
                 i.chrAddr = 0;
-                i.priorityBit = false;
                 i.scrollX = 0;
                 i.scrollY = 0;
                 i.tileMapAddr = 0;
@@ -63,6 +62,17 @@ namespace sch
             colorHalfMath = false;
             colorMathLayers = 0;
             fixedColor.reset();
+
+            ///////////////////////////
+            objSizeMode = 0;
+            objChrAddr[0] = objChrAddr[1] = 0;
+            oamAddrLoad = 0;
+            oamAddr = 0;
+            oamBuffer = 0;
+            useAltSpr0 = false;
+            for(auto& i : oamLow)   i = 0;
+            for(auto& i : oamHigh)  i = 0;
+            for(auto& i : sprites)  i.reset();
         }
     }
 
@@ -120,12 +130,10 @@ namespace sch
             brightnessMultiplier = (0xFF00 * brightness_4bit) / (0x0F * 0x1F);
             break;
             
-        case 0x2101:
-        case 0x2102:
-        case 0x2103:
-        case 0x2104:
-            // TODO
-            break;
+        case 0x2101:    w_2101(v);      break;
+        case 0x2102:    w_2102(v);      break;
+        case 0x2103:    w_2103(v);      break;
+        case 0x2104:    w_2104(v);      break;
 
         case 0x2105:
             bgMode =                    v & 0x07;
@@ -429,7 +437,7 @@ namespace sch
                 // TODO do other BG modes
             }
 
-            // TODO render sprites
+            sprLine(line);
 
             // actually output the lines!
             outputLinePixels();

@@ -64,7 +64,8 @@ namespace sch
                     pal,
                     (tile & 0x4000) != 0,
                     (tile & 0x2000) ? hiprio : loprio,
-                    mathParticipate
+                    mathParticipate,
+                    false
                 );
             }
         }
@@ -72,7 +73,7 @@ namespace sch
 
     
     void Ppu::renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr,
-                                const Color* palette, bool hflip, u8 prio, bool math)
+                                const Color* palette, bool hflip, u8 prio, bool math, bool spr)
     {
         u8 buf[8] = {0};
 
@@ -102,11 +103,11 @@ namespace sch
 
         if(mainbuf)
         {
-            for(int i = 0; i < 8; ++i)      mainbuf[i].multiplex(buf[i^xx], palette, prio, math);
+            for(int i = 0; i < 8; ++i)      mainbuf[i].multiplex(buf[i^xx], palette, prio, math, spr);
         }
         if(subbuf)
         {
-            for(int i = 0; i < 8; ++i)      subbuf[i].multiplex(buf[i^xx], palette, prio, math);
+            for(int i = 0; i < 8; ++i)      subbuf[i].multiplex(buf[i^xx], palette, prio, math, spr);
         }
     }
 }

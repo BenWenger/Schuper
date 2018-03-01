@@ -4,6 +4,7 @@
 
 #include "snestypes.h"
 #include "bglayer.h"
+#include "sprite.h"
 #include "color.h"
 #include "event/eventhandler.h"
 #include "videosettings.h"
@@ -181,6 +182,17 @@ namespace sch
         // 2101 - 2104
         u8          objSizeMode;
         u16         objChrAddr[2];
+        u16         oamAddrLoad;
+        u16         oamAddr;
+        u8          oamBuffer;
+        bool        useAltSpr0;
+        u8          oamLow[0x200];
+        u8          oamHigh[0x20];
+        Sprite      sprites[0x80];
+        void        w_2101(u8 v);
+        void        w_2102(u8 v);
+        void        w_2103(u8 v);
+        void        w_2104(u8 v);
 
             // TODO OAM stuff
 
@@ -265,7 +277,9 @@ namespace sch
         ////////////////////////////////////////
         void    bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio);
 
-        void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math);
+        void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math, bool spr);
+
+        void    sprLine(int line);
     };
 
 }
