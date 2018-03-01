@@ -179,6 +179,9 @@ namespace sch
         int         brightnessMultiplier;
 
         // 2101 - 2104
+        u8          objSizeMode;
+        u16         objChrAddr[2];
+
             // TODO OAM stuff
 
         // 2105
