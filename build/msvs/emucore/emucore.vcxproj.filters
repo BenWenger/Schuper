@@ -34,6 +34,9 @@
     <Filter Include="src\event">
       <UniqueIdentifier>{360cc144-bff6-40fe-9425-5a26d40e3d5a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\internaldebug">
+      <UniqueIdentifier>{eac16da9-216d-46c8-b827-3289128efa30}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -80,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu_bgrender.cpp">
       <Filter>src\ppu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\internaldebug\internaldebug.cpp">
+      <Filter>src\internaldebug</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +175,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\emucore\videosettings.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\internaldebug\internaldebug.h">
+      <Filter>src\internaldebug</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

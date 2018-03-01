@@ -2,6 +2,16 @@
 #include "dmaunit.h"
 #include "bus/cpubus.h"
 #include "main/mainclock.h"
+#include "internaldebug/internaldebug.h"
+
+
+#ifdef IDBG_DUMP_DMA_UNIT_FILENAME
+#include <cstdio>
+namespace
+{
+    std::FILE* dmaLogFile = nullptr;
+}
+#endif
 
 namespace sch
 {
@@ -93,6 +103,30 @@ namespace sch
                 clock->tallyCycle(chanDelay);
 
                 auto& chan = chans[i];
+                
+#ifdef IDBG_DUMP_DMA_UNIT_FILENAME
+                if(!dmaLogFile)
+                    dmaLogFile = fopen(IDBG_DUMP_DMA_UNIT_FILENAME, "wt");
+
+                fprintf(dmaLogFile, "DMA triggered on chan %d:\n"
+                            "    Current PPU addr:  $%04X\n"
+                            "    Reading:  %s\n"
+                            "    Source:  $%06X\n"
+                            "    Dest: $21%02X\n"
+                            "    Size: $%04X\n"
+                            "    Addr Adjust: %d\n"
+                            "    Mode: %d\n\n\n"
+                        ,i,
+                        InternalDebug.getPpuAddress(),
+                        chan.ppuRead ? "yes" : "no",
+                        chan.srcAddr | chan.srcBank,
+                        chan.dstAddr,
+                        chan.size,
+                        chan.addrAdj,
+                        chan.xferMode
+                );
+#endif
+
                 int phase = 0;
                 do
                 {

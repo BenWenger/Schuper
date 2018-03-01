@@ -1,5 +1,6 @@
 
 #include "ppu.h"
+#include <cstdio>       // TODO REMOVE THIS
 
 namespace sch
 {
@@ -40,6 +41,17 @@ namespace sch
                 u16 chraddr = (tile & 0x03FF) * (8/2) * planes;
                 chraddr |= y;
                 chraddr += layer.chrAddr;
+
+                if(planes == 2)
+                {
+                    bool foobar = false;
+                    if(foobar)
+                    {
+                        FILE* dump = fopen("vramdump.bin", "wb");
+                        fwrite(vram, 2, 0x8000, dump);
+                        fclose(dump);
+                    }
+                }
 
                 auto* pal = palette;
                 if(planes != 8)     pal += (1 << planes) * ((tile & 0x1C00) >> 10);

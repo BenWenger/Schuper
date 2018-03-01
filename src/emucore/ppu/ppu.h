@@ -101,6 +101,7 @@ namespace sch
     {
 
     public:
+                    Ppu();
         void        regWrite(u16 a, u8 v);
         void        regRead(u16 a, u8& v);
 

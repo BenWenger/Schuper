@@ -2,9 +2,18 @@
 #include <algorithm>
 #include "ppu.h"
 #include "cpu/cpu.h"
+#include "internaldebug/internaldebug.h"
 
 namespace sch
 {
+    Ppu::Ppu()
+    {
+#ifdef IDBG_ENABLED
+        InternalDebug.getPpuAddress = std::bind( &Ppu::getEffectiveVramAddr, this );
+        InternalDebug.getPpuAddrInc = [this]() { return addrInc; };
+#endif
+    }
+
     void Ppu::reset(bool hard, EventManager* evt)
     {
         evtManager = evt;
@@ -139,9 +148,9 @@ namespace sch
             break;
 
         case 0x210B: case 0x210C:
-            tmp = a - 0x210B;
-            bgLayers[tmp+0].chrAddr =           (v & 0x0F) << 13;
-            bgLayers[tmp+2].chrAddr =           (v & 0xF0) << 9;
+            tmp = (a - 0x210B) << 1;
+            bgLayers[tmp+0].chrAddr =           (v & 0x0F) << 12;
+            bgLayers[tmp+1].chrAddr =           (v & 0xF0) << 8;
             break;
 
         case 0x210D:
@@ -169,6 +178,7 @@ namespace sch
             if(v & 0x02)            addrInc = 128;
             else                    addrInc = (v & 0x01) ? 32 : 1;
             vramRemapMode =         (v >> 2) & 3;
+            break;
 
         case 0x2116:
             vramAddr =              (vramAddr & 0xFF00) | v;
@@ -411,8 +421,8 @@ namespace sch
             switch(bgMode)
             {
             case 1:
-       //         bgLine_normal(0, line, 4, cgRam, 8, 11);
-         //       bgLine_normal(1, line, 4, cgRam, 7, 10);
+                bgLine_normal(0, line, 4, cgRam, 8, 11);
+                bgLine_normal(1, line, 4, cgRam, 7, 10);
                 bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 13 : 5);
                 break;
 

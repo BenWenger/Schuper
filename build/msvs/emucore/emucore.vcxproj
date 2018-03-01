@@ -29,6 +29,7 @@
     <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp" />
     <ClCompile Include="..\..\..\src\emucore\dma\dmaunit.cpp" />
     <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\internaldebug\internaldebug.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\snes.cpp" />
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp" />
@@ -60,6 +61,7 @@
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventmanager.h" />
+    <ClInclude Include="..\..\..\src\emucore\internaldebug\internaldebug.h" />
     <ClInclude Include="..\..\..\src\emucore\main\mainclock.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\bglayer.h" />
     <ClInclude Include="..\..\..\src\emucore\ppu\color.h" />
