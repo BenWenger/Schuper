@@ -123,11 +123,13 @@ namespace sch
 
         VideoResult getVideoResult() const;
 
+        void        debug_dumpVram(const char* filename);
+
     private:
         struct Coord
         {
-            int H;
             int V;
+            int H;
 
             int compare(const Coord& rhs) const {
                 if(V < rhs.V)       return -1;

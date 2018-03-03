@@ -91,6 +91,15 @@ namespace sch
             spc->reset();
             dmaUnit->reset(true, cpuBus.get(), mainClock.get(), 12, 8, 8);
             ppu->reset(true, eventManager.get());
+            altRamAddr = 0;
+            for(int i = 0; i < 0x20000; ++i)        ram[i] = 0;
+
+            mulReg_A = 0;
+            mulReg_B = 0;
+            mulReg_Dividend = 0;
+            mulReg_Divisor = 0;
+            mulReg_Quotient = 0;
+            mulReg_Product = 0;
             break;
 
         case SnesFile::Type::Spc:
@@ -114,6 +123,18 @@ namespace sch
             spc->runTo(clk);
             out = spc->readIoReg(a&3);
             break;
+            
+        case 0x4214:    out = static_cast<u8>(mulReg_Quotient & 0xFF);      break;
+        case 0x4215:    out = static_cast<u8>(mulReg_Quotient >> 8  );      break;
+        case 0x4216:    out = static_cast<u8>(mulReg_Product  & 0xFF);      break;
+        case 0x4217:    out = static_cast<u8>(mulReg_Product  >> 8  );      break;
+
+        case 0x4210: case 0x4218: case 0x4219: case 0x421A: case 0x421B:
+        case 0x4211: case 0x4016: case 0x4017:
+            // TODO
+            break;
+
+        case 0x4212:    ppu->runTo(clk);        ppu->regRead(a, out);       break;
 
         default:
             if(a >= 0x2100 && a < 0x2140)
@@ -152,6 +173,29 @@ namespace sch
         case 0x4200:
             ppu->runTo(clk);
             ppu->regWrite(a, v);
+            break;
+
+        case 0x4202:
+            mulReg_A = v;
+            break;
+
+        case 0x4203:
+            mulReg_B = v;
+            mulReg_Product = mulReg_A * mulReg_B;
+            break;
+
+        case 0x4204:
+            mulReg_Dividend = (mulReg_Dividend & 0xFF00) | v;
+            break;
+            
+        case 0x4205:
+            mulReg_Dividend = (mulReg_Dividend & 0x00FF) | (v << 8);
+            break;
+
+        case 0x4206:
+            mulReg_Divisor = v;
+            if(!mulReg_Divisor)     {   mulReg_Product = mulReg_Dividend;                   mulReg_Quotient = 0xFFFF;                             }
+            else                    {   mulReg_Product = mulReg_Dividend % mulReg_Divisor;  mulReg_Quotient = mulReg_Dividend / mulReg_Divisor;   }
             break;
 
         case 0x420B: case 0x420C:
@@ -266,5 +310,18 @@ namespace sch
     void Snes::setAudioBuffer(s16* bufA, int sizInBytesA, s16* bufB, int sizInBytesB)
     {
         audioBuffer->setBuffer(bufA, sizInBytesA, bufB, sizInBytesB);
+    }
+
+    
+    void Snes::debug_dumpVram(const char* filename)
+    {
+        ppu->debug_dumpVram(filename);
+    }
+
+    void Snes::debug_dumpWram(const char* filename)
+    {
+        FILE* file = fopen(filename, "wb");
+        fwrite(ram.get(), 1, 0x20000, file);
+        fclose(file);
     }
 }

@@ -46,6 +46,9 @@ namespace sch
         int             getBytesOfAudioForAFrame();
 
         VideoResult     doFrame(const VideoSettings& vidset);
+        
+        void            debug_dumpVram(const char* filename);
+        void            debug_dumpWram(const char* filename);
 
     private:
         
@@ -57,7 +60,6 @@ namespace sch
         u8              rd_Reg(u16 a, timestamp_t clk);
 
         SnesFile                    currentFile;
-
         u32                         romMask;
 
         std::unique_ptr<u8[]>       ram;
@@ -66,6 +68,13 @@ namespace sch
         int                         spdSlow;
         int                         spdFast;
         int                         spdXSlow;
+        
+        u8                          mulReg_A;
+        u8                          mulReg_B;
+        u16                         mulReg_Dividend;
+        u8                          mulReg_Divisor;
+        u16                         mulReg_Quotient;
+        u16                         mulReg_Product;
 
         std::unique_ptr<Spc>            spc;
         std::unique_ptr<Cpu>            cpu;

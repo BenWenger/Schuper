@@ -5,8 +5,10 @@
 
 //#define IDBG_ENABLED
 
+
+
 #ifdef IDBG_ENABLED
-    #define IDBG_DUMP_DMA_UNIT_FILENAME        "dma_log.txt"
+    //#define IDBG_DUMP_DMA_UNIT_FILENAME        "dma_log.txt"
 
 
 

@@ -287,7 +287,16 @@ namespace sch
 
     void Ppu::regRead(u16 a, u8& v)
     {
+        static const Coord      vbl_start = {0xE1, 0x16};  // TODO this is hacky
+        static const Coord      vbl_end   = {   0, 0x1E};  // TODO this is hacky
         // TODO
+        switch(a)
+        {
+        case 0x4212:
+            v &= ~0xC1;
+            if(curPos > vbl_start || curPos < vbl_end)      v |= 0x80;      // TODO this is hacky.  Slapped this in for Turtles in Time
+            break;
+        }
     }
     
     void Ppu::runTo(timestamp_t runto)
@@ -507,6 +516,13 @@ namespace sch
             out.mode = oddFrame ? VideoResult::RenderMode::InterlaceOdd : VideoResult::RenderMode::InterlaceEven;
 
         return out;
+    }
+
+    void Ppu::debug_dumpVram(const char* filename)
+    {
+        FILE* file = fopen(filename, "wb");
+        fwrite(vram, 2, 0x8000, file);
+        fclose(file);
     }
 
 }

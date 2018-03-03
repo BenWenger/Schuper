@@ -571,11 +571,11 @@ void u_JSR_IndirectX()      /* JSR ($aaaa,X)*/
 {
     u16 a =         read_p();
                     push( regs.PC >> 8 );
-                    push( regs.PC & 0xFF );     regs.PC = a;
+                    push( regs.PC & 0xFF );
     a |=            read_p() << 8;
     a += regs.X.w;  ioCyc();
-    regs.PC =       read_l(a++);
-    regs.PC |=      read_l(a) << 8;
+    regs.PC =       read_a(a++);
+    regs.PC |=      read_a(a) << 8;
 }
 
 void u_MV_PN(int adj)
@@ -602,7 +602,7 @@ void u_MV_PN(int adj)
         regs.X.w += adj;
         regs.Y.w += adj;
     }
-    if(!regs.A.w--)
+    if(regs.A.w--)
         regs.PC -= 3;
 }
 

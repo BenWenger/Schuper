@@ -131,9 +131,11 @@ namespace
                 else                                            doFileSelect(wnd);
 
                 break;
-
-            case VK_F7:         toggleCpuTrace();               break;
-            case VK_F8:         toggleSpcTrace();               break;
+                
+            case VK_F2:         snes->debug_dumpWram("wram_dump.bin");  break;
+            case VK_F3:         snes->debug_dumpVram("vram_dump.bin");  break;
+            case VK_F7:         toggleCpuTrace();                       break;
+            case VK_F8:         toggleSpcTrace();                       break;
             }
             break;
         case WM_SYSCOMMAND:
