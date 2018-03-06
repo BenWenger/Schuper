@@ -2,6 +2,23 @@
 
 # Samples
 
+##  Second presentation stuff
+
+#### The frame is a series of scanlines.  A scanline is a series of dots.
+
+![dots](rc/dots.png)
+
+#### Different scanlines do different things!!!
+
+![lines](rc/lines.png)
+
+#### Progressive vs. Interlace?  wtf?
+
+![interlace](rc/interlace.png)
+
+
+
+
 
 ##  First presentation stuff
 

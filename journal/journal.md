@@ -12,4 +12,5 @@ Week 4 | CPU tracer and loader are complete.  Fixed some CPU bugs in the process
 Week 5 | CPU bugs fixed. SMW now loads and runs properly and is audible! Also started work on basic PPG/Graphics stuff and the DMA unit.
 Week 6 | Some timing stuff touched up.  NMIs/IRQs now should work via an "event" system I have set up.  WAI instruction should also be working.  Started to build the PPU frame but haven't actually rendered anything yet.
 Week 7 | Did some planning for how I wan to organize the frame, but didn't really get much coding done.  AAArrrggggg.
-Week 8 | ... sooon
+Week 8 | Tons of work done to make up for last week!  Timing for the frame all straightened out.  PPU is mostly working!  4 bpp and 2 bpp backgrounds are displayed properly.  Sprites are also displayed.  Color math implemented.  You can now watch the demo of Super Mario World!  Although for some reason Yoshi is invisible, still need to debug that.
+Week 9 | ...
