@@ -399,10 +399,7 @@ namespace sch
         if( (line >= 1) && (line <= (overscanMode ? 240 : 224)) )
         {
             if(video.buffer)
-            {
-                ++linesRendered;
                 renderLine(line);
-            }
         }
 
         // if this is line 241, and we hit scanline 0 already, then we are done with the frame!
@@ -451,6 +448,8 @@ namespace sch
             // actually output the lines!
             outputLinePixels();
         }
+        video.buffer += video.pitch;
+        ++linesRendered;
     }
 
     void Ppu::outputLinePixels()
@@ -492,7 +491,6 @@ namespace sch
                 }
             }
         }
-        video.buffer += video.pitch;
     }
 
     u32 Ppu::getRawColor(const Color& clr)
