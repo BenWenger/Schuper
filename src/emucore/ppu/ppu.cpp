@@ -434,6 +434,13 @@ namespace sch
             // render BGs
             switch(bgMode)
             {
+            case 0:
+                bgLine_normal(0, line, 2, cgRam + 0x00, 8, 11);
+                bgLine_normal(1, line, 2, cgRam + 0x20, 7, 10);
+                bgLine_normal(2, line, 2, cgRam + 0x40, 2,  5);
+                bgLine_normal(3, line, 2, cgRam + 0x60, 1,  4);
+                break;
+
             case 1:
                 bgLine_normal(0, line, 4, cgRam, 8, 11);
                 bgLine_normal(1, line, 4, cgRam, 7, 10);
