@@ -379,8 +379,8 @@ void ad_wr_dil(u16 v, bool flg)             // DP Indirect Lng: STA [$dd]
     u32 a =                 read_l(tmp++);
     a |=                    read_l(tmp++) << 8;
     a |=                    read_l(tmp) << 16;
-                            write_a(a, v & 0xFF);
-    if(!flg)                write_a(a+1, v >> 8);
+                            write_l(a, v & 0xFF);
+    if(!flg)                write_l(a+1, v >> 8);
 }
 
 void ad_wr_sr(u16 v, bool flg)              // Stack Relative:  STA $dd,S
