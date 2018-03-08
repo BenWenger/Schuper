@@ -13,6 +13,7 @@ namespace sch
         virtual ~EventHandler() {}
 
         virtual void    performEvent(int eventId, timestamp_t clk) = 0;
+        virtual void    vblankStart(timestamp_t clk) {}
     };
 
 }

@@ -27,6 +27,9 @@ namespace sch
 
         timestamp_t getNextEventTime() const    { return nextEvent;        }
 
+        void        vblankStarted(timestamp_t clk);
+        void        addVBlankNotification(EventHandler* hndlr);
+
     private:
         void        doEvents(timestamp_t clk);
 
@@ -50,6 +53,7 @@ namespace sch
 
         timestamp_t             nextEvent;
         std::set<EventBlock>    events;
+        std::set<EventHandler*> vblNotifiers;
     };
 }
 

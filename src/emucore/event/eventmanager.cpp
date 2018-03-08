@@ -14,6 +14,7 @@ namespace sch
     void EventManager::reset()
     {
         events.clear();
+        vblNotifiers.clear();
         nextEvent = Time::Never;
     }
     
@@ -58,5 +59,16 @@ namespace sch
 
         events = std::move(newevents);
         nextEvent = events.begin()->time;
+    }
+    
+    void EventManager::vblankStarted(timestamp_t clk)
+    {
+        for(auto& i : vblNotifiers)
+            i->vblankStart(clk);
+    }
+
+    void EventManager::addVBlankNotification(EventHandler* hndlr)
+    {
+        vblNotifiers.insert(hndlr);
     }
 }

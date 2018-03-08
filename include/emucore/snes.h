@@ -20,6 +20,7 @@ namespace sch
     class Ppu;
     class MainClock;
     class EventManager;
+    class AutoJoy;
 
     class Snes
     {
@@ -86,6 +87,7 @@ namespace sch
         std::unique_ptr<Ppu>            ppu;
         std::unique_ptr<MainClock>      mainClock;
         std::unique_ptr<EventManager>   eventManager;
+        std::unique_ptr<AutoJoy>        autoJoy;
     };
 
 }

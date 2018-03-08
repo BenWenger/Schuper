@@ -9,6 +9,7 @@
 #include "dma/dmaunit.h"
 #include "ppu/ppu.h"
 #include "mainclock.h"
+#include "joy/autojoy.h"
 
 namespace sch
 {
@@ -23,6 +24,7 @@ namespace sch
         ppu = std::make_unique<Ppu>();
         mainClock = std::make_unique<MainClock>();
         eventManager = std::make_unique<EventManager>();
+        autoJoy = std::make_unique<AutoJoy>();
 
         spc->setAudioBuffer(audioBuffer.get());
         
@@ -100,6 +102,9 @@ namespace sch
             mulReg_Divisor = 0;
             mulReg_Quotient = 0;
             mulReg_Product = 0;
+
+            autoJoy->reset( eventManager.get(), cpuBus.get() );
+
             break;
 
         case SnesFile::Type::Spc:
@@ -128,14 +133,26 @@ namespace sch
         case 0x4215:    out = static_cast<u8>(mulReg_Quotient >> 8  );      break;
         case 0x4216:    out = static_cast<u8>(mulReg_Product  & 0xFF);      break;
         case 0x4217:    out = static_cast<u8>(mulReg_Product  >> 8  );      break;
-
+            
         case 0x4218: case 0x4219: case 0x421A: case 0x421B:
+        case 0x421C: case 0x421D: case 0x421E: case 0x421F:
+            out = autoJoy->read_joydata(a & 7);
+            break;
+
         case 0x4211: case 0x4016: case 0x4017:
             // TODO
             break;
 
         case 0x4210:
-        case 0x4212:    ppu->runTo(clk);        ppu->regRead(a, out);       break;
+            ppu->runTo(clk);
+            ppu->regRead(a, out);
+            break;
+
+        case 0x4212:
+            ppu->runTo(clk);
+            ppu->regRead(a, out);
+            autoJoy->read_4212(out);
+            break;
 
         default:
             if(a >= 0x2100 && a < 0x2140)
@@ -174,6 +191,7 @@ namespace sch
         case 0x4200:
             ppu->runTo(clk);
             ppu->regWrite(a, v);
+            autoJoy->write_4200(v);
             break;
 
         case 0x4202:
