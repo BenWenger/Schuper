@@ -282,6 +282,7 @@ namespace sch
                 auto adj = -ppu->getPrevFrameLength();
                 mainClock->adjustTimestamp(adj);
                 spc->adjustTimestamp(adj);
+                eventManager->adjustTimestamps(adj);
 
                 out = ppu->getVideoResult();
             }

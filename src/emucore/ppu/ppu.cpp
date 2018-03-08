@@ -78,7 +78,6 @@ namespace sch
             irqPending = false;
             irqMode = IrqMode::Disabled;
             vblReadFlag = false;
-            ppuStatus = 0;
         }
     }
 
@@ -280,7 +279,8 @@ namespace sch
 
         case 0x4200:
             nmiEnabled =        (v & 0x80) != 0;
-            // TODO other shit here
+
+            // TODO other shit here ... IRQs?
             break;
         }
     }
@@ -306,8 +306,11 @@ namespace sch
             break;
 
         case 0x4212:
+            // TODO this is a bit hacky.  Maybe touch this up later?
             v &= ~0xC1;
             if(curPos > vbl_start || curPos < vbl_end)      v |= 0x80;      // TODO this is hacky.  Slapped this in for Turtles in Time
+            if(curPos.H < 13 || curPos.H > 121)             v |= 0x40;      // Is this right???
+//            if(autoJoyRunning)                              v |= 0x01;
             break;
         }
     }
@@ -405,8 +408,11 @@ namespace sch
             if(overscanMode && line == 240)         nmiHasHappened = true;
             if(!overscanMode && line == 224)        nmiHasHappened = true;
 
-            if(nmiEnabled && nmiHasHappened)        cpu->signalNmi();
-            vblReadFlag = true;
+            if(nmiHasHappened)
+            {
+                if(nmiEnabled)                      cpu->signalNmi();
+                vblReadFlag = true;
+            }
         }
 
         int lastrenderline = (overscanMode ? 240 : 224);

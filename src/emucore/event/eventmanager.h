@@ -21,6 +21,7 @@ namespace sch
         }
 
         void        addEvent(timestamp_t clk, EventHandler* evt, int id);
+        void        adjustTimestamps(timestamp_t adj);
 
         void        reset();
 

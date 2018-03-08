@@ -45,4 +45,18 @@ namespace sch
         else
             nextEvent = events.begin()->time;
     }
+    
+    void EventManager::adjustTimestamps(timestamp_t adj)
+    {
+        if(events.empty())      return;
+
+        std::set<EventBlock>    newevents;
+        for(auto& i : events)
+        {
+            newevents.insert( EventBlock(i.time + adj, i.evt, i.id) );
+        }
+
+        events = std::move(newevents);
+        nextEvent = events.begin()->time;
+    }
 }

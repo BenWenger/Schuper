@@ -268,7 +268,6 @@ namespace sch
         bool        vblReadFlag;
 
         // 4212
-        u8          ppuStatus;
 
 
         enum EventCode
