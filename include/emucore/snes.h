@@ -7,6 +7,7 @@
 #include "snestypes.h"
 #include "snesfile.h"
 #include "videosettings.h"
+#include "snesinput.h"
 
 namespace sch
 {
@@ -45,6 +46,8 @@ namespace sch
         void            setAudioBuffer(s16* bufA, int sizInBytesA, s16* bufB = nullptr, int sizInBytesB = 0);
         int             getBytesOfAudioWritten();
         int             getBytesOfAudioForAFrame();
+
+        void            attachInputDevice(int port, InputDevice* dev);
 
         VideoResult     doFrame(const VideoSettings& vidset);
         
@@ -88,6 +91,8 @@ namespace sch
         std::unique_ptr<MainClock>      mainClock;
         std::unique_ptr<EventManager>   eventManager;
         std::unique_ptr<AutoJoy>        autoJoy;
+
+        InputDevice*            inputs[2];
     };
 
 }

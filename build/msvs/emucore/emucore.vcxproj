@@ -42,6 +42,7 @@
     <ClInclude Include="..\..\..\include\emucore\schuper.h" />
     <ClInclude Include="..\..\..\include\emucore\snes.h" />
     <ClInclude Include="..\..\..\include\emucore\snesfile.h" />
+    <ClInclude Include="..\..\..\include\emucore\snesinput.h" />
     <ClInclude Include="..\..\..\include\emucore\snestypes.h" />
     <ClInclude Include="..\..\..\include\emucore\videosettings.h" />
     <ClInclude Include="..\..\..\src\emucore\apu\dsp.h" />

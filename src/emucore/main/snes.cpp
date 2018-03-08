@@ -32,10 +32,22 @@ namespace sch
         spdSlow = 8;
         spdXSlow = 12;
         spc->setClockBase(21);                  // roughly 21 master cycles per SPC cycle
+        
+        inputs[0] = nullptr;
+        inputs[1] = nullptr;
     }
 
     Snes::~Snes()
     {
+    }
+    
+    void Snes::attachInputDevice(int port, InputDevice* dev)
+    {
+        if(port < 0 || port > 1)        return;
+
+        inputs[port] = dev;
+        if(dev)
+            dev->reset(true);
     }
 
     SnesFile::Type Snes::loadFile(SnesFile&& file)
@@ -104,6 +116,8 @@ namespace sch
             mulReg_Product = 0;
 
             autoJoy->reset( eventManager.get(), cpuBus.get() );
+            if(inputs[0])   inputs[0]->reset(true);
+            if(inputs[1])   inputs[1]->reset(true);
 
             break;
 
@@ -128,6 +142,16 @@ namespace sch
             spc->runTo(clk);
             out = spc->readIoReg(a&3);
             break;
+
+        case 0x4016:
+            out &= ~3;
+            if(inputs[0])       out |= inputs[0]->read();
+            break;
+        case 0x4017:
+            out &= ~3;
+            if(inputs[1])       out |= inputs[1]->read();
+            out |= 0x1C;
+            break;
             
         case 0x4214:    out = static_cast<u8>(mulReg_Quotient & 0xFF);      break;
         case 0x4215:    out = static_cast<u8>(mulReg_Quotient >> 8  );      break;
@@ -139,7 +163,7 @@ namespace sch
             out = autoJoy->read_joydata(a & 7);
             break;
 
-        case 0x4211: case 0x4016: case 0x4017:
+        case 0x4211:
             // TODO
             break;
 
@@ -186,6 +210,11 @@ namespace sch
         case 0x2140:  case 0x2141:  case 0x2142:  case 0x2143:
             spc->runTo(clk);
             spc->writeIoReg(a&3, v);
+            break;
+
+        case 0x4016:
+            if(inputs[0])       inputs[0]->write(v & 1);
+            if(inputs[1])       inputs[1]->write(v & 1);
             break;
 
         case 0x4200:

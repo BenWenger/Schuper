@@ -412,6 +412,7 @@ namespace sch
             {
                 if(nmiEnabled)                      cpu->signalNmi();
                 vblReadFlag = true;
+                evtManager->vblankStarted(v0_time + (line * 341 * 4));      // TODO put this '4' somewhere else
             }
         }
 

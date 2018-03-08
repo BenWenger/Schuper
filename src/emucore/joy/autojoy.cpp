@@ -11,6 +11,7 @@ namespace sch
         evtManager = evt;
         enabled = false;
         active = false;
+        evt->addVBlankNotification(this);
     }
 
     void AutoJoy::write_4200(u8 v)
@@ -84,7 +85,10 @@ namespace sch
 
         //  Do the first action (1 -> 4016)
         if(enabled)
+        {
+            active = true;
             bus->write(0x4016, 1, clk);
+        }
         
         int id;
         for(int i = 1; i < 34; ++i)
@@ -94,7 +98,7 @@ namespace sch
             else if(i & 1)      id = EvtType::Read4017;
             else                id = EvtType::Read4016;
 
-            evtManager->addEvent(clk + timegap, this, id);
+            evtManager->addEvent(clk + (timegap * i), this, id);
         }
     }
 }

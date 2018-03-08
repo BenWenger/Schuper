@@ -194,6 +194,9 @@
     <ClInclude Include="..\..\..\src\emucore\joy\autojoy.h">
       <Filter>src\joy</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\snesinput.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\src\emucore\ppu\ppu.h">

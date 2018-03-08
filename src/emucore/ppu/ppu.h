@@ -267,8 +267,6 @@ namespace sch
         // 4210
         bool        vblReadFlag;
 
-        // 4212
-
 
         enum EventCode
         {
