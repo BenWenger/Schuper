@@ -265,7 +265,7 @@ namespace sch
         bool        irqPending;
 
         // 4210
-        bool        nmiReadFlag;
+        bool        vblReadFlag;
 
         // 4212
         u8          ppuStatus;

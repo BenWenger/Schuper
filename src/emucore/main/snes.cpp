@@ -129,11 +129,12 @@ namespace sch
         case 0x4216:    out = static_cast<u8>(mulReg_Product  & 0xFF);      break;
         case 0x4217:    out = static_cast<u8>(mulReg_Product  >> 8  );      break;
 
-        case 0x4210: case 0x4218: case 0x4219: case 0x421A: case 0x421B:
+        case 0x4218: case 0x4219: case 0x421A: case 0x421B:
         case 0x4211: case 0x4016: case 0x4017:
             // TODO
             break;
 
+        case 0x4210:
         case 0x4212:    ppu->runTo(clk);        ppu->regRead(a, out);       break;
 
         default:

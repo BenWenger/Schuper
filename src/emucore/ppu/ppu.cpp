@@ -77,7 +77,7 @@ namespace sch
             nmiEnabled = false;
             irqPending = false;
             irqMode = IrqMode::Disabled;
-            nmiReadFlag = false;
+            vblReadFlag = false;
             ppuStatus = 0;
         }
     }
@@ -298,6 +298,13 @@ namespace sch
         // TODO
         switch(a)
         {
+        case 0x4210:
+            v &= ~0x8F;
+            v |= 2;
+            if(vblReadFlag)     v |= 0x80;
+            vblReadFlag = false;
+            break;
+
         case 0x4212:
             v &= ~0xC1;
             if(curPos > vbl_start || curPos < vbl_end)      v |= 0x80;      // TODO this is hacky.  Slapped this in for Turtles in Time
@@ -399,14 +406,19 @@ namespace sch
             if(!overscanMode && line == 224)        nmiHasHappened = true;
 
             if(nmiEnabled && nmiHasHappened)        cpu->signalNmi();
+            vblReadFlag = true;
         }
 
+        int lastrenderline = (overscanMode ? 240 : 224);
+
         // otherwise, see if we render it!
-        if( (line >= 1) && (line <= (overscanMode ? 240 : 224)) )
+        if( (line >= 1) && (line <= lastrenderline) )
         {
             if(video.buffer)
                 renderLine(line);
         }
+        if(line == (lastrenderline+1))
+            vblReadFlag = false;
 
         // if this is line 241, and we hit scanline 0 already, then we are done with the frame!
         if((line == 241) && (v0_time != Time::Never))

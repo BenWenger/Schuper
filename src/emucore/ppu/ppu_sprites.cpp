@@ -126,7 +126,7 @@ namespace sch
             const auto& size = sizeTable[s.size];
 
             if(s.xpos >= 256)           continue;
-            if(s.xpos < size.wd)        continue;
+            if(s.xpos + size.wd < 0)    continue;
 
             int y = (line - s.ypos) & 0xFF;
             if(y >= size.ht)            continue;
