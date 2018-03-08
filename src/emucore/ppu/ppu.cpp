@@ -73,6 +73,12 @@ namespace sch
             for(auto& i : oamLow)   i = 0;
             for(auto& i : oamHigh)  i = 0;
             for(auto& i : sprites)  i.reset();
+
+            nmiEnabled = false;
+            irqPending = false;
+            irqMode = IrqMode::Disabled;
+            nmiReadFlag = false;
+            ppuStatus = 0;
         }
     }
 
