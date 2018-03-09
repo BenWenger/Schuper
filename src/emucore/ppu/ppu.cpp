@@ -78,6 +78,8 @@ namespace sch
             irqPending = false;
             irqMode = IrqMode::Disabled;
             vblReadFlag = false;
+
+            irqPos.H = irqPos.V = 0;
         }
     }
 
@@ -280,15 +282,32 @@ namespace sch
         case 0x4200:
             nmiEnabled =        (v & 0x80) != 0;
 
-            // TODO other shit here ... IRQs?
+            irqMode = static_cast<IrqMode>((v >> 4) & 3);
+            acknowledgeIrq();
+            addIrqCatchups();
+            break;
+
+        case 0x4207:
+            irqPos.H &= 0x100;
+            irqPos.H |= v;
+            addIrqCatchups();
+            break;
+        case 0x4208:
+            irqPos.H &= 0x0FF;
+            irqPos.H |= ((v & 0x01) << 8);
+            addIrqCatchups();
+            break;
+        case 0x4209:
+            irqPos.V &= 0x100;
+            irqPos.V |= v;
+            addIrqCatchups();
+            break;
+        case 0x420A:
+            irqPos.V &= 0x0FF;
+            irqPos.V |= ((v & 0x01) << 8);
+            addIrqCatchups();
             break;
         }
-    }
-
-    void Ppu::performEvent(int eventId, timestamp_t clk)
-    {
-        if(eventId == EventCode::CatchUp)
-            runTo(clk);
     }
 
     void Ppu::regRead(u16 a, u8& v)
@@ -305,12 +324,18 @@ namespace sch
             vblReadFlag = false;
             break;
 
+        case 0x4211:
+            v &= ~0x80;
+            if(irqPending)      v |= 0x80;
+            acknowledgeIrq();
+            addIrqCatchups();
+            break;
+
         case 0x4212:
             // TODO this is a bit hacky.  Maybe touch this up later?
             v &= ~0xC1;
             if(curPos > vbl_start || curPos < vbl_end)      v |= 0x80;      // TODO this is hacky.  Slapped this in for Turtles in Time
             if(curPos.H < 13 || curPos.H > 121)             v |= 0x40;      // Is this right???
-//            if(autoJoyRunning)                              v |= 0x01;
             break;
         }
     }
@@ -329,18 +354,24 @@ namespace sch
         if((curPos.V == targetPos.V) && (curPos.H > 0))
         {
             // we already did the work for this line (at cyc 0).  Just count up the cycles and don't really do anything
+            checkIrqOnLine(curPos.V, curPos.H, targetPos.H);
             advance(targetPos.H - curPos.H);
         }
         // Scenario 2!  We're either at the exact start of a line, or the target is on a different line
         else
         {
             // if we're not at the start, fill out the rest of the line
-            if(curPos.H > 0)            targetPos.V += advance(341 - curPos.H);
+            if(curPos.H > 0)
+            {
+                checkIrqOnLine(curPos.V, curPos.H, 341);
+                targetPos.V += advance(341 - curPos.H);
+            }
 
             // Now start doing full scanlines!
             while((curPos.V < targetPos.V) && !frameIsOver())
             {
                 doScanline(curPos.V);
+                checkIrqOnLine(curPos.V, 0, 341);
                 targetPos.V += advance(341);
             }
             // Now, curPos.V == targetPos.V .. run to proper H time
@@ -348,6 +379,7 @@ namespace sch
             if(targetPos.H > 0 && !frameIsOver())
             {
                 doScanline(curPos.V);
+                checkIrqOnLine(curPos.V, 0, targetPos.H);
                 advance(targetPos.H);
             }
         }
@@ -367,6 +399,11 @@ namespace sch
         out.H += (t % 341);
 
         return out;
+    }
+
+    timestamp_t Ppu::getTimestampFromCoord(const Coord& c)
+    {
+        return 0;
     }
 
     // Advance returns any V counter adjustment that needs to be made.  Normally this is zero
@@ -553,6 +590,80 @@ namespace sch
         FILE* file = fopen(filename, "wb");
         fwrite(vram, 2, 0x8000, file);
         fclose(file);
+    }
+    
+    void Ppu::performEvent(int eventId, timestamp_t clk)
+    {
+        switch(eventId)
+        {
+        case EventCode::CatchUp:
+            runTo(clk);
+            break;
+        }
+    }
+
+    void Ppu::signalIrq()           {   irqPending = true;  cpu->signalIrq(1);          }
+    void Ppu::acknowledgeIrq()      {   irqPending = false; cpu->acknowledgeIrq(1);     }
+
+    void Ppu::checkIrqOnLine(int line, int minh, int maxh)
+    {
+        if(irqPending)          return;
+
+        switch(irqMode)
+        {
+        case IrqMode::Disabled:
+            break;
+
+        case IrqMode::H:
+            if(irqPos.H >= minh && irqPos.H < maxh)
+                signalIrq();
+            break;
+
+        case IrqMode::V:
+            if(irqPos.V == line && minh == 0)
+                signalIrq();
+            break;
+
+        case IrqMode::HV:
+            if(irqPos.V == line && irqPos.H >= minh && irqPos.H < maxh)
+                signalIrq();
+            break;
+        }
+    }
+
+    void Ppu::addIrqCatchups()
+    {
+        if(irqPending)          return;
+
+        Coord coord = irqPos;
+        switch(irqMode)
+        {
+        case IrqMode::Disabled:
+            return;
+        case IrqMode::H:
+            coord.V = curPos.V;
+            if(irqPos.H < curPos.H)     ++coord.V;
+            break;
+        case IrqMode::V:
+            coord.H = 0;
+            break;
+        case IrqMode::HV:
+            break;
+        }
+
+        if(coord.H >= 341)      return;
+
+        timestamp_t time = getTimestampFromCoord(coord);
+        time += 4;
+        if(time > curTick)
+            evtManager->addEvent(time, this, EventCode::CatchUp);
+        else
+        {
+            time += (341 * 262 * 4);
+            evtManager->addEvent(time, this, EventCode::CatchUp);
+            time += (341 * 4);
+            evtManager->addEvent(time, this, EventCode::CatchUp);
+        }
     }
 
 }

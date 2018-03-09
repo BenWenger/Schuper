@@ -147,13 +147,14 @@ namespace sch
         };
 
 
-        Coord getCoordFromTimestamp(timestamp_t t);
-        int   advance(timestamp_t cycs);
-        bool  frameIsOver() const;
-        void  doScanline(int line);
-        void  renderLine(int line);
-        u32   getRawColor(const Color& clr);
-        void  outputLinePixels();
+        Coord       getCoordFromTimestamp(timestamp_t t);
+        timestamp_t getTimestampFromCoord(const Coord& c);
+        int         advance(timestamp_t cycs);
+        bool        frameIsOver() const;
+        void        doScanline(int line);
+        void        renderLine(int line);
+        u32         getRawColor(const Color& clr);
+        void        outputLinePixels();
 
         Cpu*            cpu;        // need a pointer so we can signal interrupts
         EventManager*   evtManager;
@@ -171,7 +172,7 @@ namespace sch
         bool            nmiHasHappened;         // Whether or not NMI has already happened this frame
         
         Coord           curPos;                 // current position of rendering (should match 'curTick')
-        Coord           irqPos;                 //  next IRQ position
+        Coord           irqPos;                 // IRQ position (as written to the regs)
 
         Color           renderBufMan[256+32];
         Color           renderBufSub[256+32];
@@ -279,6 +280,11 @@ namespace sch
         void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math, bool spr);
 
         void    sprLine(int line);
+
+        void    signalIrq();
+        void    acknowledgeIrq();
+        void    addIrqCatchups();
+        void    checkIrqOnLine(int line, int minh, int maxh);
     };
 
 }
