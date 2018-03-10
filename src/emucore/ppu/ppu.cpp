@@ -11,6 +11,12 @@ namespace sch
 #ifdef IDBG_ENABLED
         InternalDebug.getPpuAddress = std::bind( &Ppu::getEffectiveVramAddr, this );
         InternalDebug.getPpuAddrInc = [this]() { return addrInc; };
+        InternalDebug.getPpuPos = [this](int& h, int& v)
+        {
+            runTo(InternalDebug.getMainClock());
+            h = curPos.H;
+            v = curPos.V;
+        };
 #endif
     }
 
@@ -80,6 +86,9 @@ namespace sch
             vblReadFlag = false;
 
             irqPos.H = irqPos.V = 0;
+            
+            latchPos.H = latchPos.V = 0;
+            latchPosToggle = false;
         }
     }
 
@@ -321,6 +330,23 @@ namespace sch
         // TODO
         switch(a)
         {
+        case 0x2137:
+            latchPos = curPos;
+            latchPosToggle = false;
+            break;
+
+        case 0x213C:
+            if(latchPosToggle)      v = (v & 0xFE) | ((latchPos.H >> 8) & 1);
+            else                    v = latchPos.H & 0xFF;
+            latchPosToggle = !latchPosToggle;
+            break;
+            
+        case 0x213D:
+            if(latchPosToggle)      v = (v & 0xFE) | ((latchPos.V >> 8) & 1);
+            else                    v = latchPos.V & 0xFF;
+            latchPosToggle = !latchPosToggle;
+            break;
+
         case 0x4210:
             v &= ~0x8F;
             v |= 2;

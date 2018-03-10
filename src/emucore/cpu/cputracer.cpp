@@ -2,6 +2,7 @@
 #include "cputracer.h"
 #include "cpustate.h"
 #include "bus/cpubus.h"
+#include "internaldebug/internaldebug.h"
 
 namespace sch
 {
@@ -388,7 +389,7 @@ const char* const opnames[0x100] = {
 
         //////////////////////////////
         //  Status flags & DP, SP
-        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  %04X  %04X\n",
+        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  %04X  %04X",
                 (regs.fE ? 'E' : '.'),
                 (regs.fN ? 'N' : '.'),
                 (regs.fV ? 'V' : '.'),
@@ -401,6 +402,15 @@ const char* const opnames[0x100] = {
                 regs.DP,
                 regs.SP
         );
+
+#ifdef IDBG_ENABLED
+        int h, v;
+        InternalDebug.getPpuPos(h,v);
+
+        fprintf(traceFile, "  H=%03d  V=%03d", h, v);
+#endif
+
+        fprintf(traceFile, "\n");
     }
     
     void CpuTracer::traceLine(const char* line)

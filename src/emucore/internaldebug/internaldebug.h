@@ -3,7 +3,7 @@
 #define SCHPUER_INTERNALDEBUG_INTERNALDEBUG_H_INCLUDED
 
 
-//#define IDBG_ENABLED
+#define IDBG_ENABLED
 
 
 
@@ -18,8 +18,10 @@
     {
         struct InternalDebugStruct
         {
-            std::function<u16()>    getPpuAddress;
-            std::function<int()>    getPpuAddrInc;
+            std::function<timestamp_t()>    getMainClock;
+            std::function<u16()>            getPpuAddress;
+            std::function<int()>            getPpuAddrInc;
+            std::function<void(int&,int&)>  getPpuPos;
         };
 
         extern InternalDebugStruct      InternalDebug;

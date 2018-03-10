@@ -1,1 +1,4 @@
 /Schuper_cpu_trace.txt
+*.exe
+*.txt
+*.log

@@ -255,6 +255,10 @@ namespace sch
         bool        interlaceObjects;
         bool        interlaceMode;
 
+        // 213C
+        Coord       latchPos;
+        bool        latchPosToggle;
+
         // 4200
         bool        nmiEnabled;
         enum class IrqMode

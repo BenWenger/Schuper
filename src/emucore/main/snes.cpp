@@ -241,9 +241,14 @@ namespace sch
             if(!mulReg_Divisor)     {   mulReg_Product = mulReg_Dividend;                   mulReg_Quotient = 0xFFFF;                             }
             else                    {   mulReg_Product = mulReg_Dividend % mulReg_Divisor;  mulReg_Quotient = mulReg_Dividend / mulReg_Divisor;   }
             break;
+            
+        case 0x4207: case 0x4208: case 0x4209: case 0x420A:
+            ppu->runTo(clk);
+            ppu->regWrite(a, v);
+            break;
 
         case 0x420B: case 0x420C:
-            ppu->runTo(clk);
+            ppu->runTo(clk);        // do I need this???
             dmaUnit->write(a, v, clk);
             break;
 
