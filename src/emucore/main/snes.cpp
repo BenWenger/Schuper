@@ -99,7 +99,7 @@ namespace sch
         {
         case SnesFile::Type::Rom:
             cpuBus->reset();
-            eventManager->reset();
+            eventManager->reset(ppu.get());
             mainClock->reset(eventManager.get());
             cpu->reset(cpuBus.get(), mainClock.get());
             spc->reset();
@@ -163,11 +163,7 @@ namespace sch
             out = autoJoy->read_joydata(a & 7);
             break;
 
-        case 0x4211:
-            // TODO
-            break;
-
-        case 0x4210:
+        case 0x4210: case 0x4211:
             ppu->runTo(clk);
             ppu->regRead(a, out);
             break;

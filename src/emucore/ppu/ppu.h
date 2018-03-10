@@ -111,6 +111,8 @@ namespace sch
         void        performEvent(int eventId, timestamp_t clk) override;
         void        frameStart(Cpu* c, const VideoSettings& vid);
 
+        timestamp_t convertHVToTimestamp(int H, int V);
+
         timestamp_t getMaxTicksPerFrame() const
         {
             return 341 * 263 * 4;       // TODO - move this '4' somewhere?
@@ -148,7 +150,6 @@ namespace sch
 
 
         Coord       getCoordFromTimestamp(timestamp_t t);
-        timestamp_t getTimestampFromCoord(const Coord& c);
         int         advance(timestamp_t cycs);
         bool        frameIsOver() const;
         void        doScanline(int line);
@@ -283,7 +284,7 @@ namespace sch
 
         void    signalIrq();
         void    acknowledgeIrq();
-        void    addIrqCatchups();
+        void    addIrqEvent();
         void    checkIrqOnLine(int line, int minh, int maxh);
     };
 

@@ -85,6 +85,8 @@ namespace sch
 
     void Ppu::frameStart(Cpu* c, const VideoSettings& vid)
     {
+        evtManager->setLineCutoff(241);
+
         video = vid;
         cpu = c;
 
@@ -98,10 +100,12 @@ namespace sch
         curPos.V =          241;
         curPos.H =          0;
 
-        // set events for when NMI might trigger  (TODO this is wrong, touch this up)
-        evtManager->addEvent( 246*341*4, this, EventCode::CatchUp );
-        evtManager->addEvent( 247*341*4, this, EventCode::CatchUp );
-        evtManager->addEvent( 248*341*4, this, EventCode::CatchUp );
+        // Set some events
+        evtManager->addEvent( 1, 262, this, EventCode::CatchUp );   // possible time for v0_time to be set
+        evtManager->addEvent( 1, 263, this, EventCode::CatchUp );   // The other possible time
+        addIrqEvent();                                              // for when the next IRQ will happen
+        evtManager->addEvent( 1, 224, this, EventCode::CatchUp );   // possible time for start of VBlank
+        evtManager->addEvent( 1, 240, this, EventCode::CatchUp );   // The other possible time
     }
 
 
@@ -284,28 +288,28 @@ namespace sch
 
             irqMode = static_cast<IrqMode>((v >> 4) & 3);
             acknowledgeIrq();
-            addIrqCatchups();
+            addIrqEvent();
             break;
 
         case 0x4207:
             irqPos.H &= 0x100;
             irqPos.H |= v;
-            addIrqCatchups();
+            addIrqEvent();
             break;
         case 0x4208:
             irqPos.H &= 0x0FF;
             irqPos.H |= ((v & 0x01) << 8);
-            addIrqCatchups();
+            addIrqEvent();
             break;
         case 0x4209:
             irqPos.V &= 0x100;
             irqPos.V |= v;
-            addIrqCatchups();
+            addIrqEvent();
             break;
         case 0x420A:
             irqPos.V &= 0x0FF;
             irqPos.V |= ((v & 0x01) << 8);
-            addIrqCatchups();
+            addIrqEvent();
             break;
         }
     }
@@ -328,7 +332,7 @@ namespace sch
             v &= ~0x80;
             if(irqPending)      v |= 0x80;
             acknowledgeIrq();
-            addIrqCatchups();
+            addIrqEvent();
             break;
 
         case 0x4212:
@@ -401,9 +405,24 @@ namespace sch
         return out;
     }
 
-    timestamp_t Ppu::getTimestampFromCoord(const Coord& c)
+    timestamp_t Ppu::convertHVToTimestamp(int H, int V)
     {
-        return 0;
+        if(H < 0 || H >= 341 || V < 0)
+            return Time::Never;
+
+        if(V >= 241)
+        {
+            V -= 241;
+            return ((V * 341) + H) * 4;     // TODO - move this '4'
+        }
+        else if(v0_time != Time::Never)
+        {
+            return v0_time + ((V * 341) + H) * 4;     // TODO - move this '4'
+        }
+
+        // if we got here, we need v0 time but don't have it, so the timestamp can't
+        //   be computed yet
+        return Time::Never;
     }
 
     // Advance returns any V counter adjustment that needs to be made.  Normally this is zero
@@ -425,6 +444,7 @@ namespace sch
             {
                 line_adj = -curPos.V;
                 v0_time = (curPos.V - 241) * 341 * 4;     // TODO move this '4' somewhere
+                evtManager->setLineCutoff(0);
                 curPos.V = 0;
             }
         }
@@ -602,8 +622,16 @@ namespace sch
         }
     }
 
-    void Ppu::signalIrq()           {   irqPending = true;  cpu->signalIrq(1);          }
-    void Ppu::acknowledgeIrq()      {   irqPending = false; cpu->acknowledgeIrq(1);     }
+    void Ppu::signalIrq()
+    {
+        irqPending = true;
+        cpu->signalIrq(1);
+    }
+    void Ppu::acknowledgeIrq()
+    {
+        irqPending = false;
+        cpu->acknowledgeIrq(1);
+    }
 
     void Ppu::checkIrqOnLine(int line, int minh, int maxh)
     {
@@ -631,7 +659,7 @@ namespace sch
         }
     }
 
-    void Ppu::addIrqCatchups()
+    void Ppu::addIrqEvent()
     {
         if(irqPending)          return;
 
@@ -651,19 +679,7 @@ namespace sch
             break;
         }
 
-        if(coord.H >= 341)      return;
-
-        timestamp_t time = getTimestampFromCoord(coord);
-        time += 4;
-        if(time > curTick)
-            evtManager->addEvent(time, this, EventCode::CatchUp);
-        else
-        {
-            time += (341 * 262 * 4);
-            evtManager->addEvent(time, this, EventCode::CatchUp);
-            time += (341 * 4);
-            evtManager->addEvent(time, this, EventCode::CatchUp);
-        }
+        evtManager->addEvent(coord.H, coord.V, this, EventCode::CatchUp);
     }
 
 }
