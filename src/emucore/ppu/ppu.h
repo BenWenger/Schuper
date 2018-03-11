@@ -198,7 +198,17 @@ namespace sch
         void        w_2103(u8 v);
         void        w_2104(u8 v);
 
-            // TODO OAM stuff
+        // mode 7 stuff
+        int         m7_ScrollX;
+        int         m7_ScrollY;
+        bool        m7_ClipToTM;
+        bool        m7_FillWithTile0;
+        bool        m7_FlipX;
+        bool        m7_FlipY;
+        u8          m7_WriteBuffer;
+        int         m7_Matrix[4];
+        int         m7_CenterX;
+        int         m7_CenterY;
 
         // 2105
         int         bgMode;
@@ -281,6 +291,7 @@ namespace sch
 
         ////////////////////////////////////////
         void    bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio);
+        void    bgLine_mode7(int bg, int line, u8 loprio, u8 hiprio);
 
         void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math, bool spr);
 

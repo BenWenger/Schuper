@@ -89,6 +89,21 @@ namespace sch
             
             latchPos.H = latchPos.V = 0;
             latchPosToggle = false;
+
+            ////////////////////////////////
+            m7_ScrollX =            0;
+            m7_ScrollY =            0;
+            m7_ClipToTM =           false;
+            m7_FillWithTile0 =      false;
+            m7_FlipX =              false;
+            m7_FlipY =              false;
+            m7_WriteBuffer =        0;
+            m7_Matrix[0] =          0;
+            m7_Matrix[1] =          0;
+            m7_Matrix[2] =          0;
+            m7_Matrix[3] =          0;
+            m7_CenterX =            0;
+            m7_CenterY =            0;
         }
     }
 
@@ -182,8 +197,10 @@ namespace sch
             break;
 
         case 0x210D:
-            // TODO Mode 7 scroll stuff
-            // NO BREAK
+            m7_ScrollX = (v << 8) | m7_WriteBuffer;
+            m7_ScrollX = ((m7_ScrollX & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+                // no break
         case 0x210F: case 0x2111: case 0x2113:
             tmp = (a - 0x210D) >> 1;
             bgLayers[tmp].scrollX = ((bgLayers[tmp].scrollX >> 8) & 7)
@@ -193,8 +210,10 @@ namespace sch
             break;
             
         case 0x210E:
-            // TODO Mode 7 scroll stuff
-            // NO BREAK
+            m7_ScrollY = (v << 8) | m7_WriteBuffer;
+            m7_ScrollY = ((m7_ScrollY & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+                // no break
         case 0x2110: case 0x2112: case 0x2114:
             tmp = (a - 0x210E) >> 1;
             bgLayers[tmp].scrollY = scrollRegPrev | (v << 8);
@@ -229,13 +248,28 @@ namespace sch
             break;
             
         case 0x211A:
-        case 0x211B:
-        case 0x211C:
-        case 0x211D:
-        case 0x211E:
+            m7_ClipToTM =       !(v & 0x80);
+            m7_FillWithTile0 =  (v & 0x40) != 0;
+            m7_FlipY =          (v & 0x02) != 0;
+            m7_FlipX =          (v & 0x01) != 0;
+            break;
+
+        case 0x211B: case 0x211C: case 0x211D: case 0x211E:
+            a -= 0x211B;
+            m7_Matrix[a] = (v << 8) | m7_WriteBuffer;
+            m7_Matrix[a] = ((m7_Matrix[a] & 0xFFFF) ^ 0x8000) - 0x8000;
+            m7_WriteBuffer = v;
+            break;
+
         case 0x211F:
+            m7_CenterX = (v << 8) | m7_WriteBuffer;
+            m7_CenterX = ((m7_CenterX & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+            break;
         case 0x2120:
-            // TODO - mode 7 garbage
+            m7_CenterY = (v << 8) | m7_WriteBuffer;
+            m7_CenterY = ((m7_CenterY & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
             break;
 
         case 0x2121:
@@ -553,6 +587,11 @@ namespace sch
                 bgLine_normal(0, line, 4, cgRam, 8, 11);
                 bgLine_normal(1, line, 4, cgRam, 7, 10);
                 bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 13 : 5);
+                break;
+
+            case 7:
+                bgLine_mode7(0, line, 5, 5);
+                // todo EXTBG
                 break;
 
                 // TODO do other BG modes
