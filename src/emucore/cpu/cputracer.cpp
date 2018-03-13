@@ -389,7 +389,7 @@ const char* const opnames[0x100] = {
 
         //////////////////////////////
         //  Status flags & DP, SP
-        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  %04X  %04X",
+        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  D=%04X  S=%04X  B=%02X",
                 (regs.fE ? 'E' : '.'),
                 (regs.fN ? 'N' : '.'),
                 (regs.fV ? 'V' : '.'),
@@ -400,7 +400,8 @@ const char* const opnames[0x100] = {
                 (regs.fZ ? '.' : 'Z'),
                 (regs.fC ? 'C' : '.'),
                 regs.DP,
-                regs.SP
+                regs.SP,
+                (regs.DBR >> 16)
         );
 
 #ifdef IDBG_ENABLED

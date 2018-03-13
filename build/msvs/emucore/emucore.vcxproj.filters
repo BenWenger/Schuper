@@ -96,6 +96,9 @@
     <ClCompile Include="..\..\..\src\emucore\joy\autojoy.cpp">
       <Filter>src\joy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\main\mem_hirom.cpp">
+      <Filter>src\main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">

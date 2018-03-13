@@ -71,6 +71,12 @@ namespace sch
                     cpuBus->setWriter(this, &Snes::wr_LoRom);
                     cpuBus->setPeeker(this, &Snes::pk_LoRom);
                     break;
+                    
+                case SnesFile::MemMap::HiRom:
+                    cpuBus->setReader(this, &Snes::rd_HiRom);
+                    cpuBus->setWriter(this, &Snes::wr_HiRom);
+                    cpuBus->setPeeker(this, &Snes::pk_HiRom);
+                    break;
 
                 default:
                     return SnesFile::Type::Invalid;

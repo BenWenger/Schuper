@@ -31,6 +31,7 @@
     <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp" />
     <ClCompile Include="..\..\..\src\emucore\internaldebug\internaldebug.cpp" />
     <ClCompile Include="..\..\..\src\emucore\joy\autojoy.cpp" />
+    <ClCompile Include="..\..\..\src\emucore\main\mem_hirom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\mem_lorom.cpp" />
     <ClCompile Include="..\..\..\src\emucore\main\snes.cpp" />
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu.cpp" />

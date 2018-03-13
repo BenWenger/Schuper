@@ -105,8 +105,8 @@ namespace sch
         for(int dstx = 0; dstx < 256; ++dstx)
         {
             // if m7_FlipX || m7_FlipY  <-  figure these out
-            int x = srcx >> 6;
-            int y = srcy >> 6;
+            int x = srcx >> 8;
+            int y = srcy >> 8;
             srcx += m7_Matrix[0];
             srcy += m7_Matrix[2];
             if(m7_ClipToTM)

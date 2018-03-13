@@ -60,6 +60,10 @@ namespace sch
         int             wr_LoRom(u32 a, u8  v, timestamp_t clk);
         u8              pk_LoRom(u32 a) const;
         
+        int             rd_HiRom(u32 a, u8& v, timestamp_t clk);
+        int             wr_HiRom(u32 a, u8  v, timestamp_t clk);
+        u8              pk_HiRom(u32 a) const;
+        
         void            wr_Reg(u16 a, u8 v, timestamp_t clk);
         u8              rd_Reg(u16 a, timestamp_t clk);
 
