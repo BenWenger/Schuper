@@ -594,6 +594,9 @@ namespace sch
                 // todo EXTBG
                 break;
 
+            default:
+                break;
+
                 // TODO do other BG modes
             }
 

@@ -283,23 +283,23 @@ const char* const opnames[0x100] = {
                     
         case jp_ix: sprintf(buf, "($%04X,X)", arg);
                     tmp = (arg + regs.X.w) & 0xFFFF;
-                    previewaddr  = bus.peek(tmp++);
-                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr  = bus.peek(regs.PBR | tmp++);
+                    previewaddr |= bus.peek(regs.PBR | tmp) << 8;
                     previewaddr |= regs.PBR;
                     previewbytes = 0;                                   break;
                     
         case jp_in: sprintf(buf, "($%04X)", arg);
                     tmp = arg + regs.DP;
-                    previewaddr  = bus.peek(tmp++);
-                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr  = bus.peek(regs.PBR | tmp++);
+                    previewaddr |= bus.peek(regs.PBR | tmp) << 8;
                     previewaddr |= regs.PBR;
                     previewbytes = 0;                                   break;
                     
         case jp_il: sprintf(buf, "[$%04X]", arg);
                     tmp = arg + regs.DP;
-                    previewaddr  = bus.peek(tmp++);
-                    previewaddr |= bus.peek(tmp++) << 8;
-                    previewaddr |= bus.peek(tmp) << 16;
+                    previewaddr  = bus.peek(regs.PBR | tmp++);
+                    previewaddr |= bus.peek(regs.PBR | tmp++) << 8;
+                    previewaddr |= bus.peek(regs.PBR | tmp) << 16;
                     previewbytes = 0;                                   break;
 
         case mv_np: sprintf(buf, "$%02X, $%02X", (arg >> 8), (arg & 0xFF));
@@ -309,8 +309,8 @@ const char* const opnames[0x100] = {
                     previewaddr = (arg + regs.DP) & 0xFFFF;
                     previewbytes = 2;                                   break;
 
-        case __per: previewaddr = (regs.PC + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
-                    sprintf(buf, "$%04X", previewaddr);
+        case __per: previewaddr = (regs.PC + 3 + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
+                    sprintf(buf, "$%04X", arg);
                     previewbytes = 0;                                   break;
         }
 

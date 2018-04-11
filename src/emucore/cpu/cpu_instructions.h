@@ -525,8 +525,8 @@ void u_JMP_Indirect()       /* JMP ($aaaa)  */
 {
     u16 a =         read_p();
     a |=            read_p() << 8;
-    regs.PC =       read_l(a++);
-    regs.PC |=      read_l(a) << 8;
+    regs.PC =       read_a(a++);            // TODO is this DBR or PBR?
+    regs.PC |=      read_a(a) << 8;
 }
 
 void u_JMP_IndirectX()      /* JMP ($aaaa,X)*/
@@ -534,17 +534,17 @@ void u_JMP_IndirectX()      /* JMP ($aaaa,X)*/
     u16 a =         read_p();
     a |=            read_p() << 8;
     a += regs.X.w;  ioCyc();
-    regs.PC =       read_l(a++);
-    regs.PC |=      read_l(a) << 8;
+    regs.PC =       read_a(a++);            // TODO is this DBR or PBR?
+    regs.PC |=      read_a(a) << 8;
 }
 
 void u_JMP_IndirectLong()   /* JMP [$aaaa]  */
 {
     u16 a =         read_p();
     a |=            read_p() << 8;
-    regs.PC =       read_l(a++);
-    regs.PC |=      read_l(a++) << 8;
-    regs.PBR =      read_l(a) << 16;
+    regs.PC =       read_a(a++);            // TODO is this DBR or PBR?
+    regs.PC |=      read_a(a++) << 8;
+    regs.PBR =      read_a(a) << 16;
 }
 
 void u_JSR_Absolute()       /* JSR $aaaa    */
@@ -574,7 +574,7 @@ void u_JSR_IndirectX()      /* JSR ($aaaa,X)*/
                     push( regs.PC & 0xFF );
     a |=            read_p() << 8;
     a += regs.X.w;  ioCyc();
-    regs.PC =       read_a(a++);
+    regs.PC =       read_a(a++);            // TODO is this DBR or PBR?
     regs.PC |=      read_a(a) << 8;
 }
 
