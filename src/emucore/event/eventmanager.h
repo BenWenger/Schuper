@@ -3,11 +3,13 @@
 #define SCHPUER_EVENT_EVENTMANAGER_H_INCLUDED
 
 #include <set>
+#include <vector>
 #include "snestypes.h"
 
 namespace sch
 {
     class EventHandler;
+    class Ppu;
 
     class EventManager
     {
@@ -19,12 +21,18 @@ namespace sch
             if(clk < nextEvent)         return;
             doEvents(clk);
         }
-
+        
         void        addEvent(timestamp_t clk, EventHandler* evt, int id);
+        void        addEvent(int H, int V, EventHandler* evt, int id);
+        void        adjustTimestamps(timestamp_t adj);
 
-        void        reset();
+        void        reset(Ppu* p);
+        void        setLineCutoff(int lc);
 
         timestamp_t getNextEventTime() const    { return nextEvent;        }
+
+        void        vblankStarted(timestamp_t clk);
+        void        addVBlankNotification(EventHandler* hndlr);
 
     private:
         void        doEvents(timestamp_t clk);
@@ -46,9 +54,22 @@ namespace sch
 
             EventBlock(timestamp_t t, EventHandler* e, int i) : time(t), evt(e), id(i) {}
         };
+        struct HVBlock
+        {
+            int             H;
+            int             V;
+            EventHandler*   evt;
+            int             id;
+            HVBlock(int h, int v, EventHandler* e, int i) : H(h), V(v), evt(e), id(i) {}
+        };
 
-        timestamp_t             nextEvent;
-        std::set<EventBlock>    events;
+        Ppu*                        ppu;
+        timestamp_t                 nextEvent;
+        std::vector<EventHandler*>  vblNotifiers;
+        std::set<EventBlock>        events;
+        std::vector<HVBlock>        eventsAfterV0;
+
+        int                         lineCutoff;
     };
 }
 

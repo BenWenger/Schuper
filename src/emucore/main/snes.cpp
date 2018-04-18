@@ -9,11 +9,16 @@
 #include "dma/dmaunit.h"
 #include "ppu/ppu.h"
 #include "mainclock.h"
+#include "joy/autojoy.h"
+
+// TODO everything to do with SRAM is wrong.  It should be on the cart, it should not be so big, it
+//  should not be wiped on reset, etc
 
 namespace sch
 {
     Snes::Snes()
         : ram(new u8[0x20000])
+        , sram(new u8[0x80000])     // <- TODO THIS IS WRONG
     {
         spc = std::make_unique<Spc>();
         cpu = std::make_unique<Cpu>();
@@ -23,6 +28,7 @@ namespace sch
         ppu = std::make_unique<Ppu>();
         mainClock = std::make_unique<MainClock>();
         eventManager = std::make_unique<EventManager>();
+        autoJoy = std::make_unique<AutoJoy>();
 
         spc->setAudioBuffer(audioBuffer.get());
         
@@ -30,10 +36,22 @@ namespace sch
         spdSlow = 8;
         spdXSlow = 12;
         spc->setClockBase(21);                  // roughly 21 master cycles per SPC cycle
+        
+        inputs[0] = nullptr;
+        inputs[1] = nullptr;
     }
 
     Snes::~Snes()
     {
+    }
+    
+    void Snes::attachInputDevice(int port, InputDevice* dev)
+    {
+        if(port < 0 || port > 1)        return;
+
+        inputs[port] = dev;
+        if(dev)
+            dev->reset(true);
     }
 
     SnesFile::Type Snes::loadFile(SnesFile&& file)
@@ -56,6 +74,12 @@ namespace sch
                     cpuBus->setReader(this, &Snes::rd_LoRom);
                     cpuBus->setWriter(this, &Snes::wr_LoRom);
                     cpuBus->setPeeker(this, &Snes::pk_LoRom);
+                    break;
+                    
+                case SnesFile::MemMap::HiRom:
+                    cpuBus->setReader(this, &Snes::rd_HiRom);
+                    cpuBus->setWriter(this, &Snes::wr_HiRom);
+                    cpuBus->setPeeker(this, &Snes::pk_HiRom);
                     break;
 
                 default:
@@ -85,7 +109,7 @@ namespace sch
         {
         case SnesFile::Type::Rom:
             cpuBus->reset();
-            eventManager->reset();
+            eventManager->reset(ppu.get());
             mainClock->reset(eventManager.get());
             cpu->reset(cpuBus.get(), mainClock.get());
             spc->reset();
@@ -93,6 +117,7 @@ namespace sch
             ppu->reset(true, eventManager.get());
             altRamAddr = 0;
             for(int i = 0; i < 0x20000; ++i)        ram[i] = 0;
+            for(int i = 0; i < 0x80000; ++i)        sram[i] = 0;
 
             mulReg_A = 0;
             mulReg_B = 0;
@@ -100,6 +125,11 @@ namespace sch
             mulReg_Divisor = 0;
             mulReg_Quotient = 0;
             mulReg_Product = 0;
+
+            autoJoy->reset( eventManager.get(), cpuBus.get() );
+            if(inputs[0])   inputs[0]->reset(true);
+            if(inputs[1])   inputs[1]->reset(true);
+
             break;
 
         case SnesFile::Type::Spc:
@@ -123,18 +153,37 @@ namespace sch
             spc->runTo(clk);
             out = spc->readIoReg(a&3);
             break;
+
+        case 0x4016:
+            out &= ~3;
+            if(inputs[0])       out |= inputs[0]->read();
+            break;
+        case 0x4017:
+            out &= ~3;
+            if(inputs[1])       out |= inputs[1]->read();
+            out |= 0x1C;
+            break;
             
         case 0x4214:    out = static_cast<u8>(mulReg_Quotient & 0xFF);      break;
         case 0x4215:    out = static_cast<u8>(mulReg_Quotient >> 8  );      break;
         case 0x4216:    out = static_cast<u8>(mulReg_Product  & 0xFF);      break;
         case 0x4217:    out = static_cast<u8>(mulReg_Product  >> 8  );      break;
-
-        case 0x4210: case 0x4218: case 0x4219: case 0x421A: case 0x421B:
-        case 0x4211: case 0x4016: case 0x4017:
-            // TODO
+            
+        case 0x4218: case 0x4219: case 0x421A: case 0x421B:
+        case 0x421C: case 0x421D: case 0x421E: case 0x421F:
+            out = autoJoy->read_joydata(a & 7);
             break;
 
-        case 0x4212:    ppu->runTo(clk);        ppu->regRead(a, out);       break;
+        case 0x4210: case 0x4211:
+            ppu->runTo(clk);
+            ppu->regRead(a, out);
+            break;
+
+        case 0x4212:
+            ppu->runTo(clk);
+            ppu->regRead(a, out);
+            autoJoy->read_4212(out);
+            break;
 
         default:
             if(a >= 0x2100 && a < 0x2140)
@@ -170,9 +219,15 @@ namespace sch
             spc->writeIoReg(a&3, v);
             break;
 
+        case 0x4016:
+            if(inputs[0])       inputs[0]->write(v & 1);
+            if(inputs[1])       inputs[1]->write(v & 1);
+            break;
+
         case 0x4200:
             ppu->runTo(clk);
             ppu->regWrite(a, v);
+            autoJoy->write_4200(v);
             break;
 
         case 0x4202:
@@ -197,9 +252,14 @@ namespace sch
             if(!mulReg_Divisor)     {   mulReg_Product = mulReg_Dividend;                   mulReg_Quotient = 0xFFFF;                             }
             else                    {   mulReg_Product = mulReg_Dividend % mulReg_Divisor;  mulReg_Quotient = mulReg_Dividend / mulReg_Divisor;   }
             break;
+            
+        case 0x4207: case 0x4208: case 0x4209: case 0x420A:
+            ppu->runTo(clk);
+            ppu->regWrite(a, v);
+            break;
 
         case 0x420B: case 0x420C:
-            ppu->runTo(clk);
+            ppu->runTo(clk);        // do I need this???
             dmaUnit->write(a, v, clk);
             break;
 
@@ -281,6 +341,7 @@ namespace sch
                 auto adj = -ppu->getPrevFrameLength();
                 mainClock->adjustTimestamp(adj);
                 spc->adjustTimestamp(adj);
+                eventManager->adjustTimestamps(adj);
 
                 out = ppu->getVideoResult();
             }

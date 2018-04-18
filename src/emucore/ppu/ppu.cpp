@@ -11,6 +11,12 @@ namespace sch
 #ifdef IDBG_ENABLED
         InternalDebug.getPpuAddress = std::bind( &Ppu::getEffectiveVramAddr, this );
         InternalDebug.getPpuAddrInc = [this]() { return addrInc; };
+        InternalDebug.getPpuPos = [this](int& h, int& v)
+        {
+            runTo(InternalDebug.getMainClock());
+            h = curPos.H;
+            v = curPos.V;
+        };
 #endif
     }
 
@@ -73,11 +79,38 @@ namespace sch
             for(auto& i : oamLow)   i = 0;
             for(auto& i : oamHigh)  i = 0;
             for(auto& i : sprites)  i.reset();
+
+            nmiEnabled = false;
+            irqPending = false;
+            irqMode = IrqMode::Disabled;
+            vblReadFlag = false;
+
+            irqPos.H = irqPos.V = 0;
+            
+            latchPos.H = latchPos.V = 0;
+            latchPosToggle = false;
+
+            ////////////////////////////////
+            m7_ScrollX =            0;
+            m7_ScrollY =            0;
+            m7_ClipToTM =           false;
+            m7_FillWithTile0 =      false;
+            m7_FlipX =              false;
+            m7_FlipY =              false;
+            m7_WriteBuffer =        0;
+            m7_Matrix[0] =          0;
+            m7_Matrix[1] =          0;
+            m7_Matrix[2] =          0;
+            m7_Matrix[3] =          0;
+            m7_CenterX =            0;
+            m7_CenterY =            0;
         }
     }
 
     void Ppu::frameStart(Cpu* c, const VideoSettings& vid)
     {
+        evtManager->setLineCutoff(241);
+
         video = vid;
         cpu = c;
 
@@ -91,10 +124,12 @@ namespace sch
         curPos.V =          241;
         curPos.H =          0;
 
-        // set events for when NMI might trigger  (TODO this is wrong, touch this up)
-        evtManager->addEvent( 246*341*4, this, EventCode::CatchUp );
-        evtManager->addEvent( 247*341*4, this, EventCode::CatchUp );
-        evtManager->addEvent( 248*341*4, this, EventCode::CatchUp );
+        // Set some events
+        evtManager->addEvent( 1, 262, this, EventCode::CatchUp );   // possible time for v0_time to be set
+        evtManager->addEvent( 1, 263, this, EventCode::CatchUp );   // The other possible time
+        addIrqEvent();                                              // for when the next IRQ will happen
+        evtManager->addEvent( 1, 224, this, EventCode::CatchUp );   // possible time for start of VBlank
+        evtManager->addEvent( 1, 240, this, EventCode::CatchUp );   // The other possible time
     }
 
 
@@ -162,8 +197,10 @@ namespace sch
             break;
 
         case 0x210D:
-            // TODO Mode 7 scroll stuff
-            // NO BREAK
+            m7_ScrollX = (v << 8) | m7_WriteBuffer;
+            m7_ScrollX = ((m7_ScrollX & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+                // no break
         case 0x210F: case 0x2111: case 0x2113:
             tmp = (a - 0x210D) >> 1;
             bgLayers[tmp].scrollX = ((bgLayers[tmp].scrollX >> 8) & 7)
@@ -173,8 +210,10 @@ namespace sch
             break;
             
         case 0x210E:
-            // TODO Mode 7 scroll stuff
-            // NO BREAK
+            m7_ScrollY = (v << 8) | m7_WriteBuffer;
+            m7_ScrollY = ((m7_ScrollY & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+                // no break
         case 0x2110: case 0x2112: case 0x2114:
             tmp = (a - 0x210E) >> 1;
             bgLayers[tmp].scrollY = scrollRegPrev | (v << 8);
@@ -209,13 +248,28 @@ namespace sch
             break;
             
         case 0x211A:
-        case 0x211B:
-        case 0x211C:
-        case 0x211D:
-        case 0x211E:
+            m7_ClipToTM =       !(v & 0x80);
+            m7_FillWithTile0 =  (v & 0x40) != 0;
+            m7_FlipY =          (v & 0x02) != 0;
+            m7_FlipX =          (v & 0x01) != 0;
+            break;
+
+        case 0x211B: case 0x211C: case 0x211D: case 0x211E:
+            a -= 0x211B;
+            m7_Matrix[a] = (v << 8) | m7_WriteBuffer;
+            m7_Matrix[a] = ((m7_Matrix[a] & 0xFFFF) ^ 0x8000) - 0x8000;
+            m7_WriteBuffer = v;
+            break;
+
         case 0x211F:
+            m7_CenterX = (v << 8) | m7_WriteBuffer;
+            m7_CenterX = ((m7_CenterX & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
+            break;
         case 0x2120:
-            // TODO - mode 7 garbage
+            m7_CenterY = (v << 8) | m7_WriteBuffer;
+            m7_CenterY = ((m7_CenterY & 0x1FFF) ^ 0x1000) - 0x1000;
+            m7_WriteBuffer = v;
             break;
 
         case 0x2121:
@@ -274,15 +328,33 @@ namespace sch
 
         case 0x4200:
             nmiEnabled =        (v & 0x80) != 0;
-            // TODO other shit here
+
+            irqMode = static_cast<IrqMode>((v >> 4) & 3);
+            acknowledgeIrq();
+            addIrqEvent();
+            break;
+
+        case 0x4207:
+            irqPos.H &= 0x100;
+            irqPos.H |= v;
+            addIrqEvent();
+            break;
+        case 0x4208:
+            irqPos.H &= 0x0FF;
+            irqPos.H |= ((v & 0x01) << 8);
+            addIrqEvent();
+            break;
+        case 0x4209:
+            irqPos.V &= 0x100;
+            irqPos.V |= v;
+            addIrqEvent();
+            break;
+        case 0x420A:
+            irqPos.V &= 0x0FF;
+            irqPos.V |= ((v & 0x01) << 8);
+            addIrqEvent();
             break;
         }
-    }
-
-    void Ppu::performEvent(int eventId, timestamp_t clk)
-    {
-        if(eventId == EventCode::CatchUp)
-            runTo(clk);
     }
 
     void Ppu::regRead(u16 a, u8& v)
@@ -292,9 +364,42 @@ namespace sch
         // TODO
         switch(a)
         {
+        case 0x2137:
+            latchPos = curPos;
+            latchPosToggle = false;
+            break;
+
+        case 0x213C:
+            if(latchPosToggle)      v = (v & 0xFE) | ((latchPos.H >> 8) & 1);
+            else                    v = latchPos.H & 0xFF;
+            latchPosToggle = !latchPosToggle;
+            break;
+            
+        case 0x213D:
+            if(latchPosToggle)      v = (v & 0xFE) | ((latchPos.V >> 8) & 1);
+            else                    v = latchPos.V & 0xFF;
+            latchPosToggle = !latchPosToggle;
+            break;
+
+        case 0x4210:
+            v &= ~0x8F;
+            v |= 2;
+            if(vblReadFlag)     v |= 0x80;
+            vblReadFlag = false;
+            break;
+
+        case 0x4211:
+            v &= ~0x80;
+            if(irqPending)      v |= 0x80;
+            acknowledgeIrq();
+            addIrqEvent();
+            break;
+
         case 0x4212:
+            // TODO this is a bit hacky.  Maybe touch this up later?
             v &= ~0xC1;
             if(curPos > vbl_start || curPos < vbl_end)      v |= 0x80;      // TODO this is hacky.  Slapped this in for Turtles in Time
+            if(curPos.H < 13 || curPos.H > 121)             v |= 0x40;      // Is this right???
             break;
         }
     }
@@ -313,18 +418,24 @@ namespace sch
         if((curPos.V == targetPos.V) && (curPos.H > 0))
         {
             // we already did the work for this line (at cyc 0).  Just count up the cycles and don't really do anything
+            checkIrqOnLine(curPos.V, curPos.H, targetPos.H);
             advance(targetPos.H - curPos.H);
         }
         // Scenario 2!  We're either at the exact start of a line, or the target is on a different line
         else
         {
             // if we're not at the start, fill out the rest of the line
-            if(curPos.H > 0)            targetPos.V += advance(341 - curPos.H);
+            if(curPos.H > 0)
+            {
+                checkIrqOnLine(curPos.V, curPos.H, 341);
+                targetPos.V += advance(341 - curPos.H);
+            }
 
             // Now start doing full scanlines!
             while((curPos.V < targetPos.V) && !frameIsOver())
             {
                 doScanline(curPos.V);
+                checkIrqOnLine(curPos.V, 0, 341);
                 targetPos.V += advance(341);
             }
             // Now, curPos.V == targetPos.V .. run to proper H time
@@ -332,6 +443,7 @@ namespace sch
             if(targetPos.H > 0 && !frameIsOver())
             {
                 doScanline(curPos.V);
+                checkIrqOnLine(curPos.V, 0, targetPos.H);
                 advance(targetPos.H);
             }
         }
@@ -353,6 +465,26 @@ namespace sch
         return out;
     }
 
+    timestamp_t Ppu::convertHVToTimestamp(int H, int V)
+    {
+        if(H < 0 || H >= 341 || V < 0)
+            return Time::Never;
+
+        if(V >= 241)
+        {
+            V -= 241;
+            return ((V * 341) + H) * 4;     // TODO - move this '4'
+        }
+        else if(v0_time != Time::Never)
+        {
+            return v0_time + ((V * 341) + H) * 4;     // TODO - move this '4'
+        }
+
+        // if we got here, we need v0 time but don't have it, so the timestamp can't
+        //   be computed yet
+        return Time::Never;
+    }
+
     // Advance returns any V counter adjustment that needs to be made.  Normally this is zero
     int Ppu::advance(timestamp_t cycs)
     {
@@ -372,6 +504,7 @@ namespace sch
             {
                 line_adj = -curPos.V;
                 v0_time = (curPos.V - 241) * 341 * 4;     // TODO move this '4' somewhere
+                evtManager->setLineCutoff(0);
                 curPos.V = 0;
             }
         }
@@ -392,18 +525,24 @@ namespace sch
             if(overscanMode && line == 240)         nmiHasHappened = true;
             if(!overscanMode && line == 224)        nmiHasHappened = true;
 
-            if(nmiEnabled && nmiHasHappened)        cpu->signalNmi();
-        }
-
-        // otherwise, see if we render it!
-        if( (line >= 1) && (line <= (overscanMode ? 240 : 224)) )
-        {
-            if(video.buffer)
+            if(nmiHasHappened)
             {
-                ++linesRendered;
-                renderLine(line);
+                if(nmiEnabled)                      cpu->signalNmi();
+                vblReadFlag = true;
+                evtManager->vblankStarted(v0_time + (line * 341 * 4));      // TODO put this '4' somewhere else
             }
         }
+
+        int lastrenderline = (overscanMode ? 240 : 224);
+
+        // otherwise, see if we render it!
+        if( (line >= 1) && (line <= lastrenderline) )
+        {
+            if(video.buffer)
+                renderLine(line);
+        }
+        if(line == (lastrenderline+1))
+            vblReadFlag = false;
 
         // if this is line 241, and we hit scanline 0 already, then we are done with the frame!
         if((line == 241) && (v0_time != Time::Never))
@@ -437,10 +576,25 @@ namespace sch
             // render BGs
             switch(bgMode)
             {
+            case 0:
+                bgLine_normal(0, line, 2, cgRam + 0x00, 8, 11);
+                bgLine_normal(1, line, 2, cgRam + 0x20, 7, 10);
+                bgLine_normal(2, line, 2, cgRam + 0x40, 2,  5);
+                bgLine_normal(3, line, 2, cgRam + 0x60, 1,  4);
+                break;
+
             case 1:
                 bgLine_normal(0, line, 4, cgRam, 8, 11);
                 bgLine_normal(1, line, 4, cgRam, 7, 10);
                 bgLine_normal(2, line, 2, cgRam, 2, mode1AltPriority ? 13 : 5);
+                break;
+
+            case 7:
+                bgLine_mode7(0, line, 5, 5);
+                // todo EXTBG
+                break;
+
+            default:
                 break;
 
                 // TODO do other BG modes
@@ -451,6 +605,8 @@ namespace sch
             // actually output the lines!
             outputLinePixels();
         }
+        video.buffer += video.pitch;
+        ++linesRendered;
     }
 
     void Ppu::outputLinePixels()
@@ -492,7 +648,6 @@ namespace sch
                 }
             }
         }
-        video.buffer += video.pitch;
     }
 
     u32 Ppu::getRawColor(const Color& clr)
@@ -523,6 +678,76 @@ namespace sch
         FILE* file = fopen(filename, "wb");
         fwrite(vram, 2, 0x8000, file);
         fclose(file);
+    }
+    
+    void Ppu::performEvent(int eventId, timestamp_t clk)
+    {
+        switch(eventId)
+        {
+        case EventCode::CatchUp:
+            runTo(clk);
+            break;
+        }
+    }
+
+    void Ppu::signalIrq()
+    {
+        irqPending = true;
+        cpu->signalIrq(1);
+    }
+    void Ppu::acknowledgeIrq()
+    {
+        irqPending = false;
+        cpu->acknowledgeIrq(1);
+    }
+
+    void Ppu::checkIrqOnLine(int line, int minh, int maxh)
+    {
+        if(irqPending)          return;
+
+        switch(irqMode)
+        {
+        case IrqMode::Disabled:
+            break;
+
+        case IrqMode::H:
+            if(irqPos.H >= minh && irqPos.H < maxh)
+                signalIrq();
+            break;
+
+        case IrqMode::V:
+            if(irqPos.V == line && minh == 0)
+                signalIrq();
+            break;
+
+        case IrqMode::HV:
+            if(irqPos.V == line && irqPos.H >= minh && irqPos.H < maxh)
+                signalIrq();
+            break;
+        }
+    }
+
+    void Ppu::addIrqEvent()
+    {
+        if(irqPending)          return;
+
+        Coord coord = irqPos;
+        switch(irqMode)
+        {
+        case IrqMode::Disabled:
+            return;
+        case IrqMode::H:
+            coord.V = curPos.V;
+            if(irqPos.H < curPos.H)     ++coord.V;
+            break;
+        case IrqMode::V:
+            coord.H = 0;
+            break;
+        case IrqMode::HV:
+            break;
+        }
+
+        evtManager->addEvent(coord.H, coord.V, this, EventCode::CatchUp);
     }
 
 }

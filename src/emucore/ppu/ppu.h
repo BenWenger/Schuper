@@ -111,6 +111,8 @@ namespace sch
         void        performEvent(int eventId, timestamp_t clk) override;
         void        frameStart(Cpu* c, const VideoSettings& vid);
 
+        timestamp_t convertHVToTimestamp(int H, int V);
+
         timestamp_t getMaxTicksPerFrame() const
         {
             return 341 * 263 * 4;       // TODO - move this '4' somewhere?
@@ -147,13 +149,13 @@ namespace sch
         };
 
 
-        Coord getCoordFromTimestamp(timestamp_t t);
-        int   advance(timestamp_t cycs);
-        bool  frameIsOver() const;
-        void  doScanline(int line);
-        void  renderLine(int line);
-        u32   getRawColor(const Color& clr);
-        void  outputLinePixels();
+        Coord       getCoordFromTimestamp(timestamp_t t);
+        int         advance(timestamp_t cycs);
+        bool        frameIsOver() const;
+        void        doScanline(int line);
+        void        renderLine(int line);
+        u32         getRawColor(const Color& clr);
+        void        outputLinePixels();
 
         Cpu*            cpu;        // need a pointer so we can signal interrupts
         EventManager*   evtManager;
@@ -171,7 +173,7 @@ namespace sch
         bool            nmiHasHappened;         // Whether or not NMI has already happened this frame
         
         Coord           curPos;                 // current position of rendering (should match 'curTick')
-        Coord           irqPos;                 //  next IRQ position
+        Coord           irqPos;                 // IRQ position (as written to the regs)
 
         Color           renderBufMan[256+32];
         Color           renderBufSub[256+32];
@@ -196,7 +198,17 @@ namespace sch
         void        w_2103(u8 v);
         void        w_2104(u8 v);
 
-            // TODO OAM stuff
+        // mode 7 stuff
+        int         m7_ScrollX;
+        int         m7_ScrollY;
+        bool        m7_ClipToTM;
+        bool        m7_FillWithTile0;
+        bool        m7_FlipX;
+        bool        m7_FlipY;
+        u8          m7_WriteBuffer;
+        int         m7_Matrix[4];
+        int         m7_CenterX;
+        int         m7_CenterY;
 
         // 2105
         int         bgMode;
@@ -253,6 +265,10 @@ namespace sch
         bool        interlaceObjects;
         bool        interlaceMode;
 
+        // 213C
+        Coord       latchPos;
+        bool        latchPosToggle;
+
         // 4200
         bool        nmiEnabled;
         enum class IrqMode
@@ -265,10 +281,7 @@ namespace sch
         bool        irqPending;
 
         // 4210
-        bool        nmiReadFlag;
-
-        // 4212
-        u8          ppuStatus;
+        bool        vblReadFlag;
 
 
         enum EventCode
@@ -278,10 +291,16 @@ namespace sch
 
         ////////////////////////////////////////
         void    bgLine_normal(int bg, int line, int planes, const Color* palette, u8 loprio, u8 hiprio);
+        void    bgLine_mode7(int bg, int line, u8 loprio, u8 hiprio);
 
         void    renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr, const Color* palette, bool hflip, u8 prio, bool math, bool spr);
 
         void    sprLine(int line);
+
+        void    signalIrq();
+        void    acknowledgeIrq();
+        void    addIrqEvent();
+        void    checkIrqOnLine(int line, int minh, int maxh);
     };
 
 }

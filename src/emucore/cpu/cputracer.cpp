@@ -2,6 +2,7 @@
 #include "cputracer.h"
 #include "cpustate.h"
 #include "bus/cpubus.h"
+#include "internaldebug/internaldebug.h"
 
 namespace sch
 {
@@ -282,8 +283,8 @@ const char* const opnames[0x100] = {
                     
         case jp_ix: sprintf(buf, "($%04X,X)", arg);
                     tmp = (arg + regs.X.w) & 0xFFFF;
-                    previewaddr  = bus.peek(tmp++);
-                    previewaddr |= bus.peek(tmp) << 8;
+                    previewaddr  = bus.peek(regs.PBR | tmp++);
+                    previewaddr |= bus.peek(regs.PBR | tmp) << 8;
                     previewaddr |= regs.PBR;
                     previewbytes = 0;                                   break;
                     
@@ -308,8 +309,8 @@ const char* const opnames[0x100] = {
                     previewaddr = (arg + regs.DP) & 0xFFFF;
                     previewbytes = 2;                                   break;
 
-        case __per: previewaddr = (regs.PC + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
-                    sprintf(buf, "$%04X", previewaddr);
+        case __per: previewaddr = (regs.PC + 3 + (arg ^ 0x8000) - 0x8000) & 0xFFFF;
+                    sprintf(buf, "$%04X", arg);
                     previewbytes = 0;                                   break;
         }
 
@@ -388,7 +389,7 @@ const char* const opnames[0x100] = {
 
         //////////////////////////////
         //  Status flags & DP, SP
-        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  %04X  %04X\n",
+        fprintf(traceFile, "  [%c %c%c%c%c%c%c%c%c]  D=%04X  S=%04X  B=%02X",
                 (regs.fE ? 'E' : '.'),
                 (regs.fN ? 'N' : '.'),
                 (regs.fV ? 'V' : '.'),
@@ -399,8 +400,18 @@ const char* const opnames[0x100] = {
                 (regs.fZ ? '.' : 'Z'),
                 (regs.fC ? 'C' : '.'),
                 regs.DP,
-                regs.SP
+                regs.SP,
+                (regs.DBR >> 16)
         );
+
+#ifdef IDBG_ENABLED
+        int h, v;
+        InternalDebug.getPpuPos(h,v);
+
+        fprintf(traceFile, "  H=%03d  V=%03d", h, v);
+#endif
+
+        fprintf(traceFile, "\n");
     }
     
     void CpuTracer::traceLine(const char* line)

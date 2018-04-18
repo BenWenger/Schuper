@@ -9,12 +9,15 @@
 #include "snes.h"
 #include "dibsection.h"
 
+extern sch::u8         opbuffer[0x100];
+
 namespace
 {
     const char* const       wndClassName = "Schuper_Window_Class";
     
     const char* const       cpuTraceFileName = "Schuper_cpu_trace.txt";
     const char* const       spcTraceFileName = "Schuper_spc_trace.txt";
+    const char* const       opBufferFileName = "Schuper_opbuffer.bin";
 
 
     typedef sch::SnesFile::Type     FileType;
@@ -28,6 +31,8 @@ namespace
     DibSection              dibBuffer;
     int                     displayedLines = 0;
     int                     frameCount = 0;
+
+    sch::StdController      controller;
 
     void toggleCpuTrace()
     {
@@ -59,6 +64,23 @@ namespace
 
     void doFrame(HWND wnd)
     {
+        int keys = 0;
+        
+        if(GetAsyncKeyState('A') & 0x8000)              keys |= sch::StdController::Btn::A;
+        if(GetAsyncKeyState('S') & 0x8000)              keys |= sch::StdController::Btn::B;
+        if(GetAsyncKeyState('D') & 0x8000)              keys |= sch::StdController::Btn::Y;
+        if(GetAsyncKeyState('F') & 0x8000)              keys |= sch::StdController::Btn::X;
+        if(GetAsyncKeyState('E') & 0x8000)              keys |= sch::StdController::Btn::L;
+        if(GetAsyncKeyState('R') & 0x8000)              keys |= sch::StdController::Btn::R;
+        if(GetAsyncKeyState(VK_UP) & 0x8000)            keys |= sch::StdController::Btn::Up;
+        if(GetAsyncKeyState(VK_LEFT) & 0x8000)          keys |= sch::StdController::Btn::Left;
+        if(GetAsyncKeyState(VK_RIGHT) & 0x8000)         keys |= sch::StdController::Btn::Right;
+        if(GetAsyncKeyState(VK_DOWN) & 0x8000)          keys |= sch::StdController::Btn::Down;
+        if(GetAsyncKeyState('O') & 0x8000)              keys |= sch::StdController::Btn::Select;
+        if(GetAsyncKeyState('P') & 0x8000)              keys |= sch::StdController::Btn::Start;
+
+        controller.setState(keys);
+
         auto lk = snd->lock();
         snes->setAudioBuffer( lk.getBuffer<sch::s16>(0), lk.getSize(0), lk.getBuffer<sch::s16>(1), lk.getSize(1) );
         auto res = snes->doFrame(videoSettings);
@@ -162,6 +184,7 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
     videoSettings.pitch =    512;
 
     sch::Snes snesobj;
+    snesobj.attachInputDevice(0, &controller);
     snes = &snesobj;
     runapp = true;
     loadState = FileType::Invalid;
@@ -203,6 +226,12 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         }
         else
             Sleep(10);
+    }
+
+    {
+        FILE* f = fopen(opBufferFileName, "wb");
+        fwrite(opbuffer, 1, 0x100, f);
+        fclose(f);
     }
 
     return 0;

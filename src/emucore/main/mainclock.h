@@ -5,6 +5,7 @@
 #include <algorithm>  // for min/max
 #include "snestypes.h"
 #include "../event/eventmanager.h"
+#include "internaldebug/internaldebug.h"
 
 namespace sch
 {
@@ -13,6 +14,14 @@ namespace sch
     class MainClock
     {
     public:
+        MainClock()
+        {
+#ifdef IDBG_ENABLED
+            InternalDebug.getMainClock = std::bind(&MainClock::getTick, this);
+#endif
+        }
+
+
         inline void     ioCyc()             { tallyCycle(6);        }
         inline void     fastCyc()           { tallyCycle(6);        }
         inline void     slowCyc()           { tallyCycle(8);        }

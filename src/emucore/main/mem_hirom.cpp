@@ -4,7 +4,7 @@
 namespace sch
 {
 
-    int Snes::rd_LoRom(u32 a, u8& v, timestamp_t clk)
+    int Snes::rd_HiRom(u32 a, u8& v, timestamp_t clk)
     {
         // There must be a better way to do this... but whatever
 
@@ -13,14 +13,17 @@ namespace sch
             v = ram[a & 0x1FFFF];
             return spdSlow;
         }
-        else if((a & 0x400000) || (a & 0x008000))   // Banks 40-7D, C0-FF --- also the "ROM" parts of all banks
+        else if(a & 0x400000)       // banks $40-7D, C0-FF
         {
-            v = currentFile.memory[romMask & ( ((a & 0x7F0000) >> 1) | (a & 0x7FFF) ) ];
-
-            // or SRAM???
-            if( ((a & 0x700000) == 0x700000) & !(a & 0x8000) )
-                v = sram[((a & 0xF0000) >> 1) | (a & 0x7FFF)];
-
+            v = currentFile.memory[romMask & (a & 0x3FFFFF)];
+            if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
+                return spdFast;
+            else
+                return spdSlow;
+        }
+        else if(a & 0x008000)       // the "ROM" parts of other banks????
+        {
+            v = currentFile.memory[romMask & (a & 0x3FFFFF)];       ///  ????  TODO is this right?
             if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
                 return spdFast;
             else
@@ -49,7 +52,7 @@ namespace sch
     }
 
     
-    int Snes::wr_LoRom(u32 a, u8 v, timestamp_t clk)
+    int Snes::wr_HiRom(u32 a, u8 v, timestamp_t clk)
     {
         // There must be a better way to do this... but whatever
 
@@ -58,12 +61,15 @@ namespace sch
             ram[a & 0x1FFFF] = v;
             return spdSlow;
         }
-        else if((a & 0x400000) || (a & 0x008000))   // Banks 40-7D, C0-FF --- also the "ROM" parts of all banks
+        else if(a & 0x400000)       // banks $40-7D, C0-FF
         {
-            // or SRAM???
-            if( ((a & 0x700000) == 0x700000) & !(a & 0x8000) )
-                sram[((a & 0xF0000) >> 1) | (a & 0x7FFF)] = v;
-
+            if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
+                return spdFast;
+            else
+                return spdSlow;
+        }
+        else if(a & 0x008000)       // the "ROM" parts of other banks????
+        {
             if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
                 return spdFast;
             else
@@ -91,15 +97,21 @@ namespace sch
         return spdSlow;
     }
 
-    u8 Snes::pk_LoRom(u32 a) const
+    u8 Snes::pk_HiRom(u32 a) const
     {
+        // There must be a better way to do this... but whatever
+
         if((a & 0xFE0000) == 0x7E0000)              // Banks 7E, 7F
         {
             return ram[a & 0x1FFFF];
         }
-        else if((a & 0x400000) || (a & 0x008000))   // Banks 40-7D, C0-FF --- also the "ROM" parts of all banks
+        else if(a & 0x400000)       // banks $40-7D, C0-FF
         {
-            return currentFile.memory[romMask & ( ((a & 0x7F0000) >> 1) | (a & 0x7FFF) ) ];
+            return currentFile.memory[romMask & (a & 0x3FFFFF)];
+        }
+        else if(a & 0x008000)       // the "ROM" parts of other banks????
+        {
+            return currentFile.memory[romMask & (a & 0x3FFFFF)];       ///  ????  TODO is this right?
         }
         else                                        // Everything else (reg space)
         {

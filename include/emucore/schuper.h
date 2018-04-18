@@ -4,6 +4,7 @@
 
 #include "emucore/types.h"
 #include "emucore/snesfile.h"
+#include "emucore/snesinput.h"
 #include "emucore/snes.h"
 
 #endif

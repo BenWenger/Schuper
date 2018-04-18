@@ -31,7 +31,8 @@ namespace sch
         enum class MemMap
         {
             Unknown,
-            LoRom
+            LoRom,
+            HiRom
         };
 
         Type                        type;

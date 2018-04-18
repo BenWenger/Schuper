@@ -37,6 +37,9 @@
     <Filter Include="src\internaldebug">
       <UniqueIdentifier>{eac16da9-216d-46c8-b827-3289128efa30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\joy">
+      <UniqueIdentifier>{3dc12aad-bd4f-42e3-8bca-3e8f0e2b0d46}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\emucore\apu\smp.cpp">
@@ -89,6 +92,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\emucore\ppu\ppu_sprites.cpp">
       <Filter>src\ppu</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\joy\autojoy.cpp">
+      <Filter>src\joy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\main\mem_hirom.cpp">
+      <Filter>src\main</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -184,6 +193,12 @@
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\ppu\sprite.h">
       <Filter>src\ppu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\joy\autojoy.h">
+      <Filter>src\joy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\emucore\snesinput.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

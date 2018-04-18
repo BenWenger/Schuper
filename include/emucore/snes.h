@@ -7,6 +7,7 @@
 #include "snestypes.h"
 #include "snesfile.h"
 #include "videosettings.h"
+#include "snesinput.h"
 
 namespace sch
 {
@@ -20,6 +21,7 @@ namespace sch
     class Ppu;
     class MainClock;
     class EventManager;
+    class AutoJoy;
 
     class Snes
     {
@@ -45,6 +47,8 @@ namespace sch
         int             getBytesOfAudioWritten();
         int             getBytesOfAudioForAFrame();
 
+        void            attachInputDevice(int port, InputDevice* dev);
+
         VideoResult     doFrame(const VideoSettings& vidset);
         
         void            debug_dumpVram(const char* filename);
@@ -56,13 +60,18 @@ namespace sch
         int             wr_LoRom(u32 a, u8  v, timestamp_t clk);
         u8              pk_LoRom(u32 a) const;
         
+        int             rd_HiRom(u32 a, u8& v, timestamp_t clk);
+        int             wr_HiRom(u32 a, u8  v, timestamp_t clk);
+        u8              pk_HiRom(u32 a) const;
+        
         void            wr_Reg(u16 a, u8 v, timestamp_t clk);
         u8              rd_Reg(u16 a, timestamp_t clk);
 
         SnesFile                    currentFile;
         u32                         romMask;
-
+        
         std::unique_ptr<u8[]>       ram;
+        std::unique_ptr<u8[]>       sram;
         u32                         altRamAddr;
             
         int                         spdSlow;
@@ -86,6 +95,9 @@ namespace sch
         std::unique_ptr<Ppu>            ppu;
         std::unique_ptr<MainClock>      mainClock;
         std::unique_ptr<EventManager>   eventManager;
+        std::unique_ptr<AutoJoy>        autoJoy;
+
+        InputDevice*            inputs[2];
     };
 
 }

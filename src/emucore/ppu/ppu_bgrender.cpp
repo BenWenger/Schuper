@@ -71,6 +71,75 @@ namespace sch
         }
     }
 
+    namespace
+    {
+        inline int m7clip(int a)
+        {
+            if(a & 0x2000)      return a | ~0x03FF;
+            else                return a &  0x03FF;
+        }
+    }
+
+    void Ppu::bgLine_mode7(int bg, int line, u8 loprio, u8 hiprio)
+    {
+        Color*      manscr = (manScrLayers & (1<<bg)) ? (renderBufMan + 16) : nullptr;
+        Color*      subscr = (subScrLayers & (1<<bg)) ? (renderBufSub + 16) : nullptr;
+        if(!manscr && !subscr)      return;
+        
+        u8 prio = loprio;
+        bool math = (colorMathLayers & (1<<bg)) != 0;
+
+        int cx = m7clip(m7_ScrollX - m7_CenterX);
+        int cy = m7clip(m7_ScrollY - m7_CenterY);
+
+        int srcx = ((m7_Matrix[0]*cx  ) & ~0x3F)
+                 + ((m7_Matrix[1]*line) & ~0x3F)
+                 + ((m7_Matrix[1]*cy  ) & ~0x3F)
+                 + (m7_CenterX << 8);
+        
+        int srcy = ((m7_Matrix[2]*cx  ) & ~0x3F)
+                 + ((m7_Matrix[3]*line) & ~0x3F)
+                 + ((m7_Matrix[3]*cy  ) & ~0x3F)
+                 + (m7_CenterY << 8);
+
+        for(int dstx = 0; dstx < 256; ++dstx)
+        {
+            // if m7_FlipX || m7_FlipY  <-  figure these out
+            int x = srcx >> 8;
+            int y = srcy >> 8;
+            srcx += m7_Matrix[0];
+            srcy += m7_Matrix[2];
+            if(m7_ClipToTM)
+            {
+                if(x <     0)   x =     0;
+                if(x > 0x3FF)   x = 0x3FF;
+                if(y <     0)   y =     0;
+                if(y > 0x3FF)   y = 0x3FF;
+            }
+
+            int tile = -1;
+            if(x >= 0 && y >= 0 && x < 0x400 && y < 0x400)
+                tile = vram[((y & ~7) << 3) | (x & ~7)] & 0xFF;
+            else if(m7_FillWithTile0)
+                tile = 0;
+
+            u8 px = 0;
+            if(tile >= 0)
+            {
+                px = vram[(tile << 6) | ((y&7)<<3) | (x&7)] >> 8;
+                if(bg)          // EXTBG
+                {
+                    if(px & 0x80)       prio = hiprio;
+                    else                prio = loprio;
+                    px &= 0x7F;
+                }
+            }
+            
+            if(manscr)      manscr[dstx].multiplex(px, cgRam, prio, math, false);
+            if(subscr)      subscr[dstx].multiplex(px, cgRam, prio, math, false);
+        }
+    }
+
     
     void Ppu::renderPixelsToBuf(Color* mainbuf, Color* subbuf, int planes, u16 addr,
                                 const Color* palette, bool hflip, u8 prio, bool math, bool spr)
