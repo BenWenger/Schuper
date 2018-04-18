@@ -4,8 +4,6 @@
 #include "cputracer.h"
 #include "main/mainclock.h"
 
-sch::u8 opbuffer[0x100]= {0};
-
 namespace sch
 {
     inline void Cpu::dpCyc()            {   if(regs.DP & 0x00FF)        ioCyc();            }

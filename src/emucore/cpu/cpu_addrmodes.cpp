@@ -1,68 +1,14 @@
 
-#ifndef SCHUPER_CPU_CPU_H_INCLUDED
-#define SCHUPER_CPU_CPU_H_INCLUDED
-
-#include <algorithm>
-#include "snestypes.h"
-#include "cpustate.h"
+#include "cpu.h"
 
 namespace sch
 {
-    class CpuBus;
-    class CpuTracer;
-    class MainClock;
-
-    class Cpu
+    u16 Cpu::ad_rd_im(bool flg)
     {
-    public:
-        void            runTo(timestamp_t runto);
-        void            setTracer(CpuTracer* trc)       { tracer = trc;             }
-
-        void            reset(CpuBus* thebus, MainClock* theclock);
-
-        void            signalNmi();
-        void            signalIrq(u32 irqmask);
-        void            acknowledgeIrq(u32 irqmask);
-
-    private:
-        enum class IntType
-        {
-            Reset,
-            Abort,
-            Nmi,
-            Irq,
-            Cop,
-            Brk
-        };
-        MainClock*      clock;
-
-        
-        CpuTracer*      tracer;
-        CpuBus*         bus;
-        CpuState        regs;
-        
-        bool            stopped;
-        bool            waiting;
-        bool            interruptReady;
-        bool            interruptPending;
-        bool            resetPending;
-        bool            nmiPending;
-        u32             irqFlags;
-        
-        void            innerRun(timestamp_t runto);
-
-        //////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////
-        //  Reading/writing
-        u8              read_pc();
-        
-        //////////////////////////////////////////////////////
-        //////////////////////////////////////////////////////
-        //  Addressing modes
-        typedef         void (Cpu::*rwop_t)(u16& v, bool flg);
-
-        //  Immediate
-        u16     ad_rd_im(bool flg);
+        u16 v =             read_pc();
+        if(!flg)    v |=    read_pc() << 8;
+    }
+    /*
         //  Absolute
         u16     ad_rd_ab(bool flg);
         void    ad_wr_ab(u16 v, bool flg);
@@ -121,7 +67,5 @@ namespace sch
         //  Stack Relative Ind Y        LDA ($nn, S), Y
         u16     ad_rd_siy(bool flg);
         void    ad_wr_siy(u16 v, bool flg);
-    };
+        */
 }
-
-#endif

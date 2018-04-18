@@ -99,6 +99,9 @@
     <ClCompile Include="..\..\..\src\emucore\main\mem_hirom.cpp">
       <Filter>src\main</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\emucore\cpu\cpu_addrmodes.cpp">
+      <Filter>src\cpu</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">
@@ -150,9 +153,6 @@
       <Filter>src\cpu</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h">
-      <Filter>src\cpu</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.h">
       <Filter>src\cpu</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h">
