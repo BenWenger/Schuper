@@ -17,6 +17,10 @@ namespace sch
         {
             v = currentFile.memory[romMask & ( ((a & 0x7F0000) >> 1) | (a & 0x7FFF) ) ];
 
+            // or SRAM???
+            if( ((a & 0x700000) == 0x700000) & !(a & 0x8000) )
+                v = sram[((a & 0xF0000) >> 1) | (a & 0x7FFF)];
+
             if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
                 return spdFast;
             else
@@ -56,6 +60,10 @@ namespace sch
         }
         else if((a & 0x400000) || (a & 0x008000))   // Banks 40-7D, C0-FF --- also the "ROM" parts of all banks
         {
+            // or SRAM???
+            if( ((a & 0x700000) == 0x700000) & !(a & 0x8000) )
+                sram[((a & 0xF0000) >> 1) | (a & 0x7FFF)] = v;
+
             if((a & 0x800000) /* && inFastRomMode() */ )        // TODO
                 return spdFast;
             else

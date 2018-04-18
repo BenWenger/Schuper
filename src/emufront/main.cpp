@@ -9,12 +9,15 @@
 #include "snes.h"
 #include "dibsection.h"
 
+extern sch::u8         opbuffer[0x100];
+
 namespace
 {
     const char* const       wndClassName = "Schuper_Window_Class";
     
     const char* const       cpuTraceFileName = "Schuper_cpu_trace.txt";
     const char* const       spcTraceFileName = "Schuper_spc_trace.txt";
+    const char* const       opBufferFileName = "Schuper_opbuffer.bin";
 
 
     typedef sch::SnesFile::Type     FileType;
@@ -223,6 +226,12 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         }
         else
             Sleep(10);
+    }
+
+    {
+        FILE* f = fopen(opBufferFileName, "wb");
+        fwrite(opbuffer, 1, 0x100, f);
+        fclose(f);
     }
 
     return 0;

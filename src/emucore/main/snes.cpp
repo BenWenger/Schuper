@@ -11,10 +11,14 @@
 #include "mainclock.h"
 #include "joy/autojoy.h"
 
+// TODO everything to do with SRAM is wrong.  It should be on the cart, it should not be so big, it
+//  should not be wiped on reset, etc
+
 namespace sch
 {
     Snes::Snes()
         : ram(new u8[0x20000])
+        , sram(new u8[0x80000])     // <- TODO THIS IS WRONG
     {
         spc = std::make_unique<Spc>();
         cpu = std::make_unique<Cpu>();
@@ -113,6 +117,7 @@ namespace sch
             ppu->reset(true, eventManager.get());
             altRamAddr = 0;
             for(int i = 0; i < 0x20000; ++i)        ram[i] = 0;
+            for(int i = 0; i < 0x80000; ++i)        sram[i] = 0;
 
             mulReg_A = 0;
             mulReg_B = 0;

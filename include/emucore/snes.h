@@ -69,8 +69,9 @@ namespace sch
 
         SnesFile                    currentFile;
         u32                         romMask;
-
+        
         std::unique_ptr<u8[]>       ram;
+        std::unique_ptr<u8[]>       sram;
         u32                         altRamAddr;
             
         int                         spdSlow;
