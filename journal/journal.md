@@ -2,7 +2,18 @@
 
 # Journal
 
+#### Spring
 
+Week | What is completed
+--- | ---
+Week 1 | Added SRAM read/writing, Added readable Mode7 registers.  Started debugging why Castlevania 4 isn't working (looks like a CPU bug)
+Week 2 | Continued debugging efforts.  Fixed a CPU bug that was causing indirect JMPs to use the wrong bank for address lookup.  But CV4 still isn't working.  Grrrrr.
+Week 3 | Wrote some utilities to convert my CPU trace logs to a format that matches BSNES tracelogs so I can compare my emu output to the output of an emu that is working.  Though minor difference in timing (when IRQs trip, etc) still make a direct comparison difficult to find exactly where the bug is.  At this point I'm thinking of just redoing the CPU from scratch and then diffing my two CPUs to see where the problem was.
+Week 4 | ...
+
+
+
+#### Winter
 
 Week | What is completed
 --- | ---
