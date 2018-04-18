@@ -4,6 +4,8 @@
 #include "cpu/cpu.h"
 #include "internaldebug/internaldebug.h"
 
+int ppu_bgmode = 0;
+
 namespace sch
 {
     Ppu::Ppu()
@@ -104,6 +106,8 @@ namespace sch
             m7_Matrix[3] =          0;
             m7_CenterX =            0;
             m7_CenterY =            0;
+            m7_MultB =              0;
+            m7_MultResult =         0;
         }
     }
 
@@ -172,6 +176,7 @@ namespace sch
 
         case 0x2105:
             bgMode =                    v & 0x07;
+            ppu_bgmode = bgMode;        // TODO remove this
             mode1AltPriority =          (v & 0x08) != 0;
             bgLayers[0].use16Tiles =    (v & 0x10) != 0;
             bgLayers[1].use16Tiles =    (v & 0x20) != 0;
@@ -259,6 +264,9 @@ namespace sch
             m7_Matrix[a] = (v << 8) | m7_WriteBuffer;
             m7_Matrix[a] = ((m7_Matrix[a] & 0xFFFF) ^ 0x8000) - 0x8000;
             m7_WriteBuffer = v;
+
+            if(a == 1)      m7_MultB = v;
+            m7_MultResult = m7_Matrix[0] * m7_MultB;
             break;
 
         case 0x211F:
@@ -364,6 +372,10 @@ namespace sch
         // TODO
         switch(a)
         {
+        case 0x2134:    v = static_cast<u8>( m7_MultResult        & 0xFF);      break;
+        case 0x2135:    v = static_cast<u8>((m7_MultResult >>  8) & 0xFF);      break;
+        case 0x2136:    v = static_cast<u8>((m7_MultResult >> 16) & 0xFF);      break;
+
         case 0x2137:
             latchPos = curPos;
             latchPosToggle = false;

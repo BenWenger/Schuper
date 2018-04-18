@@ -210,6 +210,9 @@ namespace sch
         int         m7_CenterX;
         int         m7_CenterY;
 
+        u8          m7_MultB;
+        int         m7_MultResult;
+
         // 2105
         int         bgMode;
         bool        mode1AltPriority;

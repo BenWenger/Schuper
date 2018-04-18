@@ -9,7 +9,8 @@
 #include "snes.h"
 #include "dibsection.h"
 
-extern sch::u8         opbuffer[0x100];
+extern sch::u8          opbuffer[0x100];
+extern int              ppu_bgmode;
 
 namespace
 {
@@ -51,6 +52,11 @@ namespace
         return loadState != FileType::Invalid;
     }
 
+    void textout(HDC dc, int x, int y, const char* str)
+    {
+        TextOutA(dc, x, y, str, strlen(str));
+    }
+
     void doDraw(HDC screendc)
     {
         if(loadState == FileType::Rom)
@@ -59,7 +65,10 @@ namespace
         }
         char buf[20];
         sprintf(buf,"%d      ", frameCount);
-        TextOutA(screendc, 520, 0, buf, strlen(buf));
+        textout(screendc, 520, 0, buf);
+        
+        sprintf(buf,"%d      ", ppu_bgmode);
+        textout(screendc, 520, 20, buf);
     }
 
     void doFrame(HWND wnd)

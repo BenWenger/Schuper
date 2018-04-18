@@ -60,7 +60,7 @@ namespace sch
         regs.fX = true;
         regs.fZ = 1;
         regs.PC = 0;
-        regs.SP = 0x0180;
+        regs.SP = 0x01FF;
         
         // Set interrupt stuff
             // immediately interrupt with a RESET
