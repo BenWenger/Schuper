@@ -27,7 +27,6 @@
     <ClCompile Include="..\..\..\src\emucore\apu\spcbus.cpp" />
     <ClCompile Include="..\..\..\src\emucore\cpu\cpu.cpp" />
     <ClCompile Include="..\..\..\src\emucore\cpu\cputracer.cpp" />
-    <ClCompile Include="..\..\..\src\emucore\cpu\cpu_addrmodes.cpp" />
     <ClCompile Include="..\..\..\src\emucore\dma\dmaunit.cpp" />
     <ClCompile Include="..\..\..\src\emucore\event\eventmanager.cpp" />
     <ClCompile Include="..\..\..\src\emucore\internaldebug\internaldebug.cpp" />
@@ -61,6 +60,7 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.hpp" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h" />

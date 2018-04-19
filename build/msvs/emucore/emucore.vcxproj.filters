@@ -99,9 +99,6 @@
     <ClCompile Include="..\..\..\src\emucore\main\mem_hirom.cpp">
       <Filter>src\main</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\emucore\cpu\cpu_addrmodes.cpp">
-      <Filter>src\cpu</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\emucore\apu\smp.h">
@@ -199,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\emucore\snesinput.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.hpp">
+      <Filter>src\cpu</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

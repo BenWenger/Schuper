@@ -4,6 +4,8 @@
 #include "cputracer.h"
 #include "main/mainclock.h"
 
+#include "cpu_addrmodes.hpp"
+
 namespace sch
 {
     inline void Cpu::dpCyc()            {   if(regs.DP & 0x00FF)        ioCyc();            }
