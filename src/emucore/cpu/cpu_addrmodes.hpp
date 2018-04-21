@@ -24,10 +24,10 @@ namespace sch
     {
         u16 v =             read( a );
         if(flg) {
-            CALLOP(v,flg);  ioCyc();
+            v = CALLOP(v,flg);  ioCyc();
         } else {
             v |=            read( a + 1 ) << 8;
-            CALLOP(v,flg);  ioCyc();
+            v = CALLOP(v,flg);  ioCyc();
                             write( a + 1, static_cast<u8>( v >> 8 ) );
         }
         write( a, static_cast<u8>(v) );
@@ -81,7 +81,121 @@ namespace sch
 
         if(wr || ((a ^ tmp) & 0xFF00))      ioCyc();
 
+        return a + regs.DBR;
+    }
+
+    
+    inline u32 Cpu::ad_addr_iyl()
+    {
+        u32 dp =            regs.DP + read_pc();
+                            dpCyc();
+        u32 addr =          read(dp);
+        addr |=             read(dp+1) << 8;
+        addr |=             read(dp+1) << 16;
+        return addr + regs.Y.w;
+    }
+    
+    inline u32 Cpu::ad_addr_ix()
+    {
+        u32 dp =            ad_addr_dr(regs.X.w);
+        u32 a =             read(dp);
+        a |=                read(dp+1) << 8;
+        return a + regs.DBR;
+    }
+    
+    inline u32 Cpu::ad_addr_dr(u16 r)
+    {
+        u16 dp =            regs.DP + read_pc();
+                            dpCyc();
+        dp += r;            ioCyc();
+        return dp;
+    }
+
+    inline u32 Cpu::ad_addr_ar(u16 r, bool wr)
+    {
+        u32 tmp =           read_pc() | regs.DBR;
+        tmp |=              read_pc() << 8;
+        
+        u32 a = tmp + r;
+        if(wr || ((a ^ tmp) & 0xFF00))      ioCyc();
+
         return a;
     }
+
+    inline u32 Cpu::ad_addr_axl()
+    {
+        u32 a =             read_pc();
+        a |=                read_pc() << 8;
+        a |=                read_pc() << 16;
+        return a + regs.X.w;
+    }
+
+    inline void Cpu::ad_branch(bool condition)
+    {
+        int adj =           (read_pc() ^ 0x80) - 0x80;
+        if(condition)
+        {
+            ioCyc();
+            u16 newpc =     regs.PC + adj;
+            if(regs.fE && ((newpc ^ regs.PC) & 0xFF00))
+                ioCyc();
+
+            regs.PC = newpc;
+        }
+    }
+    
+    u32 Cpu::ad_addr_di()
+    {
+        u16 dp =        regs.DP + read_pc();
+                        dpCyc();
+        u32 a =         read(dp++);
+        a |=            read(dp) << 8;
+        return a | regs.DBR;
+    }
+    
+    u32 Cpu::ad_addr_dil()
+    {
+        u16 dp =        regs.DP + read_pc();
+                        dpCyc();
+        u32 a =         read(dp++);
+        a |=            read(dp++) << 8;
+        a |=            read(dp)   << 16;
+        return a;
+    }
+    
+    void Cpu::ad_push(u16 v, bool flg)
+    {
+        ioCyc();
+        if(!flg)
+            push(static_cast<u8>(v >> 8));
+        push(static_cast<u8>(v & 0xFF));
+    }
+
+    u16 Cpu::ad_pull(bool flg)
+    {
+        ioCyc();
+        ioCyc();
+        u16 v = pull();
+        if(!flg)
+            v |= pull() << 8;
+        return v;
+    }
+    
+    u32 Cpu::ad_addr_sr()
+    {
+        u16 a =         regs.SP + read_pc();
+                        ioCyc();
+        return a;
+    }
+
+    u32 Cpu::ad_addr_siy()
+    {
+        u16 tmp =       ad_addr_sr();
+        u16 a =         read(tmp);
+        a |=            read(tmp) << 8;
+                        ioCyc();
+        return a + regs.DBR + regs.Y.w;
+    }
+    
 
 }

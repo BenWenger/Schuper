@@ -54,26 +54,96 @@ namespace sch
         //////////////////////////////////////////////////////
         //////////////////////////////////////////////////////
         //  Reading/writing
-        u8              read_pc();
+        u8              read_pc()       { return read(regs.PBR | regs.PC++);    }
         u8              read(u32 a);
         void            write(u32 a, u8 v);
 
+        void            push(u8 v)      { write(regs.SP--, v);      }
+        u8              pull()          { return read(++regs.SP);   }
+        
         void            ioCyc();
-        void            dpCyc()
-        {
-            if(regs.DP & 0xFF)      ioCyc();
-        }
+        void            ioCyc(int cycs);
+        void            dpCyc();
+        void            tallyCycle(int cyc);
+        void            checkInterruptPending();
+        
+        //////////////////////////////////////////////////////
+        //////////////////////////////////////////////////////
+        //  Instructions
+        void            ADC(u16 v);
+        void            AND(u16 v);
+        u16             ASL(u16 v, bool flg);
+        void            BIT(u16 v, bool set_flags);
+        void            CPR(u16 v, u16 r, bool flg);
+        void            CMP(u16 v)                      { CPR(v, regs.A.w, regs.fM);    }
+        void            CPX(u16 v)                      { CPR(v, regs.X.w, regs.fX);    }
+        void            CPY(u16 v)                      { CPR(v, regs.Y.w, regs.fX);    }
+        u16             DEC(u16 v, bool flg);
+        void            EOR(u16 v);
+        u16             INC(u16 v, bool flg);
+        void            LDA(u16 v);
+        void            LDX(u16 v);
+        void            LDY(u16 v);
+        u16             LSR(u16 v, bool flg);
+        void            ORA(u16 v);
+        u16             ROL(u16 v, bool flg);
+        u16             ROR(u16 v, bool flg);
+        void            SBC(u16 v);
+        u16             TRB(u16 v, bool flg);
+        u16             TSB(u16 v, bool flg);
+        
+        u16             STA();
+        void            TAX();
+        void            TAY();
+        void            TCD();
+        void            TCS();
+        void            TDC();
+        void            TSC();
+        void            TSX();
+        void            TXA();
+        void            TXS();
+        void            TXY();
+        void            TYA();
+        void            TYX();
+        
+        void            u_BRL();
+        void            u_JMP_Absolute();
+        void            u_JMP_AbsoluteLong();
+        void            u_JMP_Indirect();
+        void            u_JMP_IndirectX();
+        void            u_JMP_IndirectLong();
+        void            u_JSR_Absolute();
+        void            u_JSR_AbsoluteLong();
+        void            u_JSR_IndirectX();
+        void            u_MVN();
+        void            u_PEA();
+        void            u_PEI();
+        void            u_PER();
+        void            u_PLA();
+        void            u_MVP();
+        void            u_REP();
+        void            u_RTI();
+        void            u_RTL();
+        void            u_RTS();
+        void            u_SEP();
+        void            u_WAI();
+        void            u_XBA();
+        void            u_XCE();
+
+        void            doInterrupt(IntType type);
         
         //////////////////////////////////////////////////////
         //////////////////////////////////////////////////////
         //  Addressing modes
-        typedef         void (Cpu::*rwop_t)(u16& v, bool flg);
+        typedef         u16 (Cpu::*rwop_t)(u16 v, bool flg);
 
         // Support
         u16     ad_final_rd(u32 a, bool flg);
         void    ad_final_wr(u32 a, u16 v, bool flg);
         void    ad_final_rw(u32 a, rwop_t op, bool flg);
 
+        //  Accumulator mode
+        void    ad_rw_ac(rwop_t op);
         //  Immediate
         u16     ad_rd_im(bool flg);
         //  Absolute
@@ -96,55 +166,51 @@ namespace sch
         void    ad_wr_iy(u16 v, bool flg)       {        ad_final_wr( ad_addr_iy( true),  v, flg );  }
         //  Indirect, Y Long    LDA [$nn], Y
         u32     ad_addr_iyl();
-        u16     ad_rd_iyl(bool flg);
-        void    ad_wr_iyl(u16 v, bool flg);
+        u16     ad_rd_iyl(bool flg)             { return ad_final_rd( ad_addr_iyl(),     flg ); }
+        void    ad_wr_iyl(u16 v, bool flg)      {        ad_final_wr( ad_addr_iyl(),  v, flg ); }
         //  Indirect, X         LDA ($nn, X)
         u32     ad_addr_ix();
-        u16     ad_rd_ix(bool flg);
-        void    ad_wr_ix(u16 v, bool flg);
+        u16     ad_rd_ix(bool flg)              { return ad_final_rd( ad_addr_ix(),     flg );  }
+        void    ad_wr_ix(u16 v, bool flg)       {        ad_final_wr( ad_addr_ix(),  v, flg );  }
         //  Direct Page Indexed     LDA $nn,X / LDA $nn,Y
         u32     ad_addr_dr(u16 r);
-        u16     ad_rd_dr(u16 r, bool flg);
-        void    ad_wr_dr(u16 v, u16 r, bool flg);
-        void    ad_rw_dx(rwop_t op, bool flg);
-        u16     ad_rd_dx(bool flg)          { return ad_rd_dr(regs.X.w, flg);   }
-        u16     ad_rd_dy(bool flg)          { return ad_rd_dr(regs.Y.w, flg);   }
-        u16     ad_wr_dx(u16 v, bool flg)   { ad_wr_dr(v, regs.X.w, flg);       }
-        u16     ad_wr_dy(u16 v, bool flg)   { ad_wr_dr(v, regs.Y.w, flg);       }
+        u16     ad_rd_dx(bool flg)              { return ad_final_rd( ad_addr_dr(regs.X.w),     flg );  }
+        u16     ad_wr_dx(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.X.w),  v, flg );  }
+        void    ad_rw_dx(rwop_t op, bool flg)   {        ad_final_rw( ad_addr_dr(regs.X.w), op, flg );  }
+        u16     ad_rd_dy(bool flg)              { return ad_final_rd( ad_addr_dr(regs.Y.w),     flg );  }
+        u16     ad_wr_dy(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.Y.w),  v, flg );  }
         //  Absolute Indexed     LDA $nnnn,X / LDA $nnnn,Y
-        u32     ad_addr_ar(u16 r);
-        u16     ad_rd_ar(u16 r, bool flg);
-        void    ad_wr_ar(u16 v, u16 r, bool flg);
-        void    ad_rw_ax(rwop_t op, bool flg);
-        u16     ad_rd_ax(bool flg)          { return ad_rd_ar(regs.X.w, flg);   }
-        u16     ad_rd_ay(bool flg)          { return ad_rd_ar(regs.Y.w, flg);   }
-        u16     ad_wr_ax(u16 v, bool flg)   { ad_wr_ar(v, regs.X.w, flg);       }
-        u16     ad_wr_ay(u16 v, bool flg)   { ad_wr_ar(v, regs.Y.w, flg);       }
+        u32     ad_addr_ar(u16 r, bool wr);
+        u16     ad_rd_ax(bool flg)              { return ad_final_rd( ad_addr_ar(regs.X.w, false),     flg );  }
+        u16     ad_wr_ax(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.X.w,  true),  v, flg );  }
+        void    ad_rw_ax(rwop_t op, bool flg)   {        ad_final_rw( ad_addr_ar(regs.X.w,  true), op, flg );  }
+        u16     ad_rd_ay(bool flg)              { return ad_final_rd( ad_addr_ar(regs.Y.w, false),     flg );  }
+        u16     ad_wr_ay(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.Y.w,  true),  v, flg );  }
         //  Absolute Long, X     LDA $nnnnnn,X
         u32     ad_addr_axl();
-        u16     ad_rd_axl(bool flg);
-        void    ad_wr_axl(u16 v, bool flg);
+        u16     ad_rd_axl(bool flg)             { return ad_final_rd( ad_addr_axl(),    flg );  }
+        void    ad_wr_axl(u16 v, bool flg)      {        ad_final_wr( ad_addr_axl(), v, flg );  }
         //  Relative (branching)
         void    ad_branch(bool condition);
         //  Direct Page Indirect        LDA ($nn)
         u32     ad_addr_di();
-        u16     ad_rd_di(bool flg);
-        void    ad_wr_di(u16 v, bool flg);
+        u16     ad_rd_di(bool flg)              { return ad_final_rd( ad_addr_di(),    flg );   }
+        void    ad_wr_di(u16 v, bool flg)       {        ad_final_wr( ad_addr_di(), v, flg );   }
         //  Direct Page Indirect Long   LDA [$nn]
         u32     ad_addr_dil();
-        u16     ad_rd_dil(bool flg);
-        void    ad_wr_dil(u16 v, bool flg);
+        u16     ad_rd_dil(bool flg)             { return ad_final_rd( ad_addr_dil(),    flg );  }
+        void    ad_wr_dil(u16 v, bool flg)      {        ad_final_wr( ad_addr_dil(), v, flg );  }
         //  Stack push/pull modes       PHA / PHP / PLA / PLP
         void    ad_push(u16 v, bool flg);
         u16     ad_pull(bool flg);
         //  Stack Relative              LDA $nn, S
         u32     ad_addr_sr();
-        u16     ad_rd_sr(bool flg);
-        void    ad_wr_sr(u16 v, bool flg);
+        u16     ad_rd_sr(bool flg)              { return ad_final_rd( ad_addr_sr(),    flg );   }
+        void    ad_wr_sr(u16 v, bool flg)       {        ad_final_wr( ad_addr_sr(), v, flg );   }
         //  Stack Relative Ind Y        LDA ($nn, S), Y
         u32     ad_addr_siy();
-        u16     ad_rd_siy(bool flg);
-        void    ad_wr_siy(u16 v, bool flg);
+        u16     ad_rd_siy(bool flg)             { return ad_final_rd( ad_addr_siy(),    flg );  }
+        void    ad_wr_siy(u16 v, bool flg)      {        ad_final_wr( ad_addr_siy(), v, flg );  }
     };
 }
 
