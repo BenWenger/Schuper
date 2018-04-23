@@ -461,7 +461,7 @@ namespace sch
         a |=            read_pc() << 8;
         push( static_cast<u8>(regs.PBR >> 16) );
         ioCyc();
-        regs.PBR =      read_pc() << 16;    // doesn't push minus one?
+        regs.PBR =      read( regs.PBR | regs.PC ) << 16;    // pushes PC minus one
         push( static_cast<u8>(regs.PC >> 8) );
         push( static_cast<u8>(regs.PC & 0xFF) );
         regs.PC = a;
@@ -566,7 +566,7 @@ namespace sch
         ioCyc(2);
         regs.PC =           pull();
         regs.PC |=          pull() << 8;
-        regs.PBR =          pull() << 16;
+        regs.PBR =          pull() << 16;       regs.PC++;
     }
 
     void Cpu::u_RTS()

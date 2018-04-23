@@ -17,7 +17,7 @@ namespace sch
     void Cpu::ad_final_wr(u32 a, u16 v, bool flg)
     {
                     write( a, static_cast<u8>(v & 0xFF) );
-        if(!flg)    write( a, static_cast<u8>(v >> 8) );
+        if(!flg)    write( a + 1, static_cast<u8>(v >> 8) );
     }
 
     void Cpu::ad_final_rw(u32 a, rwop_t op, bool flg)
