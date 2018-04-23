@@ -61,7 +61,7 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cputracer.h" />
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.hpp" />
-    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h" />
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.hpp" />
     <ClInclude Include="..\..\..\src\emucore\dma\dmaunit.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventhandler.h" />
     <ClInclude Include="..\..\..\src\emucore\event\eventmanager.h" />

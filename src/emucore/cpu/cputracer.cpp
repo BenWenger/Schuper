@@ -196,7 +196,7 @@ const char* const opnames[0x100] = {
                     previewbytes = mdbytes;                             break;
 
         case sr__m: sprintf(buf, "$%02X,S", arg);
-                    previewaddr = (arg + regs.SP) & 0xFFFF;
+                    previewaddr = (arg + regs.SP.w) & 0xFFFF;
                     previewbytes = mdbytes;                             break;
 
         case ab__m: sprintf(buf, "$%04X", arg);
@@ -256,7 +256,7 @@ const char* const opnames[0x100] = {
                     previewbytes = mdbytes;                             break;
                     
         case siy_m: sprintf(buf, "($%02X,S),Y", arg);
-                    tmp = (arg + regs.SP) & 0xFFFF;
+                    tmp = (arg + regs.SP.w) & 0xFFFF;
                     previewaddr  = bus.peek(tmp++);
                     previewaddr |= bus.peek(tmp) << 8;
                     previewaddr  = ((previewaddr + regs.Y.w) & 0xFFFF) | regs.DBR;
@@ -400,7 +400,7 @@ const char* const opnames[0x100] = {
                 (regs.fZ ? '.' : 'Z'),
                 (regs.fC ? 'C' : '.'),
                 regs.DP,
-                regs.SP,
+                regs.SP.w,
                 (regs.DBR >> 16)
         );
 

@@ -58,8 +58,8 @@ namespace sch
         u8              read(u32 a);
         void            write(u32 a, u8 v);
 
-        void            push(u8 v)      { write(regs.SP--, v);      }
-        u8              pull()          { return read(++regs.SP);   }
+        void            push(u8 v);
+        u8              pull();
         
         void            ioCyc();
         void            ioCyc(int cycs);
@@ -71,24 +71,27 @@ namespace sch
         //////////////////////////////////////////////////////
         //  Instructions
         void            ADC(u16 v);
+        void            ADC_decimal(u16 v);
         void            AND(u16 v);
         u16             ASL(u16 v, bool flg);
         void            BIT(u16 v, bool set_flags);
         void            CPR(u16 v, u16 r, bool flg);
-        void            CMP(u16 v)                      { CPR(v, regs.A.w, regs.fM);    }
+        void            CMP(u16 v)                      { CPR(v, regs.fM ? regs.A.l : regs.A.w, regs.fM);    }
         void            CPX(u16 v)                      { CPR(v, regs.X.w, regs.fX);    }
         void            CPY(u16 v)                      { CPR(v, regs.Y.w, regs.fX);    }
         u16             DEC(u16 v, bool flg);
         void            EOR(u16 v);
         u16             INC(u16 v, bool flg);
-        void            LDA(u16 v);
-        void            LDX(u16 v);
-        void            LDY(u16 v);
+        void            LDR(CpuState::SplitReg& r, u16 v, bool flg);
+        void            LDA(u16 v)      { LDR(regs.A, v, regs.fM);  }
+        void            LDX(u16 v)      { LDR(regs.X, v, regs.fX);  }
+        void            LDY(u16 v)      { LDR(regs.Y, v, regs.fX);  }
         u16             LSR(u16 v, bool flg);
         void            ORA(u16 v);
         u16             ROL(u16 v, bool flg);
         u16             ROR(u16 v, bool flg);
         void            SBC(u16 v);
+        void            SBC_decimal(u16 v);
         u16             TRB(u16 v, bool flg);
         u16             TSB(u16 v, bool flg);
         
@@ -115,18 +118,18 @@ namespace sch
         void            u_JSR_Absolute();
         void            u_JSR_AbsoluteLong();
         void            u_JSR_IndirectX();
-        void            u_MVN();
+        void            u_MVNP(int adj);
+        inline void     u_MVN()                     { u_MVNP( 1);   }
+        inline void     u_MVP()                     { u_MVNP(-1);   }
         void            u_PEA();
         void            u_PEI();
         void            u_PER();
         void            u_PLA();
-        void            u_MVP();
         void            u_REP();
         void            u_RTI();
         void            u_RTL();
         void            u_RTS();
         void            u_SEP();
-        void            u_WAI();
         void            u_XBA();
         void            u_XCE();
 
@@ -175,17 +178,17 @@ namespace sch
         //  Direct Page Indexed     LDA $nn,X / LDA $nn,Y
         u32     ad_addr_dr(u16 r);
         u16     ad_rd_dx(bool flg)              { return ad_final_rd( ad_addr_dr(regs.X.w),     flg );  }
-        u16     ad_wr_dx(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.X.w),  v, flg );  }
+        void    ad_wr_dx(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.X.w),  v, flg );  }
         void    ad_rw_dx(rwop_t op, bool flg)   {        ad_final_rw( ad_addr_dr(regs.X.w), op, flg );  }
         u16     ad_rd_dy(bool flg)              { return ad_final_rd( ad_addr_dr(regs.Y.w),     flg );  }
-        u16     ad_wr_dy(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.Y.w),  v, flg );  }
+        void    ad_wr_dy(u16 v, bool flg)       {        ad_final_wr( ad_addr_dr(regs.Y.w),  v, flg );  }
         //  Absolute Indexed     LDA $nnnn,X / LDA $nnnn,Y
         u32     ad_addr_ar(u16 r, bool wr);
         u16     ad_rd_ax(bool flg)              { return ad_final_rd( ad_addr_ar(regs.X.w, false),     flg );  }
-        u16     ad_wr_ax(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.X.w,  true),  v, flg );  }
+        void    ad_wr_ax(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.X.w,  true),  v, flg );  }
         void    ad_rw_ax(rwop_t op, bool flg)   {        ad_final_rw( ad_addr_ar(regs.X.w,  true), op, flg );  }
         u16     ad_rd_ay(bool flg)              { return ad_final_rd( ad_addr_ar(regs.Y.w, false),     flg );  }
-        u16     ad_wr_ay(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.Y.w,  true),  v, flg );  }
+        void    ad_wr_ay(u16 v, bool flg)       {        ad_final_wr( ad_addr_ar(regs.Y.w,  true),  v, flg );  }
         //  Absolute Long, X     LDA $nnnnnn,X
         u32     ad_addr_axl();
         u16     ad_rd_axl(bool flg)             { return ad_final_rd( ad_addr_axl(),    flg );  }

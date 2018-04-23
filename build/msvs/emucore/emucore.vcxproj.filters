@@ -152,9 +152,6 @@
     <ClInclude Include="..\..\..\src\emucore\cpu\cpustate.h">
       <Filter>src\cpu</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.h">
-      <Filter>src\cpu</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\bus\cpubus.h">
       <Filter>src\bus</Filter>
     </ClInclude>
@@ -198,6 +195,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\src\emucore\cpu\cpu_addrmodes.hpp">
+      <Filter>src\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\emucore\cpu\cpu_instructions.hpp">
       <Filter>src\cpu</Filter>
     </ClInclude>
   </ItemGroup>

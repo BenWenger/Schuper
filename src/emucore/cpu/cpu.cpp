@@ -4,7 +4,9 @@
 #include "cputracer.h"
 #include "main/mainclock.h"
 
+#include "cpu_instructions.hpp"
 #include "cpu_addrmodes.hpp"
+
 
 namespace sch
 {
@@ -28,6 +30,18 @@ namespace sch
     {
         tallyCycle( bus->write(a, v, clock->getTick() ) );
     }
+
+    inline void Cpu::push(u8 v)
+    {
+        if(regs.fE)             write(0x0100 | regs.SP.l--, v);
+        else                    write(regs.SP.w--, v);
+    }
+    
+    inline u8 Cpu::pull()
+    {
+        if(regs.fE)             return read(0x0100 | ++regs.SP.l);
+        else                    return read(++regs.SP.w);
+    }
     
     void Cpu::reset(CpuBus* thebus, MainClock* theclock)
     {
@@ -50,7 +64,7 @@ namespace sch
         regs.fX = true;
         regs.fZ = 1;
         regs.PC = 0;
-        regs.SP = 0x01FF;
+        regs.SP.w = 0x01FF;
         
         // Set interrupt stuff
             // immediately interrupt with a RESET

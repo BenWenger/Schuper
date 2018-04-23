@@ -25,7 +25,7 @@ namespace sch
         
         u16         DP;
         u16         PC;
-        u16         SP;
+        SplitReg    SP;
 
         u32         PBR;
         u32         DBR;

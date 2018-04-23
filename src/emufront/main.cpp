@@ -9,7 +9,6 @@
 #include "snes.h"
 #include "dibsection.h"
 
-extern sch::u8          opbuffer[0x100];
 extern int              ppu_bgmode;
 
 namespace
@@ -236,12 +235,13 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmd, int show)
         else
             Sleep(10);
     }
-
+    /*
     {
         FILE* f = fopen(opBufferFileName, "wb");
         fwrite(opbuffer, 1, 0x100, f);
         fclose(f);
     }
+    */
 
     return 0;
 }
