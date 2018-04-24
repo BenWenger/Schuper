@@ -19,6 +19,20 @@ namespace sch
             h = curPos.H;
             v = curPos.V;
         };
+        InternalDebug.getIrqPos = [this](int& h, int& v)
+        {
+            h = irqPos.H;
+            v = irqPos.V;
+            switch(irqMode)
+            {
+            case IrqMode::Disabled:
+                h = v = -1;
+                break;
+
+            case IrqMode::V:        h = -1;     break;
+            case IrqMode::H:        v = -1;     break;
+            }
+        };
 #endif
     }
 
@@ -750,7 +764,7 @@ namespace sch
             return;
         case IrqMode::H:
             coord.V = curPos.V;
-            if(irqPos.H < curPos.H)     ++coord.V;
+            if(irqPos.H <= curPos.H)    ++coord.V;
             break;
         case IrqMode::V:
             coord.H = 0;

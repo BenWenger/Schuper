@@ -22,6 +22,7 @@
             std::function<u16()>            getPpuAddress;
             std::function<int()>            getPpuAddrInc;
             std::function<void(int&,int&)>  getPpuPos;
+            std::function<void(int&,int&)>  getIrqPos;
         };
 
         extern InternalDebugStruct      InternalDebug;

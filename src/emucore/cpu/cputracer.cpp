@@ -409,6 +409,10 @@ const char* const opnames[0x100] = {
         InternalDebug.getPpuPos(h,v);
 
         fprintf(traceFile, "  H=%03d  V=%03d", h, v);
+
+        InternalDebug.getIrqPos(h,v);
+        fprintf(traceFile, "  IrqH=%03d   IrqV=%03d", h, v);
+
 #endif
 
         fprintf(traceFile, "\n");

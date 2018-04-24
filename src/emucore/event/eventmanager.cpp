@@ -34,7 +34,11 @@ namespace sch
     void EventManager::addEvent(int H, int V, EventHandler* evt, int id)
     {
         if(V >= lineCutoff)
-            addEvent( ppu->convertHVToTimestamp(H,V), evt, id );
+        {
+            auto clk = ppu->convertHVToTimestamp(H,V);
+            if(clk != Time::Never)
+                addEvent( clk + 4, evt, id );       // +4 so we run THROUGH the dot and not just TO the dot
+        }
         else
             eventsAfterV0.emplace_back(H, V, evt, id);
     }
