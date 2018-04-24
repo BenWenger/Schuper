@@ -29,7 +29,37 @@ namespace sch
     
     void Cpu::ADC_decimal(u16 v)
     {
-        // TODO
+        // This is so freaking gross
+        if(regs.fM)
+        {
+            int lo = (regs.A.l & 0x0F) + (v & 0x0F) + !!regs.fC;        if(lo > 0x09)   lo += 0x06;
+            int hi = (regs.A.l & 0xF0) + (v & 0xF0) + (lo & 0xF0);
+
+            regs.fZ = (regs.A.l + v + !!regs.fC) & 0xFF;
+            regs.fN = (hi & 0x80);
+            regs.fV = (hi ^ regs.A.l) & (hi ^ v) & 0x80;
+
+            if(hi > 0x90)       hi += 0x60;     // yes, apparently this happens after setting above flags
+
+            regs.fC = (hi > 0xFF);
+            regs.A.l = (hi & 0xF0) | (lo & 0x0F);
+        }
+        else
+        {
+            int a = (regs.A.w & 0x000F) + (v & 0x000F) + !!regs.fC;     if(a > 0x0009)  a += 0x0006;
+            int b = (regs.A.w & 0x00F0) + (v & 0x00F0) + (a & 0x00F0);  if(b > 0x0090)  b += 0x0060;
+            int c = (regs.A.w & 0x0F00) + (v & 0x0F00) + (b & 0x0F00);  if(c > 0x0900)  c += 0x0600;
+            int d = (regs.A.w & 0xF000) + (v & 0xF000) + (c & 0xF000);
+
+            regs.fZ = (regs.A.w + v + !!regs.fC) & 0xFFFF;
+            regs.fN = (d & 0x8000);
+            regs.fV = (d ^ regs.A.w) & (d ^ v) & 0x8000;
+
+            if(d > 0x9000)      d += 0x6000;
+
+            regs.fC = (d > 0xFFFF);
+            regs.A.w = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
+        }
     }
 
     void Cpu::AND(u16 v)
@@ -238,7 +268,44 @@ namespace sch
 
     void Cpu::SBC_decimal(u16 v)
     {
-        // TODO
+        if(regs.fM)
+        {
+            int lo = (regs.A.l & 0x0F) - (v & 0x0F) - !regs.fC;
+            int hi = (regs.A.l & 0xF0) - (v & 0xF0);
+
+            if(lo < 0)      {   lo -= 0x06;     hi -= 0x10;     }
+            if(hi < 0)      {   hi -= 0x06;                     }
+
+            // Flags don't care about decimal mode?
+            int dif = regs.A.l - v - !regs.fC;
+            regs.fC = (dif >= 0);
+            regs.fZ = (dif & 0xFF);
+            regs.fN = (dif & 0x80);
+            regs.fV = (regs.A.l ^ dif) & (regs.A.l ^ v) & 0x80;
+
+            regs.A.l = (hi & 0xF0) | (lo & 0x0F);
+        }
+        else
+        {
+            int a = (regs.A.w & 0x000F) - (v & 0x000F) - !regs.fC;
+            int b = (regs.A.w & 0x00F0) - (v & 0x00F0);
+            int c = (regs.A.w & 0x0F00) - (v & 0x0F00);
+            int d = (regs.A.w & 0xF000) - (v & 0xF000);
+        
+            if(a < 0)       {   a -= 0x0006;    b -= 0x0010;    }
+            if(b < 0)       {   b -= 0x0060;    c -= 0x0100;    }
+            if(c < 0)       {   c -= 0x0600;    d -= 0x1000;    }
+            if(d < 0)       {   d -= 0x6000;                    }
+
+            // Flags don't care about decimal mode?
+            int dif = regs.A.w - v - !regs.fC;
+            regs.fC = (dif >= 0);
+            regs.fZ = (dif & 0xFFFF);
+            regs.fN = (dif & 0x8000);
+            regs.fV = (regs.A.w ^ dif) & (regs.A.w ^ v) & 0x8000;
+
+            regs.A.w = (d & 0xF000) | (c & 0x0F00) | (b & 0x00F0) | (a & 0x000F);
+        }
     }
     
     u16 Cpu::TRB(u16 v, bool flg)
