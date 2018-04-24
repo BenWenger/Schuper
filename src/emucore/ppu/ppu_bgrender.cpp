@@ -119,7 +119,7 @@ namespace sch
 
             int tile = -1;
             if(x >= 0 && y >= 0 && x < 0x400 && y < 0x400)
-                tile = vram[((y & ~7) << 3) | (x & ~7)] & 0xFF;
+                tile = vram[((y & ~7) << 4) | (x >> 3)] & 0xFF;
             else if(m7_FillWithTile0)
                 tile = 0;
 
