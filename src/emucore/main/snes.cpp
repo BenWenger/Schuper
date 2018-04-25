@@ -114,7 +114,7 @@ namespace sch
             cpu->reset(cpuBus.get(), mainClock.get());
             spc->reset();
             dmaUnit->reset(true, cpuBus.get(), mainClock.get(), 12, 8, 8);
-            ppu->reset(true, eventManager.get());
+            ppu->reset(true, eventManager.get(), dmaUnit.get());
             altRamAddr = 0;
             for(int i = 0; i < 0x20000; ++i)        ram[i] = 0;
             for(int i = 0; i < 0x80000; ++i)        sram[i] = 0;

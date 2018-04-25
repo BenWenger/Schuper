@@ -16,6 +16,9 @@ namespace sch
         void            write(u16 a, u8 v, timestamp_t clk);
         void            read(u16 a, u8& v, timestamp_t clk);
 
+        void            doFrameStart();
+        void            doLine();
+
     private:
         struct Channel
         {
@@ -28,6 +31,11 @@ namespace sch
             u8          dstAddr;
             u32         srcBank;
             u16         srcAddr;
+            u32         indirectSrcBank;
+            u16         hdmaAddr;
+
+            u8          lineCountAndRepeat;
+            bool        doTransfer;
 
             u16         size;
         };
@@ -38,10 +46,14 @@ namespace sch
         CpuBus*         bus = nullptr;
         MainClock*      clock = nullptr;
         Channel         chans[8];
+        u8              hdmaEnable;
+        u8              hdmaActive;     // bit becomes zero when a channel is "terminated"
 
 
         void            doDma(u8 chanmask);
 
+        void            readIndirectAddr(Channel& chan);
+        u8              readHdmaTableByte(Channel& chan);
     };
 }
 

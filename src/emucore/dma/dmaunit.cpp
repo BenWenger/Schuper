@@ -15,24 +15,42 @@ namespace
 
 namespace sch
 {
+    namespace
+    {
+        static const u8 modePatterns[8][4] = {
+            {0,0,0,0},
+            {0,1,0,1},
+            {0,0,0,0},
+            {0,0,1,1},
+            {0,1,2,3},
+            {0,1,0,1},
+            {0,0,0,0},
+            {0,0,1,1}
+        };
+
+        static const int modeSizes[8] = {
+            1,2,2,4,4,4,2,4
+        };
+    }
+
     void DmaUnit::read(u16 a, u8& v, timestamp_t clk)
     {
         auto& chan = chans[(a & 0x0070) >> 4];
 
         switch(a & 0xFF8F)
         {
-        case 0x4300:    v = chan.modeByte;                          break;
-        case 0x4301:    v = chan.dstAddr;                           break;
-        case 0x4302:    v = static_cast<u8>(chan.srcAddr & 0xFF);   break;
-        case 0x4303:    v = static_cast<u8>(chan.srcAddr >> 8);     break;
-        case 0x4304:    v = static_cast<u8>(chan.srcBank >> 16);    break;
-        case 0x4305:    v = static_cast<u8>(chan.size & 0xFF);      break;
-        case 0x4306:    v = static_cast<u8>(chan.size >> 8);        break;
+        case 0x4300:    v = chan.modeByte;                                  break;
+        case 0x4301:    v = chan.dstAddr;                                   break;
+        case 0x4302:    v = static_cast<u8>(chan.srcAddr & 0xFF);           break;
+        case 0x4303:    v = static_cast<u8>(chan.srcAddr >> 8);             break;
+        case 0x4304:    v = static_cast<u8>(chan.srcBank >> 16);            break;
+        case 0x4305:    v = static_cast<u8>(chan.size & 0xFF);              break;
+        case 0x4306:    v = static_cast<u8>(chan.size >> 8);                break;
             
-        case 0x4307:    /* TODO */                                  break;
-        case 0x4308:    /* TODO */                                  break;
-        case 0x4309:    /* TODO */                                  break;
-        case 0x430A:    /* TODO */                                  break;
+        case 0x4307:    v = static_cast<u8>(chan.indirectSrcBank >> 16);    break;
+        case 0x4308:    v = static_cast<u8>(chan.hdmaAddr & 0xFF);          break;
+        case 0x4309:    v = static_cast<u8>(chan.hdmaAddr >> 8);            break;
+        case 0x430A:    v = chan.lineCountAndRepeat;                        break;
         }
     }
 
@@ -45,7 +63,7 @@ namespace sch
         }
         else if(a == 0x420C)
         {
-            // TODO HDMA enable
+            hdmaEnable = v;
         }
         else
         {
@@ -69,10 +87,10 @@ namespace sch
             
             case 0x4305:    chan.size = (chan.size & 0xFF00) | v;               break;
             case 0x4306:    chan.size = (chan.size & 0x00FF) | (v << 8);        break;
-            case 0x4307:    /* TODO */                                          break;
-            case 0x4308:    /* TODO */                                          break;
-            case 0x4309:    /* TODO */                                          break;
-            case 0x430A:    /* TODO */                                          break;
+            case 0x4307:    chan.indirectSrcBank = (v << 16);                   break;
+            case 0x4308:    chan.srcAddr = (chan.hdmaAddr & 0xFF00) | v;        break;
+            case 0x4309:    chan.srcAddr = (chan.hdmaAddr & 0x00FF) | (v << 8); break;
+            case 0x430A:    chan.lineCountAndRepeat = v;                        break;
             }
         }
     }
@@ -82,16 +100,6 @@ namespace sch
 
     void DmaUnit::doDma(u8 chanmask)
     {
-        static const u8 modePatterns[8][4] = {
-            {0,0,0,0},
-            {0,1,0,1},
-            {0,0,0,0},
-            {0,0,1,1},
-            {0,1,2,3},
-            {0,1,0,1},
-            {0,0,0,0},
-            {0,0,1,1}
-        };
 
         u8 v;
 
@@ -162,6 +170,7 @@ namespace sch
         dmaDelay = dma_len;
         chanDelay = chan_len;
         xferDelay = xfer_len;
+        hdmaEnable = 0;
 
         if(hard)
         {
@@ -178,6 +187,102 @@ namespace sch
                 write(0x4308 | a, 0xFF, 0);
                 write(0x4309 | a, 0xFF, 0);
                 write(0x430A | a, 0xFF, 0);
+            }
+            for(int i = 0; i < 8; ++i)
+                chans[i].doTransfer = false;
+        }
+    }
+    
+    u8 DmaUnit::readHdmaTableByte(Channel& chan)
+    {
+        u8 v;
+        bus->read(chan.hdmaAddr++ | chan.srcBank, v, clock->getTick());
+        clock->tallyCycle(8);
+        return v;
+    }
+    
+    void DmaUnit::readIndirectAddr(Channel& chan)
+    {
+        chan.size  = readHdmaTableByte(chan);
+        chan.size |= readHdmaTableByte(chan) << 8;
+    }
+    
+    void DmaUnit::doFrameStart()
+    {
+        clock->tallyCycle(18);
+        hdmaActive = 0xFF;
+
+        for(int i = 0; i < 8; ++i)
+        {
+            auto& chan = chans[i];
+
+            if(!(hdmaEnable & (1<<i)))
+               continue;
+
+            chan.lineCountAndRepeat = readHdmaTableByte(chan);
+            if(!chan.lineCountAndRepeat)
+                hdmaActive &= ~(1<<i);
+
+            chan.hdmaAddr = chan.srcAddr;
+            if(chan.indirect)
+                readIndirectAddr(chan);
+
+            chan.doTransfer = true;
+        }
+    }
+
+    void DmaUnit::doLine()
+    {
+        u8 chanmask = hdmaEnable & hdmaActive;
+        if(!chanmask)       // nothing to do if no channels active
+            return;
+
+        clock->tallyCycle(18);
+
+        for(int i = 0; i < 8; ++i)
+        {
+            if(!(chanmask & (1<<i)))
+                continue;
+
+            auto& chan = chans[i];
+
+            if(chan.doTransfer)
+            {
+                u8 v;
+                u32 srcBank = (chan.indirect ? chan.indirectSrcBank : chan.srcBank);
+                u16& src = (chan.indirect ? chan.size : chan.srcAddr);
+                for(int x = 0; x < modeSizes[chan.xferMode]; ++x)
+                {
+                    u8 dst = chan.dstAddr + modePatterns[chan.xferMode][x];
+
+                    if(chan.ppuRead)
+                    {
+                        bus->read(0x2100 | dst, v, clock->getTick());
+                        bus->write(srcBank | src++, v, clock->getTick());
+                    }
+                    else
+                    {
+                        bus->read(srcBank | src++, v, clock->getTick());
+                        bus->write(0x2100 | dst, v, clock->getTick());
+                    }
+                    clock->tallyCycle(8);
+                }
+            }
+
+            --chan.lineCountAndRepeat;
+            chan.doTransfer = !!(chan.lineCountAndRepeat & 0x80);
+            if(chan.lineCountAndRepeat & 0x7F)
+                clock->tallyCycle(8);
+            else
+            {
+                chan.lineCountAndRepeat = readHdmaTableByte(chan);
+                if(chan.indirect)
+                    readIndirectAddr(chan);
+
+                if(!chan.lineCountAndRepeat)
+                    hdmaActive &= ~(1<<i);
+
+                chan.doTransfer = true;
             }
         }
     }

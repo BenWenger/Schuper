@@ -3,6 +3,7 @@
 #include "ppu.h"
 #include "cpu/cpu.h"
 #include "internaldebug/internaldebug.h"
+#include "dma/dmaunit.h"
 
 int ppu_bgmode = 0;
 
@@ -36,9 +37,10 @@ namespace sch
 #endif
     }
 
-    void Ppu::reset(bool hard, EventManager* evt)
+    void Ppu::reset(bool hard, EventManager* evt, DmaUnit* dma)
     {
         evtManager = evt;
+        dmaUnit = dma;
         if(hard)
         {
             for(auto& i : bgLayers)
@@ -148,6 +150,13 @@ namespace sch
         addIrqEvent();                                              // for when the next IRQ will happen
         evtManager->addEvent( 1, 224, this, EventCode::CatchUp );   // possible time for start of VBlank
         evtManager->addEvent( 1, 240, this, EventCode::CatchUp );   // The other possible time
+
+        // HDMA events
+        evtManager->addEvent( 0, 6, this, EventCode::HdmaStart );
+        for(int i = 0; i <= 0xE0; ++i)
+            evtManager->addEvent( i, 278, this, EventCode::HdmaLine );
+        for(int i = 0xE1; i < 0xE0; ++i)
+            evtManager->addEvent( i, 278, this, EventCode::HdmaLineOverscan );
     }
 
 
@@ -559,7 +568,7 @@ namespace sch
             }
         }
 
-        int lastrenderline = (overscanMode ? 240 : 224);
+        int lastrenderline = (overscanMode ? 240 : 224);    // TODO this seems wrong
 
         // otherwise, see if we render it!
         if( (line >= 1) && (line <= lastrenderline) )
@@ -712,6 +721,20 @@ namespace sch
         {
         case EventCode::CatchUp:
             runTo(clk);
+            break;
+
+        case EventCode::HdmaStart:
+            if(!forceBlank)
+                dmaUnit->doFrameStart();            // TODO  do this even if force blank?
+            break;
+
+        case EventCode::HdmaLineOverscan:
+            if(nmiHasHappened)          break;      // don't do this if rendering has already ended
+            if(!overscanMode)           break;      // don't do this if not in overscan mode
+            // otherwise..... fall through to normal HdmaLine (no break)
+        case EventCode::HdmaLine:
+            if(!forceBlank)
+                dmaUnit->doLine();                  // TODO even if force blank?
             break;
         }
     }
