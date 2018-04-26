@@ -218,12 +218,12 @@ namespace sch
 
             if(!(hdmaEnable & (1<<i)))
                continue;
-
+            
+            chan.hdmaAddr = chan.srcAddr;
             chan.lineCountAndRepeat = readHdmaTableByte(chan);
             if(!chan.lineCountAndRepeat)
                 hdmaActive &= ~(1<<i);
 
-            chan.hdmaAddr = chan.srcAddr;
             if(chan.indirect)
                 readIndirectAddr(chan);
 
@@ -250,7 +250,7 @@ namespace sch
             {
                 u8 v;
                 u32 srcBank = (chan.indirect ? chan.indirectSrcBank : chan.srcBank);
-                u16& src = (chan.indirect ? chan.size : chan.srcAddr);
+                u16& src = (chan.indirect ? chan.size : chan.hdmaAddr);
                 for(int x = 0; x < modeSizes[chan.xferMode]; ++x)
                 {
                     u8 dst = chan.dstAddr + modePatterns[chan.xferMode][x];

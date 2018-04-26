@@ -152,11 +152,11 @@ namespace sch
         evtManager->addEvent( 1, 240, this, EventCode::CatchUp );   // The other possible time
 
         // HDMA events
-        evtManager->addEvent( 0, 6, this, EventCode::HdmaStart );
+        evtManager->addEvent( 6, 0, this, EventCode::HdmaStart );
         for(int i = 0; i <= 0xE0; ++i)
-            evtManager->addEvent( i, 278, this, EventCode::HdmaLine );
+            evtManager->addEvent( 278, i, this, EventCode::HdmaLine );
         for(int i = 0xE1; i < 0xE0; ++i)
-            evtManager->addEvent( i, 278, this, EventCode::HdmaLineOverscan );
+            evtManager->addEvent( 278, i, this, EventCode::HdmaLineOverscan );
     }
 
 
