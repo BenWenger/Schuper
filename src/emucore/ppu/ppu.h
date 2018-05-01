@@ -97,6 +97,7 @@
 namespace sch
 {
     class Cpu;
+    class DmaUnit;
 
     class Ppu : public EventHandler
     {
@@ -107,7 +108,7 @@ namespace sch
         void        regRead(u16 a, u8& v);
 
         void        runTo(timestamp_t runto);
-        void        reset(bool hard, EventManager* evt);        
+        void        reset(bool hard, EventManager* evt, DmaUnit* dma);        
         void        performEvent(int eventId, timestamp_t clk) override;
         void        frameStart(Cpu* c, const VideoSettings& vid);
 
@@ -159,6 +160,7 @@ namespace sch
 
         Cpu*            cpu;        // need a pointer so we can signal interrupts
         EventManager*   evtManager;
+        DmaUnit*        dmaUnit;
 
         VideoSettings   video;
         int             linesRendered;
@@ -290,6 +292,9 @@ namespace sch
         enum EventCode
         {
             CatchUp = 0,
+            HdmaStart,
+            HdmaLine,
+            HdmaLineOverscan
         };
 
         ////////////////////////////////////////
