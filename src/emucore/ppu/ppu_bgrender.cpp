@@ -109,12 +109,10 @@ namespace sch
             int y = srcy >> 8;
             srcx += m7_Matrix[0];
             srcy += m7_Matrix[2];
-            if(m7_ClipToTM)
+            if(m7_WrapMap)
             {
-                if(x <     0)   x =     0;
-                if(x > 0x3FF)   x = 0x3FF;
-                if(y <     0)   y =     0;
-                if(y > 0x3FF)   y = 0x3FF;
+                x &= 0x03FF;
+                y &= 0x03FF;
             }
 
             int tile = -1;

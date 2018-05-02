@@ -203,7 +203,7 @@ namespace sch
         // mode 7 stuff
         int         m7_ScrollX;
         int         m7_ScrollY;
-        bool        m7_ClipToTM;
+        bool        m7_WrapMap;
         bool        m7_FillWithTile0;
         bool        m7_FlipX;
         bool        m7_FlipY;

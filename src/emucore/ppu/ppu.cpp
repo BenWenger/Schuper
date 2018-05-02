@@ -111,7 +111,7 @@ namespace sch
             ////////////////////////////////
             m7_ScrollX =            0;
             m7_ScrollY =            0;
-            m7_ClipToTM =           false;
+            m7_WrapMap =            false;
             m7_FillWithTile0 =      false;
             m7_FlipX =              false;
             m7_FlipY =              false;
@@ -276,7 +276,7 @@ namespace sch
             break;
             
         case 0x211A:
-            m7_ClipToTM =       !(v & 0x80);
+            m7_WrapMap =        !(v & 0x80);
             m7_FillWithTile0 =  (v & 0x40) != 0;
             m7_FlipY =          (v & 0x02) != 0;
             m7_FlipX =          (v & 0x01) != 0;
